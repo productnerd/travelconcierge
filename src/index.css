@@ -1,0 +1,100 @@
+@import "tailwindcss";
+
+@theme {
+  --color-cream: #F5F0E8;
+  --color-off-black: #1A1A1A;
+  --color-red: #D93B2B;
+  --color-red-light: #F5A89A;
+  --color-black: #000000;
+  --color-white: #FFFFFF;
+  --color-amber: #F5C842;
+  --color-green: #3B7A4A;
+  --color-dark-red: #8B1A10;
+
+  --font-display: 'Space Grotesk', sans-serif;
+  --font-mono: 'Space Mono', monospace;
+  --font-body: 'Inter', sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html, body, #root {
+  height: 100%;
+  width: 100%;
+  overflow: hidden;
+}
+
+/* Custom scrollbar for side panel */
+.scrollbar-thin::-webkit-scrollbar {
+  width: 4px;
+}
+.scrollbar-thin::-webkit-scrollbar-track {
+  background: transparent;
+}
+.scrollbar-thin::-webkit-scrollbar-thumb {
+  background: var(--color-off-black);
+  border-radius: 2px;
+  opacity: 0.3;
+}
+
+/* Skeleton loading animation */
+@keyframes skeleton-pulse {
+  0%, 100% { opacity: 0.3; }
+  50% { opacity: 0.6; }
+}
+.skeleton {
+  animation: skeleton-pulse 1.5s ease-in-out infinite;
+  background: var(--color-off-black);
+  border-radius: 4px;
+}
+
+/* Highlight pulse for regions on map */
+@keyframes highlight-pulse {
+  0%, 100% { opacity: 0.65; }
+  50% { opacity: 0.85; }
+}
+.highlight-pulse {
+  animation: highlight-pulse 2s ease-in-out infinite;
+}
+
+body {
+  font-family: var(--font-body);
+  background-color: var(--color-cream);
+  color: var(--color-off-black);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-display);
+}
+
+.border-retro {
+  border: 2px solid var(--color-off-black);
+}
+
+.btn-pressed {
+  box-shadow: 2px 2px 0px var(--color-off-black);
+}
+
+.btn-pressed:active {
+  box-shadow: none;
+  transform: translate(2px, 2px);
+}
+
+.mapboxgl-popup-content {
+  font-family: var(--font-display);
+  background: var(--color-cream) !important;
+  border: 2px solid var(--color-off-black) !important;
+  border-radius: 8px !important;
+  padding: 8px 12px !important;
+  box-shadow: none !important;
+}
+
+.mapboxgl-popup-tip {
+  border-top-color: var(--color-off-black) !important;
+}

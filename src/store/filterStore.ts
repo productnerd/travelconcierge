@@ -1,0 +1,127 @@
+import { create } from 'zustand'
+import type { AlgorithmPreset } from '@/utils/scoring'
+
+export type ColorMode = 'busyness' | 'weather' | 'bestTime'
+
+export interface FilterState {
+  selectedMonths: number[]
+  busynessMax: number
+  tempMin: number | null
+  tempMax: number | null
+  sunshineMin: number | null
+  rainfallMax: number | null
+  selectedActivities: string[]
+  selectedLandscapes: string[]
+  showShortlistOnly: boolean
+  agentAppliedKeys: string[]
+  colorMode: ColorMode
+  algorithmPreset: AlgorithmPreset
+}
+
+interface FilterActions {
+  setMonths: (months: number[]) => void
+  toggleMonth: (month: number) => void
+  setBusynessMax: (max: number) => void
+  setTempRange: (min: number | null, max: number | null) => void
+  setSunshineMin: (min: number | null) => void
+  setRainfallMax: (max: number | null) => void
+  toggleActivity: (activity: string) => void
+  toggleLandscape: (landscape: string) => void
+  setShowShortlistOnly: (show: boolean) => void
+  setFilter: (key: string, value: unknown) => void
+  clearFilter: (key: string) => void
+  setFilters: (filters: Partial<FilterState>, fromAgent?: boolean) => void
+  setColorMode: (mode: ColorMode) => void
+  setAlgorithmPreset: (preset: AlgorithmPreset) => void
+  resetAll: () => void
+}
+
+const initialState: FilterState = {
+  selectedMonths: [new Date().getMonth() + 1],
+  busynessMax: 5,
+  tempMin: null,
+  tempMax: null,
+  sunshineMin: null,
+  rainfallMax: null,
+  selectedActivities: [],
+  selectedLandscapes: [],
+  showShortlistOnly: false,
+  agentAppliedKeys: [],
+  colorMode: 'busyness' as ColorMode,
+  algorithmPreset: 'balanced' as AlgorithmPreset,
+}
+
+export const useFilterStore = create<FilterState & FilterActions>((set) => ({
+  ...initialState,
+
+  setMonths: (months) => set({ selectedMonths: months }),
+
+  toggleMonth: (month) =>
+    set((s) => {
+      const has = s.selectedMonths.includes(month)
+      if (has && s.selectedMonths.length === 1) return s // keep at least 1
+      return {
+        selectedMonths: has
+          ? s.selectedMonths.filter((m) => m !== month)
+          : [...s.selectedMonths, month].sort((a, b) => a - b),
+      }
+    }),
+
+  setBusynessMax: (max) => set({ busynessMax: max }),
+
+  setTempRange: (min, max) => set({ tempMin: min, tempMax: max }),
+
+  setSunshineMin: (min) => set({ sunshineMin: min }),
+
+  setRainfallMax: (max) => set({ rainfallMax: max }),
+
+  toggleActivity: (activity) =>
+    set((s) => ({
+      selectedActivities: s.selectedActivities.includes(activity)
+        ? s.selectedActivities.filter((a) => a !== activity)
+        : [...s.selectedActivities, activity],
+    })),
+
+  toggleLandscape: (landscape) =>
+    set((s) => ({
+      selectedLandscapes: s.selectedLandscapes.includes(landscape)
+        ? s.selectedLandscapes.filter((l) => l !== landscape)
+        : [...s.selectedLandscapes, landscape],
+    })),
+
+  setShowShortlistOnly: (show) => set({ showShortlistOnly: show }),
+
+  setFilter: (key, value) => set({ [key]: value } as Partial<FilterState>),
+
+  clearFilter: (key) => {
+    const defaults: Record<string, unknown> = {
+      busynessMax: 5,
+      tempMin: null,
+      tempMax: null,
+      sunshineMin: null,
+      rainfallMax: null,
+      selectedActivities: [],
+      selectedLandscapes: [],
+      showShortlistOnly: false,
+    }
+    set((s) => ({
+      ...s,
+      [key]: defaults[key] ?? null,
+      agentAppliedKeys: s.agentAppliedKeys.filter((k) => k !== key),
+    }))
+  },
+
+  setFilters: (filters, fromAgent = false) =>
+    set((s) => ({
+      ...s,
+      ...filters,
+      agentAppliedKeys: fromAgent
+        ? [...new Set([...s.agentAppliedKeys, ...Object.keys(filters)])]
+        : s.agentAppliedKeys,
+    })),
+
+  setColorMode: (mode) => set({ colorMode: mode }),
+  setAlgorithmPreset: (preset) => set({ algorithmPreset: preset }),
+
+  resetAll: () => set(initialState),
+}))
