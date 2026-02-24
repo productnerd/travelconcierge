@@ -57,9 +57,105 @@ function createCirclePolygon(lat: number, lon: number): number[][][] {
   return [points]
 }
 
-// Centroid lookup for fallback polygon generation
+// Centroid lookup for countries missing from Natural Earth 110m
+// Format: [lat, lon]
 const CENTROIDS: Record<string, [number, number]> = {
+  // Previously existing
   MV: [3.2, 73.22],
+  // European microstates
+  AD: [42.546, 1.602],      // Andorra
+  LI: [47.166, 9.555],      // Liechtenstein
+  MC: [43.738, 7.425],      // Monaco
+  SM: [43.942, 12.458],     // San Marino
+  VA: [41.902, 12.453],     // Vatican City
+  MT: [35.937, 14.375],     // Malta
+  // Caribbean islands
+  AG: [17.061, -61.796],    // Antigua & Barbuda
+  BB: [13.194, -59.543],    // Barbados
+  DM: [15.415, -61.371],    // Dominica
+  GD: [12.116, -61.679],    // Grenada
+  KN: [17.357, -62.783],    // Saint Kitts & Nevis
+  LC: [13.909, -60.979],    // Saint Lucia
+  VC: [13.254, -61.197],    // Saint Vincent & Grenadines
+  // African islands
+  CV: [16.002, -24.013],    // Cabo Verde
+  KM: [-11.875, 43.872],    // Comoros
+  MU: [-20.348, 57.552],    // Mauritius
+  SC: [-4.679, 55.492],     // Seychelles
+  ST: [0.186, 6.613],       // Sao Tome & Principe
+  // Pacific islands
+  FM: [6.916, 158.185],     // Micronesia
+  KI: [1.870, -157.363],    // Kiribati (Tarawa)
+  MH: [7.131, 171.184],     // Marshall Islands
+  NR: [-0.522, 166.932],    // Nauru
+  PW: [7.515, 134.583],     // Palau
+  TO: [-21.179, -175.198],  // Tonga
+  TV: [-8.520, 179.198],    // Tuvalu
+  WS: [-13.759, -171.762],  // Samoa
+  // Asian
+  BH: [26.066, 50.558],     // Bahrain
+  SG: [1.352, 103.820],     // Singapore
+}
+
+// Region-level centroid overrides for sub-national island regions
+// These get their own circle polygon instead of sharing the parent country polygon
+const REGION_OVERRIDES: Record<string, [number, number]> = {
+  // Portugal - Atlantic islands
+  'pt-azores-sao-miguel': [37.749, -25.668],
+  'pt-azores-pico-faial': [38.468, -28.530],
+  'pt-azores-flores': [39.451, -31.187],
+  'pt-madeira': [32.651, -16.908],
+  // Spain - island groups
+  'es-islands': [28.291, -16.630],  // Canary Islands centroid
+  // Ecuador - Galápagos
+  'ec-galapagos': [-0.953, -90.966],
+  // Brazil - Fernando de Noronha
+  'br-noronha': [-3.854, -32.424],
+  // Chile - Easter Island
+  'cl-easter': [-27.113, -109.350],
+  // Tanzania - Zanzibar
+  'tz-zanzibar': [-6.165, 39.187],
+  // USA - Hawaii
+  'us-hawaii': [20.798, -156.331],
+  // China - Hainan
+  'cn-hainan': [19.200, 109.735],
+  // South Korea - Jeju
+  'kr-jeju': [33.400, 126.570],
+  // Japan - Okinawa / Miyako-Yaeyama
+  'jp-okinawa-main': [26.335, 127.800],
+  'jp-miyako-yaeyama': [24.340, 124.157],
+  // Philippines - remote islands
+  'ph-batanes': [20.449, 121.970],
+  'ph-siargao': [9.848, 126.045],
+  'ph-palawan': [9.835, 118.738],
+  // Indonesia - spread out archipelago
+  'id-bali': [-8.340, 115.092],
+  'id-lombok-gili': [-8.565, 116.351],
+  'id-komodo-flores': [-8.548, 119.889],
+  'id-raja-ampat': [-0.230, 130.524],
+  'id-sulawesi-togean': [-0.355, 121.954],
+  // Malaysia - island regions
+  'my-langkawi': [6.350, 99.800],
+  'my-borneo-sabah': [5.978, 116.075],
+  'my-borneo-sarawak': [2.471, 111.846],
+  'my-perhentian-east': [5.925, 102.731],
+  // Vietnam - Phu Quoc
+  'vn-phu-quoc': [10.227, 103.967],
+  // Greece - island groups (distinct from mainland)
+  'gr-crete': [35.240, 24.470],
+  'gr-cyclades': [36.883, 25.133],
+  'gr-dodecanese': [36.435, 27.125],
+  'gr-ionian': [39.620, 19.920],
+  // Italy - Sicily & Sardinia
+  'it-sicily': [37.600, 14.015],
+  // Madagascar - coast (Nosy Be)
+  'mg-coast': [-13.333, 48.268],
+  // Fiji - main island
+  'fj-islands': [-17.771, 177.951],
+  // New Zealand - distinct islands
+  'nz-auckland': [-36.848, 174.763],
+  'nz-fiordland': [-45.414, 167.718],
+  'nz-queenstown': [-44.501, 168.749],
 }
 
 function matchCountry(feature: GeoJSONFeature, countryCode: string): boolean {
@@ -151,6 +247,27 @@ async function main() {
 
     // Duplicate the polygon once per region in this country
     for (const region of countryRegions) {
+      // Check if this specific region has a centroid override (island sub-regions)
+      const override = REGION_OVERRIDES[region.geojson_id]
+      if (override) {
+        outputFeatures.push({
+          type: 'Feature',
+          properties: {
+            NAME: region.name,
+            geojson_id: region.geojson_id,
+            region_slug: region.geojson_id,
+            country_code: region.country_code,
+          },
+          geometry: {
+            type: 'Polygon',
+            coordinates: createCirclePolygon(override[0], override[1]),
+          },
+        })
+        fallback++
+        console.log(`  + ${region.geojson_id} (region override circle)`)
+        continue
+      }
+
       outputFeatures.push({
         type: 'Feature',
         properties: {
