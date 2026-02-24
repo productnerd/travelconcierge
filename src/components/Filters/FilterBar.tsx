@@ -4,9 +4,8 @@ import BusynessFilter from './BusynessFilter'
 import TempFilter from './TempFilter'
 import SunshineFilter from './SunshineFilter'
 import ActivePills from './ActivePills'
-import { useFilterStore, type ColorMode } from '@/store/filterStore'
+import { useFilterStore } from '@/store/filterStore'
 import { useShortlistStore } from '@/store/shortlistStore'
-import { PRESET_LABELS, type AlgorithmPreset } from '@/utils/scoring'
 
 const ACTIVITIES = ['surfing', 'hiking', 'diving', 'freediving', 'snorkeling', 'cultural', 'food', 'safari', 'skiing', 'beach', 'wildlife', 'adventure']
 const LANDSCAPES = ['beach', 'mountain', 'jungle', 'desert', 'city', 'island']
@@ -21,10 +20,6 @@ export default function FilterBar() {
   const setShowShortlistOnly = useFilterStore((s) => s.setShowShortlistOnly)
   const rainfallMax = useFilterStore((s) => s.rainfallMax)
   const setFilter = useFilterStore((s) => s.setFilter)
-  const colorMode = useFilterStore((s) => s.colorMode)
-  const setColorMode = useFilterStore((s) => s.setColorMode)
-  const algorithmPreset = useFilterStore((s) => s.algorithmPreset)
-  const setAlgorithmPreset = useFilterStore((s) => s.setAlgorithmPreset)
   const shortlistedCount = useShortlistStore((s) => s.shortlistedSlugs.length)
 
   return (
@@ -32,46 +27,6 @@ export default function FilterBar() {
       {/* Row 1: Months + core filters (scrollable on mobile) */}
       <div className="flex items-center gap-3 md:gap-4 overflow-x-auto pb-1 scrollbar-thin">
         <MonthSelector />
-
-        <div className="w-px h-6 bg-off-black/20 shrink-0" />
-
-        {/* Color mode toggle */}
-        <div className="flex items-center gap-1 shrink-0">
-          {([
-            { mode: 'busyness' as ColorMode, label: 'Crowds' },
-            { mode: 'weather' as ColorMode, label: 'Weather' },
-            { mode: 'bestTime' as ColorMode, label: 'Best Time' },
-          ]).map(({ mode, label }) => (
-            <button
-              key={mode}
-              onClick={() => setColorMode(mode)}
-              className={`
-                px-2 py-1 text-[10px] font-display font-bold rounded-lg border-2 border-off-black transition-colors
-                ${colorMode === mode ? 'bg-off-black text-cream' : 'bg-cream text-off-black hover:bg-off-black/10'}
-              `}
-            >
-              {label}
-            </button>
-          ))}
-        </div>
-
-        {/* Preset selector (only visible for bestTime mode) */}
-        {colorMode === 'bestTime' && (
-          <div className="flex items-center gap-1 shrink-0">
-            {(Object.entries(PRESET_LABELS) as [AlgorithmPreset, string][]).map(([key, label]) => (
-              <button
-                key={key}
-                onClick={() => setAlgorithmPreset(key)}
-                className={`
-                  px-1.5 py-0.5 text-[9px] font-display font-bold rounded border-2 border-off-black transition-colors
-                  ${algorithmPreset === key ? 'bg-red text-white' : 'bg-cream text-off-black hover:bg-red-light'}
-                `}
-              >
-                {label}
-              </button>
-            ))}
-          </div>
-        )}
 
         <div className="w-px h-6 bg-off-black/20 shrink-0" />
 

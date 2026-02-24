@@ -6,7 +6,8 @@ import { useShortlistStore } from '@/store/shortlistStore'
 import { useFilterStore } from '@/store/filterStore'
 import type { FilteredRegion } from '@/hooks/useRegions'
 import { busynessColor, busynessLabel } from '@/types'
-import { scoreColor, scoreLabel } from '@/utils/scoring'
+import { scoreColor, scoreLabel, PRESET_LABELS, type AlgorithmPreset } from '@/utils/scoring'
+import type { ColorMode } from '@/store/filterStore'
 import 'mapbox-gl/dist/mapbox-gl.css'
 
 const MAPBOX_TOKEN = import.meta.env.VITE_MAPBOX_TOKEN
@@ -30,6 +31,9 @@ export default function TravelMap({ regions, geojson }: Props) {
   const eliminatedSlugs = useUIStore((s) => s.eliminatedSlugs)
   const shortlistedSlugs = useShortlistStore((s) => s.shortlistedSlugs)
   const colorMode = useFilterStore((s) => s.colorMode)
+  const setColorMode = useFilterStore((s) => s.setColorMode)
+  const algorithmPreset = useFilterStore((s) => s.algorithmPreset)
+  const setAlgorithmPreset = useFilterStore((s) => s.setAlgorithmPreset)
 
   // Build a lookup: geojson_id → region data
   const regionByGeojsonId = useMemo(() => {
@@ -270,11 +274,47 @@ export default function TravelMap({ regions, geojson }: Props) {
         </Popup>
       )}
 
-      {/* Legend */}
+      {/* Legend + Color mode toggle */}
       <div className="absolute bottom-4 left-4 bg-cream border-2 border-off-black rounded-xl p-3 text-xs font-display">
-        <div className="font-bold mb-2">
-          {colorMode === 'busyness' ? 'Busyness' : colorMode === 'weather' ? 'Weather' : 'Best Time'}
+        {/* Color mode toggle */}
+        <div className="flex items-center gap-1 mb-2">
+          {([
+            { mode: 'busyness' as ColorMode, label: 'Crowds' },
+            { mode: 'weather' as ColorMode, label: 'Weather' },
+            { mode: 'bestTime' as ColorMode, label: 'Best Time' },
+          ]).map(({ mode, label }) => (
+            <button
+              key={mode}
+              onClick={() => setColorMode(mode)}
+              className={`
+                px-2 py-1 text-[10px] font-display font-bold rounded-lg border-2 border-off-black transition-colors
+                ${colorMode === mode ? 'bg-off-black text-cream' : 'bg-cream text-off-black hover:bg-off-black/10'}
+              `}
+            >
+              {label}
+            </button>
+          ))}
         </div>
+
+        {/* Preset selector (only visible for bestTime mode) */}
+        {colorMode === 'bestTime' && (
+          <div className="flex items-center gap-1 mb-2">
+            {(Object.entries(PRESET_LABELS) as [AlgorithmPreset, string][]).map(([key, label]) => (
+              <button
+                key={key}
+                onClick={() => setAlgorithmPreset(key)}
+                className={`
+                  px-1.5 py-0.5 text-[9px] font-display font-bold rounded border-2 border-off-black transition-colors
+                  ${algorithmPreset === key ? 'bg-red text-white' : 'bg-cream text-off-black hover:bg-red-light'}
+                `}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+        )}
+
+        {/* Legend items */}
         {colorMode === 'busyness' ? (
           [
             { score: 1, label: 'Very Quiet' },
