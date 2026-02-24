@@ -124,20 +124,22 @@ export function goodWeatherScore(d: ClimateInput): number {
 export type AlgorithmPreset = 'weather-chaser' | 'balanced' | 'crowd-avoider'
 
 const PRESET_ALPHA: Record<AlgorithmPreset, number> = {
-  'weather-chaser': 0.85,
-  'balanced': 0.65,
-  'crowd-avoider': 0.40,
+  'weather-chaser': 0.90,
+  'balanced': 0.67,     // weather weighs ~2× busyness
+  'crowd-avoider': 0.45,
 }
 
 /**
  * Best Time to Visit (0–100).
  * Geometric mean: 100 × W^α × Q^(1−α)
- * where W = goodWeather / 100, Q = max((5 − busyness) / 4, 0.05).
+ * where W = goodWeather / 100, Q = quietness on a 0.2–1.0 scale.
+ * Q floor of 0.2 ensures peak season doesn't obliterate the score.
  */
 export function bestTimeScore(d: ClimateInput, preset: AlgorithmPreset = 'balanced'): number {
   const alpha = PRESET_ALPHA[preset]
   const W = goodWeatherScore(d) / 100
-  const Q = Math.max((5 - d.busyness) / 4, 0.05)
+  // busyness 1→Q=1.0, busyness 5→Q=0.2 (linear, gentler floor than before)
+  const Q = Math.max(1 - (d.busyness - 1) * 0.2, 0.2)
   return 100 * Math.pow(W, alpha) * Math.pow(Q, 1 - alpha)
 }
 
