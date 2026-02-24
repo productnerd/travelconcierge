@@ -212,7 +212,10 @@ async function main() {
 
   for (const [countryCode, countryRegions] of regionsByCountry) {
     // Find the Natural Earth feature for this country
-    const neFeature = neData.features.find(f => matchCountry(f, countryCode))
+    // Two-pass: prefer exact ISO match over ADM0_A3 prefix (avoids N. Cyprus shadowing Cyprus)
+    const neFeature =
+      neData.features.find(f => f.properties.ISO_A2 === countryCode || f.properties.ISO_A2_EH === countryCode) ||
+      neData.features.find(f => f.properties.ISO_A2 === '-99' && typeof f.properties.ADM0_A3 === 'string' && f.properties.ADM0_A3.substring(0, 2) === countryCode)
 
     if (!neFeature) {
       // Fallback: create a circle polygon for small island nations

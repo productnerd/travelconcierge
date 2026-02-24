@@ -176,8 +176,8 @@ export default function TravelMap({ regions, geojson }: Props) {
                 'case',
                 ['==', ['get', 'isFiltered'], 0], 0.15,
                 ['==', ['get', 'isEliminated'], 1], 0.2,
-                ['==', ['get', 'isSelected'], 1], 0.85,
-                0.65,
+                ['==', ['get', 'isSelected'], 1], 0.9,
+                0.8,
               ],
             }}
           />
