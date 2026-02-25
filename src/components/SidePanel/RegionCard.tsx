@@ -24,8 +24,8 @@ export default function RegionCard({ region }: Props) {
     <div
       onClick={() => selectRegion(region.slug)}
       className={`
-        relative bg-cream border-2 rounded-xl p-6 cursor-pointer transition-colors
-        ${selectedSlug === region.slug ? 'border-red' : 'border-off-black hover:border-red'}
+        relative bg-cream border rounded-xl p-4 cursor-pointer transition-colors
+        ${selectedSlug === region.slug ? 'border-red' : 'border-off-black/30 hover:border-red'}
       `}
     >
       {/* Heart button */}
@@ -65,10 +65,12 @@ export default function RegionCard({ region }: Props) {
         {/* Busyness */}
         <span className="text-[10px] font-mono text-off-black/70">{region.avg_busyness}/5</span>
 
-        {/* Temp */}
-        {region.avg_temp_c !== null && (
+        {/* Temp — show high/low if available, fallback to avg */}
+        {region.avg_temp_max_c !== null ? (
+          <span className="text-[10px] font-mono">{Math.round(region.avg_temp_max_c)}°/{Math.round(region.avg_temp_min_c!)}°</span>
+        ) : region.avg_temp_c !== null ? (
           <span className="text-[10px] font-mono">{Math.round(region.avg_temp_c)}°C</span>
-        )}
+        ) : null}
 
         {/* Sunshine */}
         {region.avg_sunshine_hours !== null && (

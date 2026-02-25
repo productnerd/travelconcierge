@@ -105,25 +105,27 @@ export default function RegionDetail({ region }: Props) {
 
       {/* Climate stats */}
       <div className="grid grid-cols-2 gap-2 mt-4">
-        <div className="bg-cream border-2 border-off-black rounded-lg p-2">
-          <div className="text-[10px] font-display text-off-black/60">Avg Temp</div>
+        <div className="bg-cream border border-off-black/30 rounded-lg p-2">
+          <div className="text-[10px] font-display text-off-black/60">Temp High / Low</div>
           <div className="text-lg font-mono font-bold">
-            {region.avg_temp_c !== null ? `${Math.round(region.avg_temp_c)}°C` : '—'}
+            {region.avg_temp_max_c !== null
+              ? `${Math.round(region.avg_temp_max_c)}° / ${Math.round(region.avg_temp_min_c!)}°`
+              : region.avg_temp_c !== null ? `${Math.round(region.avg_temp_c)}°C` : '—'}
           </div>
         </div>
-        <div className="bg-cream border-2 border-off-black rounded-lg p-2">
+        <div className="bg-cream border border-off-black/30 rounded-lg p-2">
           <div className="text-[10px] font-display text-off-black/60">Sunshine</div>
           <div className="text-lg font-mono font-bold">
             {region.avg_sunshine_hours !== null ? `${region.avg_sunshine_hours}h` : '—'}
           </div>
         </div>
-        <div className="bg-cream border-2 border-off-black rounded-lg p-2">
+        <div className="bg-cream border border-off-black/30 rounded-lg p-2">
           <div className="text-[10px] font-display text-off-black/60">Rainfall</div>
           <div className="text-lg font-mono font-bold">
             {region.avg_rainfall_mm !== null ? `${region.avg_rainfall_mm}mm` : '—'}
           </div>
         </div>
-        <div className="bg-cream border-2 border-off-black rounded-lg p-2">
+        <div className="bg-cream border border-off-black/30 rounded-lg p-2">
           <div className="text-[10px] font-display text-off-black/60">Sea Temp</div>
           <div className="text-lg font-mono font-bold">
             {region.avg_sea_temp_c !== null ? `${region.avg_sea_temp_c}°C` : '—'}
