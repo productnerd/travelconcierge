@@ -12,7 +12,16 @@ function haversineKm(lat1: number, lon1: number, lat2: number, lon2: number): nu
   return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))
 }
 
+// Overall score: bestTimeScore (0-100) combined with cost value (cheap=high)
+// Cost tier 1-5 maps to value score: 1→100, 2→80, 3→60, 4→40, 5→20
+function overallScore(region: FilteredRegion): number {
+  const costTier = COST_INDEX[region.country_code] ?? 3
+  const costValue = 120 - costTier * 20 // 1→100, 2→80, 3→60, 4→40, 5→20
+  return region.bestTimeScore * 0.6 + costValue * 0.4
+}
+
 const SORT_OPTIONS: { key: SortBy; label: string }[] = [
+  { key: 'overall', label: 'Overall' },
   { key: 'bestTime', label: 'Best Time' },
   { key: 'distance', label: 'Distance' },
   { key: 'cost', label: 'Cost' },
@@ -46,6 +55,8 @@ export default function RegionCards({ regions }: Props) {
   const sorted = useMemo(() => {
     const arr = [...regions]
     switch (sortBy) {
+      case 'overall':
+        return arr.sort((a, b) => overallScore(b) - overallScore(a))
       case 'bestTime':
         return arr.sort((a, b) => b.bestTimeScore - a.bestTimeScore)
       case 'distance':

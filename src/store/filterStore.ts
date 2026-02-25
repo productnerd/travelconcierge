@@ -2,7 +2,7 @@ import { create } from 'zustand'
 import type { AlgorithmPreset } from '@/utils/scoring'
 
 export type ColorMode = 'busyness' | 'weather' | 'bestTime'
-export type SortBy = 'bestTime' | 'distance' | 'cost' | 'name'
+export type SortBy = 'overall' | 'bestTime' | 'distance' | 'cost' | 'name'
 
 export interface FilterState {
   selectedMonths: number[]
@@ -54,7 +54,7 @@ const initialState: FilterState = {
   agentAppliedKeys: [],
   colorMode: 'busyness' as ColorMode,
   algorithmPreset: 'balanced' as AlgorithmPreset,
-  sortBy: 'bestTime' as SortBy,
+  sortBy: 'overall' as SortBy,
   userLocation: null,
 }
 
