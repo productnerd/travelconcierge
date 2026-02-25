@@ -5,8 +5,8 @@ export default function ActivePills() {
 
   const pills: { key: string; label: string; isAgent: boolean }[] = []
 
-  if (filters.busynessMax < 10) {
-    const label = filters.busynessMax <= 4 ? 'Quiet only' : `Busyness ≤ ${filters.busynessMax}/10`
+  if (filters.busynessMax < 5) {
+    const label = filters.busynessMax <= 2 ? 'Quiet only' : `Busyness ≤ ${filters.busynessMax}/5`
     pills.push({ key: 'busynessMax', label, isAgent: filters.agentAppliedKeys.includes('busynessMax') })
   }
 

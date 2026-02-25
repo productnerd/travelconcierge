@@ -83,38 +83,26 @@ export function countryFlag(code: string): string {
     .join('')
 }
 
-// Busyness label from score (1–10 scale)
+// Busyness label from score
 export function busynessLabel(score: number): string {
-  if (score <= 2) return 'Very Quiet'
-  if (score <= 4) return 'Quiet'
-  if (score <= 6) return 'Moderate'
-  if (score <= 8) return 'Busy'
-  return 'Peak Season'
+  const labels: Record<number, string> = {
+    1: 'Very Quiet',
+    2: 'Quiet',
+    3: 'Moderate',
+    4: 'Busy',
+    5: 'Peak Season',
+  }
+  return labels[score] || 'Unknown'
 }
 
-// Busyness color from score (1–10 scale, interpolated)
+// Busyness color from score
 export function busynessColor(score: number): string {
-  // Clamp to 1–10
-  const s = Math.max(1, Math.min(10, score))
-  // Gradient stops: 1=deep green, 4=light green, 6=yellow, 8=red, 10=dark red
-  const stops: [number, [number, number, number]][] = [
-    [1, [59, 122, 74]],   // #3B7A4A
-    [4, [107, 175, 120]], // #6BAF78
-    [6, [245, 200, 66]],  // #F5C842
-    [8, [217, 59, 43]],   // #D93B2B
-    [10, [139, 26, 16]],  // #8B1A10
-  ]
-  // Find surrounding stops
-  for (let i = 0; i < stops.length - 1; i++) {
-    const [lo, cLo] = stops[i]
-    const [hi, cHi] = stops[i + 1]
-    if (s <= hi) {
-      const t = (s - lo) / (hi - lo)
-      const r = Math.round(cLo[0] + t * (cHi[0] - cLo[0]))
-      const g = Math.round(cLo[1] + t * (cHi[1] - cLo[1]))
-      const b = Math.round(cLo[2] + t * (cHi[2] - cLo[2]))
-      return `rgb(${r},${g},${b})`
-    }
+  const colors: Record<number, string> = {
+    1: '#3B7A4A',
+    2: '#6BAF78',
+    3: '#F5C842',
+    4: '#D93B2B',
+    5: '#8B1A10',
   }
-  return '#8B1A10'
+  return colors[score] || '#999'
 }

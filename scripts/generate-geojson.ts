@@ -164,6 +164,21 @@ const EXTRA_ISLANDS: { geojson_id: string; country_code: string; name: string; l
   // Corsica is now its own region (fr-corsica) with a REGION_OVERRIDE — no longer mirrors fr-provence
 ]
 
+// Calculate a circle radius for multi-region countries based on centroid spacing.
+// Uses 40% of the minimum distance between any two centroids, clamped to [0.8, 4] degrees.
+function multiRegionRadius(regions: Region[]): number {
+  let minDist = Infinity
+  for (let i = 0; i < regions.length; i++) {
+    for (let j = i + 1; j < regions.length; j++) {
+      const dlat = regions[i].centroid_lat - regions[j].centroid_lat
+      const dlon = regions[i].centroid_lon - regions[j].centroid_lon
+      const dist = Math.sqrt(dlat * dlat + dlon * dlon)
+      if (dist < minDist) minDist = dist
+    }
+  }
+  return Math.max(0.8, Math.min(4, minDist * 0.4))
+}
+
 function matchCountry(feature: GeoJSONFeature, countryCode: string): boolean {
   const props = feature.properties
   // Primary: ISO_A2
@@ -274,22 +289,42 @@ async function main() {
         continue
       }
 
-      // Use full NE country polygon (works for single AND multi-region countries)
-      outputFeatures.push({
-        type: 'Feature',
-        properties: {
-          NAME: neName,
-          geojson_id: region.geojson_id,
-          region_slug: region.geojson_id,
-          country_code: region.country_code,
-        },
-        geometry: {
-          type: neFeature.geometry.type,
-          coordinates: simplifyCoords(neFeature.geometry.coordinates),
-        },
-      })
-      matched++
-      console.log(`  + ${region.geojson_id} -> ${neName} (${countryCode})`)
+      if (countryRegions.length === 1) {
+        // Single-region country: use full NE polygon
+        outputFeatures.push({
+          type: 'Feature',
+          properties: {
+            NAME: neName,
+            geojson_id: region.geojson_id,
+            region_slug: region.geojson_id,
+            country_code: region.country_code,
+          },
+          geometry: {
+            type: neFeature.geometry.type,
+            coordinates: simplifyCoords(neFeature.geometry.coordinates),
+          },
+        })
+        matched++
+        console.log(`  + ${region.geojson_id} -> ${neName} (${countryCode})`)
+      } else {
+        // Multi-region country: use circle at region centroid to avoid overlapping polygons
+        const radius = multiRegionRadius(countryRegions)
+        outputFeatures.push({
+          type: 'Feature',
+          properties: {
+            NAME: region.name,
+            geojson_id: region.geojson_id,
+            region_slug: region.geojson_id,
+            country_code: region.country_code,
+          },
+          geometry: {
+            type: 'Polygon',
+            coordinates: createCirclePolygon(region.centroid_lat, region.centroid_lon, radius),
+          },
+        })
+        fallback++
+        console.log(`  + ${region.geojson_id} (multi-region circle, r=${radius.toFixed(1)}°)`)
+      }
     }
   }
 

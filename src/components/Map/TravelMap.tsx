@@ -167,7 +167,7 @@ export default function TravelMap({ regions, geojson }: Props) {
                 colorMode === 'busyness'
                   ? [
                       'interpolate', ['linear'], ['get', 'busyness'],
-                      1, '#3B7A4A', 4, '#6BAF78', 6, '#F5C842', 8, '#D93B2B', 10, '#8B1A10',
+                      1, '#3B7A4A', 2, '#6BAF78', 3, '#F5C842', 4, '#D93B2B', 5, '#8B1A10',
                     ]
                   : [
                       'interpolate', ['linear'],
@@ -256,7 +256,7 @@ export default function TravelMap({ regions, geojson }: Props) {
                   className="inline-block w-2 h-2 rounded-full"
                   style={{ backgroundColor: busynessColor(hovered.busyness) }}
                 />
-                <span>{hovered.busyness}/10 · {busynessLabel(hovered.busyness)}</span>
+                <span>{hovered.busyness}/5 · {busynessLabel(hovered.busyness)}</span>
               </>
             ) : (() => {
               const val = colorMode === 'weather' ? hovered.weatherScore
@@ -279,13 +279,13 @@ export default function TravelMap({ regions, geojson }: Props) {
       )}
 
       {/* Legend + Color mode toggle */}
-      <div className="absolute bottom-4 left-4 bg-cream border-2 border-off-black rounded-xl p-3 text-xs font-display">
+      <div className="absolute bottom-4 left-4 bg-cream border-2 border-off-black rounded-xl p-4 text-xs font-display">
         {/* Color mode toggle */}
-        <div className="flex items-center gap-1 mb-2 flex-wrap">
+        <div className="flex items-center gap-1.5 mb-3 flex-wrap">
           {([
             { mode: 'overall' as ColorMode, label: 'Overall', tip: 'Combines weather, crowds, cost, and safety' },
             { mode: 'bestTime' as ColorMode, label: 'Crowds & Weather', tip: 'Best combination of good weather and low crowds' },
-            { mode: 'busyness' as ColorMode, label: 'Crowds', tip: 'Tourist crowd levels 1 (very quiet) to 10 (peak season)' },
+            { mode: 'busyness' as ColorMode, label: 'Crowds', tip: 'Tourist crowd levels 1 (very quiet) to 5 (peak season)' },
             { mode: 'weather' as ColorMode, label: 'Weather', tip: 'Temperature, rainfall, sunshine, humidity, wind, cloud cover' },
           ]).map(({ mode, label, tip }) => (
             <button
@@ -305,11 +305,11 @@ export default function TravelMap({ regions, geojson }: Props) {
         {/* Legend items */}
         {colorMode === 'busyness' ? (
           [
-            { score: 1, label: 'Very Quiet (1–2)' },
-            { score: 4, label: 'Quiet (3–4)' },
-            { score: 6, label: 'Moderate (5–6)' },
-            { score: 8, label: 'Busy (7–8)' },
-            { score: 10, label: 'Peak Season (9–10)' },
+            { score: 1, label: 'Very Quiet' },
+            { score: 2, label: 'Quiet' },
+            { score: 3, label: 'Moderate' },
+            { score: 4, label: 'Busy' },
+            { score: 5, label: 'Peak Season' },
           ].map(({ score, label }) => (
             <div key={score} className="flex items-center gap-2 mb-0.5">
               <span

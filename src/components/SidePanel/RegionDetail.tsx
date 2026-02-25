@@ -178,7 +178,7 @@ export default function RegionDetail({ region }: Props) {
           <h3 className="font-display font-bold text-sm mb-1.5">Monthly Crowds</h3>
           <div className="grid grid-cols-12 gap-0.5">
             {sortedMonths.map((m) => {
-              const pct = ((m.busyness - 1) / 9) * 100
+              const pct = ((m.busyness - 1) / 4) * 100
               return (
                 <div key={`crowd-${m.month}`} className="flex flex-col items-center gap-0.5">
                   <div className="w-full h-8 bg-off-black/5 rounded-sm relative overflow-hidden border border-off-black/10">

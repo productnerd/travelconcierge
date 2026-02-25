@@ -1,34 +1,25 @@
 import { useFilterStore } from '@/store/filterStore'
-
-const OPTIONS = [
-  { label: 'Any', value: 10 },
-  { label: 'Quiet', value: 4 },
-  { label: 'Moderate', value: 6 },
-  { label: 'Busy', value: 8 },
-]
+import { busynessLabel } from '@/types'
 
 export default function BusynessFilter() {
   const busynessMax = useFilterStore((s) => s.busynessMax)
   const setBusynessMax = useFilterStore((s) => s.setBusynessMax)
 
   return (
-    <div className="flex items-center gap-1">
-      <span className="text-xs font-display font-bold mr-1">Busy:</span>
-      {OPTIONS.map(({ label, value }) => (
-        <button
-          key={value}
-          onClick={() => setBusynessMax(value)}
-          className={`
-            px-2 py-1 text-xs font-display rounded-lg border-2 border-off-black transition-colors
-            ${busynessMax === value
-              ? 'bg-red text-white font-bold'
-              : 'bg-cream text-off-black hover:bg-red-light'
-            }
-          `}
-        >
-          {label}
-        </button>
-      ))}
+    <div className="flex items-center gap-2">
+      <span className="text-xs font-display font-bold">Crowds:</span>
+      <input
+        type="range"
+        min={1}
+        max={5}
+        step={1}
+        value={busynessMax}
+        onChange={(e) => setBusynessMax(Number(e.target.value))}
+        className="w-20 h-1 accent-red"
+      />
+      <span className="text-xs font-mono">
+        {busynessMax >= 5 ? 'Any' : `≤${busynessMax} ${busynessLabel(busynessMax)}`}
+      </span>
     </div>
   )
 }

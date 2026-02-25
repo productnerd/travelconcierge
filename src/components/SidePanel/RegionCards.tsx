@@ -85,9 +85,9 @@ export default function RegionCards({ regions }: Props) {
   }
 
   return (
-    <div className="p-3">
+    <div className="p-4">
       {/* Sort controls */}
-      <div className="flex items-center gap-1 mb-3">
+      <div className="flex items-center gap-1 mb-4">
         <span className="text-[10px] font-display font-bold text-off-black/50 mr-1">Sort:</span>
         {SORT_OPTIONS.map(({ key, label, tip }) => (
           <button
@@ -108,7 +108,7 @@ export default function RegionCards({ regions }: Props) {
         {regions.length} region{regions.length !== 1 ? 's' : ''}
       </p>
 
-      <div className="flex flex-col gap-2">
+      <div className="flex flex-col gap-3">
         {sorted.map((region) => (
           <RegionCard key={region.slug} region={region} />
         ))}
