@@ -187,7 +187,8 @@ export default function RegionDetail({ region }: Props) {
             </div>
           ))}
 
-          {/* Temp row (daytime-weighted: 75% max + 25% min) */}
+          {/* Temp row */}
+          <div className="col-span-12 text-[8px] text-off-black/40 mt-1 cursor-help" title="Daytime-weighted temperature (75% high + 25% low)">🌡️ Temp</div>
           {sortedMonths.map((m) => {
             const wt = m.temp_max_c !== null && m.temp_min_c !== null
               ? 0.75 * m.temp_max_c + 0.25 * m.temp_min_c
@@ -200,6 +201,7 @@ export default function RegionDetail({ region }: Props) {
                     ? 'bg-red/10 font-bold'
                     : ''
                 }`}
+                title={wt !== null ? `${Math.round(wt)}°C` : undefined}
               >
                 {wt !== null ? `${Math.round(wt)}°` : '—'}
               </div>
@@ -207,6 +209,7 @@ export default function RegionDetail({ region }: Props) {
           })}
 
           {/* Rainfall row */}
+          <div className="col-span-12 text-[8px] text-off-black/40 mt-1 cursor-help" title="Monthly rainfall in millimeters. Red = heavy rain (>150mm)">🌧️ Rain</div>
           {sortedMonths.map((m) => (
             <div
               key={`rain-${m.month}`}
@@ -215,12 +218,14 @@ export default function RegionDetail({ region }: Props) {
                   ? 'text-red font-bold'
                   : 'text-off-black/50'
               }`}
+              title={m.rainfall_mm !== null ? `${Math.round(m.rainfall_mm)}mm rainfall` : undefined}
             >
               {m.rainfall_mm !== null ? `${Math.round(m.rainfall_mm)}` : '—'}
             </div>
           ))}
 
           {/* Humidity row */}
+          <div className="col-span-12 text-[8px] text-off-black/40 mt-1 cursor-help" title="Average humidity percentage. Red = oppressive (>75%)">💧 Humidity</div>
           {sortedMonths.map((m) => (
             <div
               key={`hum-${m.month}`}
@@ -229,28 +234,21 @@ export default function RegionDetail({ region }: Props) {
                   ? 'text-red font-bold'
                   : 'text-off-black/50'
               }`}
+              title={m.humidity_pct !== null ? `${Math.round(m.humidity_pct)}% humidity` : undefined}
             >
               {m.humidity_pct !== null ? `${Math.round(m.humidity_pct)}%` : '—'}
             </div>
           ))}
 
-          {/* Busyness row */}
-          {sortedMonths.map((m) => (
-            <div key={`busy-${m.month}`} className="flex justify-center py-0.5">
-              <span
-                className="inline-block w-2.5 h-2.5 rounded-full border border-off-black"
-                style={{ backgroundColor: busynessColor(m.busyness), opacity: 0.65 }}
-              />
-            </div>
-          ))}
-
           {/* Monsoon row — only if any month has monsoon */}
-          {sortedMonths.some((m) => m.has_monsoon) &&
-            sortedMonths.map((m) => (
-              <div key={`monsoon-${m.month}`} className="text-[8px] py-0.5 text-center">
+          {sortedMonths.some((m) => m.has_monsoon) && <>
+            <div className="col-span-12 text-[8px] text-off-black/40 mt-1 cursor-help" title="Monsoon season: heavy sustained rainfall with flooding risk">⛈️ Monsoon</div>
+            {sortedMonths.map((m) => (
+              <div key={`monsoon-${m.month}`} className="text-[8px] py-0.5 text-center" title={m.has_monsoon ? 'Monsoon season' : ''}>
                 {m.has_monsoon ? '⛈' : ''}
               </div>
             ))}
+          </>}
         </div>
       </div>
 
