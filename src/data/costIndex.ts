@@ -37,3 +37,109 @@ export const COST_INDEX: Record<string, number> = {
 export function costLabel(tier: number): string {
   return '$'.repeat(tier)
 }
+
+// Travel advisory tier per country (1-4)
+// 1: Normal — no significant travel concerns
+// 2: Exercise caution — localized crime/petty theft but tourist-safe (e.g. South Africa, Brazil, Mexico)
+// 3: Reconsider travel — significant instability, terrorism risk, or civil unrest
+// 4: Do not travel — active conflict, war zones, extreme danger
+// Only countries at tier 2+ are listed; unlisted countries default to tier 1.
+// Based on combined UK FCDO, US State Dept, and AU Smartraveller advisories (Feb 2026).
+
+export const SAFETY_TIER: Record<string, number> = {
+  // Tier 4: Do not travel — active conflict / extreme danger
+  AF: 4, // Afghanistan
+  IQ: 4, // Iraq
+  LY: 4, // Libya
+  SO: 4, // Somalia
+  SS: 4, // South Sudan
+  SD: 4, // Sudan
+  SY: 4, // Syria
+  YE: 4, // Yemen
+  KP: 4, // North Korea
+  CF: 4, // Central African Republic
+
+  // Tier 3: Reconsider travel — significant risk
+  BI: 3, // Burundi
+  TD: 3, // Chad
+  CD: 3, // DRC
+  ER: 3, // Eritrea
+  HT: 3, // Haiti
+  IR: 3, // Iran
+  LB: 3, // Lebanon
+  ML: 3, // Mali
+  MM: 3, // Myanmar
+  NE: 3, // Niger
+  NG: 3, // Nigeria
+  PK: 3, // Pakistan
+  PS: 3, // Palestine
+  VE: 3, // Venezuela
+  BF: 3, // Burkina Faso
+  GN: 3, // Guinea
+  GW: 3, // Guinea-Bissau
+  LR: 3, // Liberia
+  MR: 3, // Mauritania
+  SL: 3, // Sierra Leone
+  TM: 3, // Turkmenistan
+  UA: 3, // Ukraine (active conflict)
+
+  // Tier 2: Exercise caution — localized crime but generally tourist-safe
+  ZA: 2, // South Africa
+  BR: 2, // Brazil
+  MX: 2, // Mexico
+  CO: 2, // Colombia
+  PE: 2, // Peru
+  EC: 2, // Ecuador
+  KE: 2, // Kenya
+  UG: 2, // Uganda
+  TZ: 2, // Tanzania
+  ET: 2, // Ethiopia
+  EG: 2, // Egypt
+  DZ: 2, // Algeria
+  JM: 2, // Jamaica
+  TT: 2, // Trinidad & Tobago
+  HN: 2, // Honduras
+  SV: 2, // El Salvador
+  GT: 2, // Guatemala
+  BD: 2, // Bangladesh
+  IN: 2, // India
+  PH: 2, // Philippines
+  TJ: 2, // Tajikistan
+  KG: 2, // Kyrgyzstan
+  CM: 2, // Cameroon
+  MZ: 2, // Mozambique
+  PG: 2, // Papua New Guinea
+  CG: 2, // Congo Republic
+  TG: 2, // Togo
+  BJ: 2, // Benin
+  GH: 2, // Ghana
+  SN: 2, // Senegal
+  CI: 2, // Côte d'Ivoire
+  MG: 2, // Madagascar
+  AO: 2, // Angola
+  ZW: 2, // Zimbabwe
+  BY: 2, // Belarus
+  RU: 2, // Russia
+  TR: 2, // Turkey
+}
+
+// Multiplier applied to overall score per safety tier
+// Tier 1: no penalty, Tier 2: barely noticeable, Tier 3: significant, Tier 4: severe
+export const SAFETY_MULTIPLIER: Record<number, number> = {
+  1: 1.0,
+  2: 0.95,
+  3: 0.75,
+  4: 0.35,
+}
+
+export function safetyMultiplier(countryCode: string): number {
+  return SAFETY_MULTIPLIER[SAFETY_TIER[countryCode] ?? 1]
+}
+
+export function safetyLabel(countryCode: string): string | null {
+  const tier = SAFETY_TIER[countryCode] ?? 1
+  if (tier === 1) return null
+  if (tier === 2) return 'Caution'
+  if (tier === 3) return 'Risky'
+  return 'Avoid'
+}

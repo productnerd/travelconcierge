@@ -2,7 +2,7 @@ import { useMemo, useCallback } from 'react'
 import type { FilteredRegion } from '@/hooks/useRegions'
 import RegionCard from './RegionCard'
 import { useFilterStore, type SortBy } from '@/store/filterStore'
-import { COST_INDEX } from '@/data/costIndex'
+import { COST_INDEX, safetyMultiplier } from '@/data/costIndex'
 
 function haversineKm(lat1: number, lon1: number, lat2: number, lon2: number): number {
   const R = 6371
@@ -12,12 +12,13 @@ function haversineKm(lat1: number, lon1: number, lat2: number, lon2: number): nu
   return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))
 }
 
-// Overall score: bestTimeScore (0-100) combined with cost value (cheap=high)
-// Cost tier 1-5 maps to value score: 1→100, 2→80, 3→60, 4→40, 5→20
+// Overall score: bestTime (75%) + cost value (25%), then multiplied by safety factor
+// Safety: tier 1 → ×1.0, tier 2 → ×0.95, tier 3 → ×0.75, tier 4 → ×0.35
 function overallScore(region: FilteredRegion): number {
   const costTier = COST_INDEX[region.country_code] ?? 3
   const costValue = 120 - costTier * 20 // 1→100, 2→80, 3→60, 4→40, 5→20
-  return region.bestTimeScore * 0.6 + costValue * 0.4
+  const raw = region.bestTimeScore * 0.75 + costValue * 0.25
+  return raw * safetyMultiplier(region.country_code)
 }
 
 const SORT_OPTIONS: { key: SortBy; label: string }[] = [

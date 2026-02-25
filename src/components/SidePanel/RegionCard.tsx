@@ -4,7 +4,7 @@ import { useShortlistStore } from '@/store/shortlistStore'
 import { useFilterStore } from '@/store/filterStore'
 import { busynessColor, busynessLabel, countryFlag } from '@/types'
 import { scoreColor } from '@/utils/scoring'
-import { COST_INDEX, costLabel } from '@/data/costIndex'
+import { COST_INDEX, costLabel, safetyLabel } from '@/data/costIndex'
 
 interface Props {
   region: FilteredRegion
@@ -81,6 +81,17 @@ export default function RegionCard({ region }: Props) {
         <span className="text-[10px] font-mono text-off-black/50">
           {costLabel(COST_INDEX[region.country_code] ?? 3)}
         </span>
+
+        {/* Safety advisory */}
+        {safetyLabel(region.country_code) && (
+          <span className={`text-[9px] font-display font-bold px-1 py-0.5 rounded ${
+            safetyLabel(region.country_code) === 'Avoid' ? 'bg-red/20 text-red' :
+            safetyLabel(region.country_code) === 'Risky' ? 'bg-orange-200 text-orange-700' :
+            'bg-yellow-100 text-yellow-700'
+          }`}>
+            {safetyLabel(region.country_code)}
+          </span>
+        )}
       </div>
     </div>
   )
