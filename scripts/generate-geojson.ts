@@ -229,54 +229,20 @@ async function main() {
   let fallback = 0
 
   for (const [countryCode, countryRegions] of regionsByCountry) {
-    const isMultiRegion = countryRegions.length > 1
-    const regionRadius = isMultiRegion ? computeRegionRadius(countryRegions) : 0.5
-
     // Find the Natural Earth feature for this country
     // Two-pass: prefer exact ISO match over ADM0_A3 prefix (avoids N. Cyprus shadowing Cyprus)
     const neFeature =
       neData.features.find(f => f.properties.ISO_A2 === countryCode || f.properties.ISO_A2_EH === countryCode) ||
       neData.features.find(f => f.properties.ISO_A2 === '-99' && typeof f.properties.ADM0_A3 === 'string' && f.properties.ADM0_A3.substring(0, 2) === countryCode)
 
-    for (const region of countryRegions) {
-      // Use centroid circle if:
-      // 1. Region has explicit override, OR
-      // 2. Country has multiple regions (avoids overlapping polygons), OR
-      // 3. Country not in Natural Earth (small islands)
-      const override = REGION_OVERRIDES[region.geojson_id]
-      const useCircle = override || isMultiRegion || !neFeature
-
-      if (useCircle) {
-        const lat = override?.[0] ?? region.centroid_lat
-        const lon = override?.[1] ?? region.centroid_lon
-        // Island overrides get small circles; mainland multi-region gets scaled circles
-        const radius = override ? 0.5 : regionRadius
-
-        if (lat == null || lon == null) {
-          // Last resort: use CENTROIDS map for countries missing from NE
-          const centroid = CENTROIDS[countryCode]
-          if (!centroid) {
-            console.warn(`  WARNING: No centroid for ${region.geojson_id} (${countryCode}), skipping`)
-            continue
-          }
-          outputFeatures.push({
-            type: 'Feature',
-            properties: {
-              NAME: region.name,
-              geojson_id: region.geojson_id,
-              region_slug: region.geojson_id,
-              country_code: region.country_code,
-            },
-            geometry: {
-              type: 'Polygon',
-              coordinates: createCirclePolygon(centroid[0], centroid[1]),
-            },
-          })
-          fallback++
-          console.log(`    + ${region.geojson_id} (country centroid circle)`)
-          continue
-        }
-
+    if (!neFeature) {
+      // No NE polygon — use circle fallback (small island nations / microstates)
+      const centroid = CENTROIDS[countryCode]
+      if (!centroid) {
+        console.warn(`  WARNING: No NE match and no centroid for ${countryCode}, skipping`)
+        continue
+      }
+      for (const region of countryRegions) {
         outputFeatures.push({
           type: 'Feature',
           properties: {
@@ -287,19 +253,44 @@ async function main() {
           },
           geometry: {
             type: 'Polygon',
-            coordinates: createCirclePolygon(lat, lon, radius),
+            coordinates: createCirclePolygon(centroid[0], centroid[1]),
           },
         })
         fallback++
-        console.log(`  + ${region.geojson_id} (centroid circle r=${radius.toFixed(1)}°${override ? ' override' : ''})`)
+        console.log(`    + ${region.geojson_id} (fallback circle)`)
+      }
+      continue
+    }
+
+    const neName = neFeature.properties.NAME as string
+
+    for (const region of countryRegions) {
+      // Check if this specific region has a centroid override (island sub-regions)
+      const override = REGION_OVERRIDES[region.geojson_id]
+      if (override) {
+        outputFeatures.push({
+          type: 'Feature',
+          properties: {
+            NAME: region.name,
+            geojson_id: region.geojson_id,
+            region_slug: region.geojson_id,
+            country_code: region.country_code,
+          },
+          geometry: {
+            type: 'Polygon',
+            coordinates: createCirclePolygon(override[0], override[1]),
+          },
+        })
+        fallback++
+        console.log(`  + ${region.geojson_id} (region override circle)`)
         continue
       }
 
-      // Single-region country with NE polygon — use full country shape
+      // Use full NE country polygon (works for single AND multi-region countries)
       outputFeatures.push({
         type: 'Feature',
         properties: {
-          NAME: (neFeature.properties.NAME as string),
+          NAME: neName,
           geojson_id: region.geojson_id,
           region_slug: region.geojson_id,
           country_code: region.country_code,
@@ -310,7 +301,7 @@ async function main() {
         },
       })
       matched++
-      console.log(`  + ${region.geojson_id} -> ${neFeature.properties.NAME} (${countryCode})`)
+      console.log(`  + ${region.geojson_id} -> ${neName} (${countryCode})`)
     }
   }
 
