@@ -15,6 +15,8 @@ interface Region {
   geojson_id: string
   country_code: string
   name: string
+  centroid_lat: number
+  centroid_lon: number
 }
 
 interface GeoJSONFeature {
@@ -179,7 +181,7 @@ async function main() {
   console.log('Fetching regions from Supabase...')
   const { data: regions, error } = await supabase
     .from('travel_regions')
-    .select('slug, geojson_id, country_code, name')
+    .select('slug, geojson_id, country_code, name, centroid_lat, centroid_lon')
 
   if (error || !regions) {
     console.error('Failed to fetch regions:', error?.message)
@@ -211,48 +213,51 @@ async function main() {
   let fallback = 0
 
   for (const [countryCode, countryRegions] of regionsByCountry) {
+    const isMultiRegion = countryRegions.length > 1
+
     // Find the Natural Earth feature for this country
     // Two-pass: prefer exact ISO match over ADM0_A3 prefix (avoids N. Cyprus shadowing Cyprus)
     const neFeature =
       neData.features.find(f => f.properties.ISO_A2 === countryCode || f.properties.ISO_A2_EH === countryCode) ||
       neData.features.find(f => f.properties.ISO_A2 === '-99' && typeof f.properties.ADM0_A3 === 'string' && f.properties.ADM0_A3.substring(0, 2) === countryCode)
 
-    if (!neFeature) {
-      // Fallback: create a circle polygon for small island nations
-      console.log(`  No NE match for ${countryCode} - creating fallback polygon`)
-      const centroid = CENTROIDS[countryCode]
-      if (!centroid) {
-        console.warn(`  WARNING: No centroid for ${countryCode}, skipping`)
-        continue
-      }
-
-      for (const region of countryRegions) {
-        outputFeatures.push({
-          type: 'Feature',
-          properties: {
-            NAME: region.name,
-            geojson_id: region.geojson_id,
-            region_slug: region.geojson_id,
-            country_code: region.country_code,
-          },
-          geometry: {
-            type: 'Polygon',
-            coordinates: createCirclePolygon(centroid[0], centroid[1]),
-          },
-        })
-        fallback++
-        console.log(`    + ${region.geojson_id} (fallback circle)`)
-      }
-      continue
-    }
-
-    const neName = neFeature.properties.NAME as string
-
-    // Duplicate the polygon once per region in this country
     for (const region of countryRegions) {
-      // Check if this specific region has a centroid override (island sub-regions)
+      // Use centroid circle if:
+      // 1. Region has explicit override, OR
+      // 2. Country has multiple regions (avoids overlapping polygons), OR
+      // 3. Country not in Natural Earth (small islands)
       const override = REGION_OVERRIDES[region.geojson_id]
-      if (override) {
+      const useCircle = override || isMultiRegion || !neFeature
+
+      if (useCircle) {
+        const lat = override?.[0] ?? region.centroid_lat
+        const lon = override?.[1] ?? region.centroid_lon
+
+        if (lat == null || lon == null) {
+          // Last resort: use CENTROIDS map for countries missing from NE
+          const centroid = CENTROIDS[countryCode]
+          if (!centroid) {
+            console.warn(`  WARNING: No centroid for ${region.geojson_id} (${countryCode}), skipping`)
+            continue
+          }
+          outputFeatures.push({
+            type: 'Feature',
+            properties: {
+              NAME: region.name,
+              geojson_id: region.geojson_id,
+              region_slug: region.geojson_id,
+              country_code: region.country_code,
+            },
+            geometry: {
+              type: 'Polygon',
+              coordinates: createCirclePolygon(centroid[0], centroid[1]),
+            },
+          })
+          fallback++
+          console.log(`    + ${region.geojson_id} (country centroid circle)`)
+          continue
+        }
+
         outputFeatures.push({
           type: 'Feature',
           properties: {
@@ -263,18 +268,19 @@ async function main() {
           },
           geometry: {
             type: 'Polygon',
-            coordinates: createCirclePolygon(override[0], override[1]),
+            coordinates: createCirclePolygon(lat, lon),
           },
         })
         fallback++
-        console.log(`  + ${region.geojson_id} (region override circle)`)
+        console.log(`  + ${region.geojson_id} (centroid circle${override ? ' override' : ''})`)
         continue
       }
 
+      // Single-region country with NE polygon — use full country shape
       outputFeatures.push({
         type: 'Feature',
         properties: {
-          NAME: neName,
+          NAME: (neFeature.properties.NAME as string),
           geojson_id: region.geojson_id,
           region_slug: region.geojson_id,
           country_code: region.country_code,
@@ -285,7 +291,7 @@ async function main() {
         },
       })
       matched++
-      console.log(`  + ${region.geojson_id} -> ${neName} (${countryCode})`)
+      console.log(`  + ${region.geojson_id} -> ${neFeature.properties.NAME} (${countryCode})`)
     }
   }
 
