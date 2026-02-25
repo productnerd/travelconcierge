@@ -27,6 +27,8 @@ export default function RegionDetail({ region }: Props) {
     return sortedMonths.map((m) => {
       const input: ClimateInput = {
         temp_avg_c: m.temp_avg_c,
+        temp_min_c: m.temp_min_c,
+        temp_max_c: m.temp_max_c,
         rainfall_mm: m.rainfall_mm,
         sunshine_hours_day: m.sunshine_hours_day,
         cloud_cover_pct: m.cloud_cover_pct,
