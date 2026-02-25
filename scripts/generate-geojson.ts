@@ -1,11 +1,15 @@
 import { createClient } from '@supabase/supabase-js'
 import { writeFileSync, mkdirSync, existsSync } from 'node:fs'
 import { resolve } from 'node:path'
+import { union } from '@turf/union'
+import { simplify } from '@turf/simplify'
+import { featureCollection, polygon, multiPolygon } from '@turf/helpers'
 
 const SUPABASE_URL = 'https://knftyqkhampkqchoncel.supabase.co'
 const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtuZnR5cWtoYW1wa3FjaG9uY2VsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTE0NDg4MzYsImV4cCI6MjA2NzAyNDgzNn0.fugiTRvgoD3YqAZPQMV3R6Eu0Wx_9vgE6ZK8zjqFutg'
 
-const NE_URL = 'https://raw.githubusercontent.com/nvkelso/natural-earth-vector/master/geojson/ne_110m_admin_0_countries.geojson'
+const NE_COUNTRIES_URL = 'https://raw.githubusercontent.com/nvkelso/natural-earth-vector/master/geojson/ne_110m_admin_0_countries.geojson'
+const NE_ADMIN1_URL = 'https://raw.githubusercontent.com/nvkelso/natural-earth-vector/master/geojson/ne_10m_admin_1_states_provinces.geojson'
 const OUTPUT_PATH = resolve(import.meta.dirname!, '../public/regions.geojson')
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_ANON)
@@ -59,137 +63,132 @@ function createCirclePolygon(lat: number, lon: number, radiusDeg = 0.5): number[
 }
 
 // Centroid lookup for countries missing from Natural Earth 110m
-// Format: [lat, lon]
 const CENTROIDS: Record<string, [number, number]> = {
-  // Previously existing
   MV: [3.2, 73.22],
-  // European microstates
-  AD: [42.546, 1.602],      // Andorra
-  LI: [47.166, 9.555],      // Liechtenstein
-  MC: [43.738, 7.425],      // Monaco
-  SM: [43.942, 12.458],     // San Marino
-  VA: [41.902, 12.453],     // Vatican City
-  MT: [35.937, 14.375],     // Malta
-  // Caribbean islands
-  AG: [17.061, -61.796],    // Antigua & Barbuda
-  BB: [13.194, -59.543],    // Barbados
-  DM: [15.415, -61.371],    // Dominica
-  GD: [12.116, -61.679],    // Grenada
-  KN: [17.357, -62.783],    // Saint Kitts & Nevis
-  LC: [13.909, -60.979],    // Saint Lucia
-  VC: [13.254, -61.197],    // Saint Vincent & Grenadines
-  // African islands
-  CV: [16.002, -24.013],    // Cabo Verde
-  KM: [-11.875, 43.872],    // Comoros
-  MU: [-20.348, 57.552],    // Mauritius
-  SC: [-4.679, 55.492],     // Seychelles
-  ST: [0.186, 6.613],       // Sao Tome & Principe
-  // Pacific islands
-  FM: [6.916, 158.185],     // Micronesia
-  KI: [1.870, -157.363],    // Kiribati (Tarawa)
-  MH: [7.131, 171.184],     // Marshall Islands
-  NR: [-0.522, 166.932],    // Nauru
-  PW: [7.515, 134.583],     // Palau
-  TO: [-21.179, -175.198],  // Tonga
-  TV: [-8.520, 179.198],    // Tuvalu
-  WS: [-13.759, -171.762],  // Samoa
-  // Asian
-  BH: [26.066, 50.558],     // Bahrain
-  SG: [1.352, 103.820],     // Singapore
-  // New territory islands
-  PF: [-17.687, -149.406],  // French Polynesia
-  AW: [12.509, -69.969],    // Aruba
-  TC: [21.694, -71.798],    // Turks & Caicos
-  CK: [-21.237, -159.778],  // Cook Islands
-  FO: [61.892, -6.912],     // Faroe Islands
-  RE: [-21.115, 55.536],    // Réunion
-  CW: [12.170, -68.984],    // Curaçao
-  GP: [16.265, -61.551],    // Guadeloupe
-  MQ: [14.641, -61.024],    // Martinique
-  BM: [32.308, -64.751],    // Bermuda
-  PR: [18.221, -66.590],    // Puerto Rico
+  AD: [42.546, 1.602], LI: [47.166, 9.555], MC: [43.738, 7.425],
+  SM: [43.942, 12.458], VA: [41.902, 12.453], MT: [35.937, 14.375],
+  AG: [17.061, -61.796], BB: [13.194, -59.543], DM: [15.415, -61.371],
+  GD: [12.116, -61.679], KN: [17.357, -62.783], LC: [13.909, -60.979],
+  VC: [13.254, -61.197],
+  CV: [16.002, -24.013], KM: [-11.875, 43.872], MU: [-20.348, 57.552],
+  SC: [-4.679, 55.492], ST: [0.186, 6.613],
+  FM: [6.916, 158.185], KI: [1.870, -157.363], MH: [7.131, 171.184],
+  NR: [-0.522, 166.932], PW: [7.515, 134.583], TO: [-21.179, -175.198],
+  TV: [-8.520, 179.198], WS: [-13.759, -171.762],
+  BH: [26.066, 50.558], SG: [1.352, 103.820],
+  PF: [-17.687, -149.406], AW: [12.509, -69.969], TC: [21.694, -71.798],
+  CK: [-21.237, -159.778], FO: [61.892, -6.912], RE: [-21.115, 55.536],
+  CW: [12.170, -68.984], GP: [16.265, -61.551], MQ: [14.641, -61.024],
+  BM: [32.308, -64.751], PR: [18.221, -66.590],
 }
 
 // Region-level centroid overrides for sub-national island regions
 // These get their own circle polygon instead of sharing the parent country polygon
-// Only for islands truly OUTSIDE their parent country's NE 110m polygon.
-// Do NOT add islands already covered by NE (Sicily, Crete, Hainan, Borneo, etc.)
 const REGION_OVERRIDES: Record<string, [number, number]> = {
-  // Portugal - Atlantic islands (1000+ km from mainland)
   'pt-azores-sao-miguel': [37.749, -25.668],
   'pt-azores-pico-faial': [38.468, -28.530],
   'pt-azores-flores': [39.451, -31.187],
   'pt-madeira': [32.651, -16.908],
-  // Spain - Canary Islands (1100 km from mainland) + Balearics (offshore)
   'es-canary': [28.291, -16.630],
   'es-balearic': [39.571, 2.654],
-  // Ecuador - Galápagos (1000 km offshore)
   'ec-galapagos': [-0.953, -90.966],
-  // Brazil - Fernando de Noronha (350 km offshore)
   'br-noronha': [-3.854, -32.424],
-  // Chile - Easter Island (3500 km offshore)
   'cl-easter': [-27.113, -109.350],
-  // USA - Hawaii (3800 km from CONUS)
   'us-hawaii': [20.798, -156.331],
-  // South Korea - Jeju (below KR polygon southern edge)
   'kr-jeju': [33.400, 126.570],
-  // Japan - Okinawa / Miyako-Yaeyama (far south of JP polygons)
   'jp-okinawa-main': [26.335, 127.800],
   'jp-miyako-yaeyama': [24.340, 124.157],
-  // Philippines - Batanes (north of PH polygon)
   'ph-batanes': [20.449, 121.970],
-  // Indonesia - islands between NE polygons
   'id-lombok-gili': [-8.565, 116.351],
   'id-raja-ampat': [-0.230, 130.524],
-  // Malaysia - Langkawi (west of peninsular polygon edge)
   'my-langkawi': [6.350, 99.800],
-  // Greece - Dodecanese, Ionian, NE Aegean (outside NE polygon edges)
   'gr-dodecanese': [36.435, 27.125],
   'gr-ionian': [39.620, 19.920],
   'gr-ne-aegean': [39.100, 26.300],
-  // Croatia - Dalmatian islands (offshore from mainland polygon)
   'hr-islands': [43.172, 16.441],
-  // Italy - Aeolian Islands (north of Sicily, tiny volcanic chain)
   'it-aeolian': [38.560, 14.960],
-  // Honduras - Roatán (offshore Caribbean)
   'hn-roatan': [16.320, -86.530],
-  // France - Corsica (separate from mainland FR polygon)
   'fr-corsica': [42.039, 9.013],
-  // Italy - Sardinia (separate circle, NE polygon is mainland-focused)
   'it-sardinia': [40.121, 9.013],
 }
 
-// Extra island polygons missing from NE 110m that should mirror an existing region
-const EXTRA_ISLANDS: { geojson_id: string; country_code: string; name: string; lat: number; lon: number }[] = [
-  // Corsica is now its own region (fr-corsica) with a REGION_OVERRIDE — no longer mirrors fr-provence
-]
-
-// Calculate a circle radius for multi-region countries based on centroid spacing.
-// Uses 40% of the minimum distance between any two centroids, clamped to [0.8, 4] degrees.
-function multiRegionRadius(regions: Region[]): number {
-  let minDist = Infinity
-  for (let i = 0; i < regions.length; i++) {
-    for (let j = i + 1; j < regions.length; j++) {
-      const dlat = regions[i].centroid_lat - regions[j].centroid_lat
-      const dlon = regions[i].centroid_lon - regions[j].centroid_lon
-      const dist = Math.sqrt(dlat * dlat + dlon * dlon)
-      if (dist < minDist) minDist = dist
-    }
-  }
-  return Math.max(0.8, Math.min(4, minDist * 0.4))
+// Force specific admin_1 provinces to specific regions (overrides centroid-based assignment)
+// Key: "CC:admin1_name" → region geojson_id
+const ADMIN1_FORCE: Record<string, string> = {
+  'ZA:Western Cape': 'za-cape-town',
+  'ZA:Northern Cape': 'za-cape-town',
 }
 
-function matchCountry(feature: GeoJSONFeature, countryCode: string): boolean {
-  const props = feature.properties
-  // Primary: ISO_A2
-  if (props.ISO_A2 === countryCode) return true
-  // Fallback: ISO_A2_EH (handles Western Sahara edge case and others)
-  if (props.ISO_A2_EH === countryCode) return true
-  // Fallback: first two chars of ADM0_A3 when ISO_A2 is -99
-  if (props.ISO_A2 === '-99' && typeof props.ADM0_A3 === 'string') {
-    if (props.ADM0_A3.substring(0, 2) === countryCode) return true
+// Get iso_a2 from an admin_1 feature (handles both upper/lowercase property names)
+function getAdmin1CountryCode(f: GeoJSONFeature): string {
+  return (f.properties.iso_a2 ?? f.properties.ISO_A2 ?? '') as string
+}
+
+// Squared distance between two points (for comparison only, no need for sqrt)
+function distSq(lat1: number, lon1: number, lat2: number, lon2: number): number {
+  const dlat = lat2 - lat1
+  const dlon = lon2 - lon1
+  return dlat * dlat + dlon * dlon
+}
+
+// Union multiple GeoJSON features into a single simplified feature
+function unionFeatures(features: GeoJSONFeature[]): GeoJSONFeature | null {
+  if (features.length === 0) return null
+  if (features.length === 1) {
+    // Still simplify single features
+    return simplifyFeature(features[0])
   }
-  return false
+
+  try {
+    const turfFeatures = features.map(f => {
+      if (f.geometry.type === 'Polygon') {
+        return polygon(f.geometry.coordinates as number[][][])
+      } else if (f.geometry.type === 'MultiPolygon') {
+        return multiPolygon(f.geometry.coordinates as number[][][][])
+      }
+      return null
+    }).filter(Boolean) as ReturnType<typeof polygon>[]
+
+    if (turfFeatures.length === 0) return null
+    if (turfFeatures.length === 1) return simplifyFeature(features[0])
+
+    const fc = featureCollection(turfFeatures)
+    const result = union(fc)
+    if (!result) return null
+
+    // Simplify to reduce vertex count (~0.05 degrees ≈ 5km tolerance)
+    const simplified = simplify(result, { tolerance: 0.05, highQuality: true })
+
+    return {
+      type: 'Feature',
+      properties: {},
+      geometry: simplified.geometry as GeoJSONFeature['geometry'],
+    }
+  } catch (e) {
+    console.warn(`    Union failed: ${(e as Error).message}, using first feature`)
+    return simplifyFeature(features[0])
+  }
+}
+
+function simplifyFeature(f: GeoJSONFeature): GeoJSONFeature {
+  try {
+    let turfF
+    if (f.geometry.type === 'Polygon') {
+      turfF = polygon(f.geometry.coordinates as number[][][])
+    } else if (f.geometry.type === 'MultiPolygon') {
+      turfF = multiPolygon(f.geometry.coordinates as number[][][][])
+    } else {
+      return f
+    }
+    const simplified = simplify(turfF, { tolerance: 0.05, highQuality: true })
+    return {
+      type: 'Feature',
+      properties: f.properties,
+      geometry: simplified.geometry as GeoJSONFeature['geometry'],
+    }
+  } catch {
+    return f
+  }
 }
 
 async function main() {
@@ -208,17 +207,37 @@ async function main() {
   }
   console.log(`  Found ${regions.length} regions\n`)
 
-  // 2. Download Natural Earth GeoJSON
+  // 2. Download Natural Earth datasets
   console.log('Downloading Natural Earth 110m countries...')
-  const response = await fetch(NE_URL)
-  if (!response.ok) {
-    console.error(`Failed to download: ${response.status} ${response.statusText}`)
+  const neCountriesRes = await fetch(NE_COUNTRIES_URL)
+  if (!neCountriesRes.ok) {
+    console.error(`Failed to download countries: ${neCountriesRes.status}`)
     process.exit(1)
   }
-  const neData: GeoJSONCollection = await response.json()
-  console.log(`  Downloaded ${neData.features.length} country features\n`)
+  const neCountries: GeoJSONCollection = await neCountriesRes.json()
+  console.log(`  Downloaded ${neCountries.features.length} country features`)
 
-  // 3. Group regions by country_code
+  console.log('Downloading Natural Earth 10m admin_1 states/provinces (~38MB)...')
+  const neAdmin1Res = await fetch(NE_ADMIN1_URL)
+  if (!neAdmin1Res.ok) {
+    console.error(`Failed to download admin_1: ${neAdmin1Res.status}`)
+    process.exit(1)
+  }
+  const neAdmin1: GeoJSONCollection = await neAdmin1Res.json()
+  console.log(`  Downloaded ${neAdmin1.features.length} admin_1 features\n`)
+
+  // 3. Build admin_1 lookup by country code
+  const admin1ByCountry = new Map<string, GeoJSONFeature[]>()
+  for (const f of neAdmin1.features) {
+    const cc = getAdmin1CountryCode(f)
+    if (!cc || cc === '-99') continue
+    const arr = admin1ByCountry.get(cc) || []
+    arr.push(f)
+    admin1ByCountry.set(cc, arr)
+  }
+  console.log(`  Admin_1 data available for ${admin1ByCountry.size} countries\n`)
+
+  // 4. Group regions by country_code
   const regionsByCountry = new Map<string, Region[]>()
   for (const region of regions as Region[]) {
     const existing = regionsByCountry.get(region.country_code) || []
@@ -226,20 +245,20 @@ async function main() {
     regionsByCountry.set(region.country_code, existing)
   }
 
-  // 4. Build output features
+  // 5. Build output features
   const outputFeatures: GeoJSONFeature[] = []
-  let matched = 0
-  let fallback = 0
+  let countPolygon = 0
+  let countAdmin1 = 0
+  let countCircle = 0
 
   for (const [countryCode, countryRegions] of regionsByCountry) {
-    // Find the Natural Earth feature for this country
-    // Two-pass: prefer exact ISO match over ADM0_A3 prefix (avoids N. Cyprus shadowing Cyprus)
+    // Find NE 110m country feature
     const neFeature =
-      neData.features.find(f => f.properties.ISO_A2 === countryCode || f.properties.ISO_A2_EH === countryCode) ||
-      neData.features.find(f => f.properties.ISO_A2 === '-99' && typeof f.properties.ADM0_A3 === 'string' && f.properties.ADM0_A3.substring(0, 2) === countryCode)
+      neCountries.features.find(f => f.properties.ISO_A2 === countryCode || f.properties.ISO_A2_EH === countryCode) ||
+      neCountries.features.find(f => f.properties.ISO_A2 === '-99' && typeof f.properties.ADM0_A3 === 'string' && f.properties.ADM0_A3.substring(0, 2) === countryCode)
 
     if (!neFeature) {
-      // No NE polygon — use circle fallback (small island nations / microstates)
+      // No NE country polygon — use circle fallback (small island nations / microstates)
       const centroid = CENTROIDS[countryCode]
       if (!centroid) {
         console.warn(`  WARNING: No NE match and no centroid for ${countryCode}, skipping`)
@@ -248,108 +267,139 @@ async function main() {
       for (const region of countryRegions) {
         outputFeatures.push({
           type: 'Feature',
-          properties: {
-            NAME: region.name,
-            geojson_id: region.geojson_id,
-            region_slug: region.geojson_id,
-            country_code: region.country_code,
-          },
-          geometry: {
-            type: 'Polygon',
-            coordinates: createCirclePolygon(centroid[0], centroid[1]),
-          },
+          properties: { NAME: region.name, geojson_id: region.geojson_id, region_slug: region.geojson_id, country_code: region.country_code },
+          geometry: { type: 'Polygon', coordinates: createCirclePolygon(centroid[0], centroid[1]) },
         })
-        fallback++
-        console.log(`    + ${region.geojson_id} (fallback circle)`)
+        countCircle++
       }
+      console.log(`  ${countryCode}: ${countryRegions.length} region(s) — circle fallback (no NE polygon)`)
       continue
     }
 
-    const neName = neFeature.properties.NAME as string
-
+    // Handle region overrides first (island sub-regions get circles regardless)
+    const nonOverrideRegions: Region[] = []
     for (const region of countryRegions) {
-      // Check if this specific region has a centroid override (island sub-regions)
       const override = REGION_OVERRIDES[region.geojson_id]
       if (override) {
         outputFeatures.push({
           type: 'Feature',
-          properties: {
-            NAME: region.name,
-            geojson_id: region.geojson_id,
-            region_slug: region.geojson_id,
-            country_code: region.country_code,
-          },
-          geometry: {
-            type: 'Polygon',
-            coordinates: createCirclePolygon(override[0], override[1]),
-          },
+          properties: { NAME: region.name, geojson_id: region.geojson_id, region_slug: region.geojson_id, country_code: region.country_code },
+          geometry: { type: 'Polygon', coordinates: createCirclePolygon(override[0], override[1]) },
         })
-        fallback++
-        console.log(`  + ${region.geojson_id} (region override circle)`)
+        countCircle++
+        console.log(`  ${countryCode}/${region.geojson_id}: circle (island override)`)
+      } else {
+        nonOverrideRegions.push(region)
+      }
+    }
+
+    if (nonOverrideRegions.length === 0) continue
+
+    if (nonOverrideRegions.length === 1) {
+      // Single mainland region: use full NE 110m country polygon
+      const region = nonOverrideRegions[0]
+      outputFeatures.push({
+        type: 'Feature',
+        properties: { NAME: neFeature.properties.NAME as string, geojson_id: region.geojson_id, region_slug: region.geojson_id, country_code: region.country_code },
+        geometry: { type: neFeature.geometry.type, coordinates: simplifyCoords(neFeature.geometry.coordinates) },
+      })
+      countPolygon++
+      console.log(`  ${countryCode}/${region.geojson_id}: full country polygon`)
+      continue
+    }
+
+    // Multi-region country: try admin_1 approach
+    const admin1Features = admin1ByCountry.get(countryCode)
+    if (!admin1Features || admin1Features.length === 0) {
+      // No admin_1 data — use full country polygon for all regions (not ideal but better than nothing)
+      console.warn(`  ${countryCode}: no admin_1 data for ${nonOverrideRegions.length} regions — using country polygon`)
+      for (const region of nonOverrideRegions) {
+        outputFeatures.push({
+          type: 'Feature',
+          properties: { NAME: region.name, geojson_id: region.geojson_id, region_slug: region.geojson_id, country_code: region.country_code },
+          geometry: { type: neFeature.geometry.type, coordinates: simplifyCoords(neFeature.geometry.coordinates) },
+        })
+        countPolygon++
+      }
+      continue
+    }
+
+    // Assign each admin_1 feature to the closest region centroid
+    const regionAdmin1Map = new Map<string, GeoJSONFeature[]>()
+    for (const region of nonOverrideRegions) {
+      regionAdmin1Map.set(region.geojson_id, [])
+    }
+
+    for (const a1 of admin1Features) {
+      const a1Lat = (a1.properties.latitude ?? a1.properties.Latitude) as number | undefined
+      const a1Lon = (a1.properties.longitude ?? a1.properties.Longitude) as number | undefined
+      if (a1Lat == null || a1Lon == null) continue
+
+      // Check for forced assignment override
+      const a1Name = (a1.properties.name ?? a1.properties.NAME ?? '') as string
+      const forceKey = `${countryCode}:${a1Name}`
+      const forcedRegion = ADMIN1_FORCE[forceKey]
+      if (forcedRegion && regionAdmin1Map.has(forcedRegion)) {
+        regionAdmin1Map.get(forcedRegion)!.push(a1)
         continue
       }
 
-      if (countryRegions.length === 1) {
-        // Single-region country: use full NE polygon
-        outputFeatures.push({
-          type: 'Feature',
-          properties: {
-            NAME: neName,
-            geojson_id: region.geojson_id,
-            region_slug: region.geojson_id,
-            country_code: region.country_code,
-          },
-          geometry: {
-            type: neFeature.geometry.type,
-            coordinates: simplifyCoords(neFeature.geometry.coordinates),
-          },
-        })
-        matched++
-        console.log(`  + ${region.geojson_id} -> ${neName} (${countryCode})`)
-      } else {
-        // Multi-region country: use circle at region centroid to avoid overlapping polygons
-        const radius = multiRegionRadius(countryRegions)
-        outputFeatures.push({
-          type: 'Feature',
-          properties: {
-            NAME: region.name,
-            geojson_id: region.geojson_id,
-            region_slug: region.geojson_id,
-            country_code: region.country_code,
-          },
-          geometry: {
-            type: 'Polygon',
-            coordinates: createCirclePolygon(region.centroid_lat, region.centroid_lon, radius),
-          },
-        })
-        fallback++
-        console.log(`  + ${region.geojson_id} (multi-region circle, r=${radius.toFixed(1)}°)`)
+      // Find closest region by centroid distance
+      let closestRegion = nonOverrideRegions[0]
+      let closestDist = Infinity
+      for (const region of nonOverrideRegions) {
+        const d = distSq(a1Lat, a1Lon, region.centroid_lat, region.centroid_lon)
+        if (d < closestDist) {
+          closestDist = d
+          closestRegion = region
+        }
       }
+
+      regionAdmin1Map.get(closestRegion.geojson_id)!.push(a1)
+    }
+
+    // Build polygons per region
+    for (const region of nonOverrideRegions) {
+      const assigned = regionAdmin1Map.get(region.geojson_id)!
+      if (assigned.length === 0) {
+        // No admin_1 features assigned — circle fallback
+        outputFeatures.push({
+          type: 'Feature',
+          properties: { NAME: region.name, geojson_id: region.geojson_id, region_slug: region.geojson_id, country_code: region.country_code },
+          geometry: { type: 'Polygon', coordinates: createCirclePolygon(region.centroid_lat, region.centroid_lon, 1.5) },
+        })
+        countCircle++
+        console.log(`  ${countryCode}/${region.geojson_id}: circle (no admin_1 assigned)`)
+        continue
+      }
+
+      // Union assigned admin_1 features
+      const unioned = unionFeatures(assigned)
+      if (!unioned) {
+        outputFeatures.push({
+          type: 'Feature',
+          properties: { NAME: region.name, geojson_id: region.geojson_id, region_slug: region.geojson_id, country_code: region.country_code },
+          geometry: { type: 'Polygon', coordinates: createCirclePolygon(region.centroid_lat, region.centroid_lon, 1.5) },
+        })
+        countCircle++
+        console.log(`  ${countryCode}/${region.geojson_id}: circle (union failed)`)
+        continue
+      }
+
+      outputFeatures.push({
+        type: 'Feature',
+        properties: { NAME: region.name, geojson_id: region.geojson_id, region_slug: region.geojson_id, country_code: region.country_code },
+        geometry: { type: unioned.geometry.type, coordinates: simplifyCoords(unioned.geometry.coordinates) },
+      })
+      countAdmin1++
+      console.log(`  ${countryCode}/${region.geojson_id}: admin_1 union (${assigned.length} provinces)`)
     }
   }
 
-  // Add extra island features (islands missing from NE 110m that mirror an existing region)
-  for (const island of EXTRA_ISLANDS) {
-    outputFeatures.push({
-      type: 'Feature',
-      properties: {
-        NAME: island.name,
-        geojson_id: island.geojson_id,
-        region_slug: island.geojson_id,
-        country_code: island.country_code,
-      },
-      geometry: {
-        type: 'Polygon',
-        coordinates: createCirclePolygon(island.lat, island.lon),
-      },
-    })
-    fallback++
-    console.log(`  + ${island.name} -> ${island.geojson_id} (extra island circle)`)
-  }
+  console.log(`\nCountry polygons: ${countPolygon}, Admin_1 unions: ${countAdmin1}, Circles: ${countCircle}`)
+  console.log(`Total features: ${outputFeatures.length}\n`)
 
-  console.log(`\nMatched: ${matched}, Fallback: ${fallback}, Total features: ${outputFeatures.length}\n`)
-
-  // 5. Write output
+  // 6. Write output
   const output: GeoJSONCollection = {
     type: 'FeatureCollection',
     features: outputFeatures,

@@ -73,8 +73,8 @@ export default function FilterBar() {
           </div>
         </div>
 
-        {/* Hide risky toggle */}
-        <div className="w-px h-6 bg-off-black/20 shrink-0" />
+        {/* Hide risky toggle — pushed to far right */}
+        <div className="ml-auto shrink-0" />
         <button
           onClick={() => setHideRisky(!hideRisky)}
           title="Hide regions with Risky or Avoid travel advisories"

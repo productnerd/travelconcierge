@@ -24,7 +24,7 @@ export default function RegionCard({ region }: Props) {
     <div
       onClick={() => selectRegion(region.slug)}
       className={`
-        relative bg-cream border-2 rounded-xl p-4 cursor-pointer transition-colors
+        relative bg-cream border-2 rounded-xl p-5 cursor-pointer transition-colors
         ${selectedSlug === region.slug ? 'border-red' : 'border-off-black hover:border-red'}
       `}
     >
@@ -34,7 +34,7 @@ export default function RegionCard({ region }: Props) {
           e.stopPropagation()
           toggle(region.slug)
         }}
-        className="absolute top-3 right-3 text-sm"
+        className="absolute top-4 right-4 text-sm"
       >
         {isShortlisted ? (
           <span className="text-red">&#10084;</span>
@@ -52,7 +52,7 @@ export default function RegionCard({ region }: Props) {
       </p>
 
       {/* Stats row */}
-      <div className="flex items-center gap-2 mt-3">
+      <div className="flex items-center gap-2.5 mt-3">
         {/* Seasonal score pill — always shows overall score */}
         <span
           className="inline-flex items-center gap-1 px-1.5 py-0.5 text-[10px] font-display font-bold rounded border border-off-black text-white"
