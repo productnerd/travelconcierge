@@ -44,10 +44,9 @@ function simplifyCoords(coords: unknown): unknown {
   return coords
 }
 
-// Create a simple circle polygon (~50km radius) for small islands not in Natural Earth
-function createCirclePolygon(lat: number, lon: number): number[][][] {
+// Create a circle polygon with configurable radius (in degrees)
+function createCirclePolygon(lat: number, lon: number, radiusDeg = 0.5): number[][][] {
   const points: number[][] = []
-  const radiusDeg = 0.5 // ~50km at equator
   const steps = 24
   for (let i = 0; i <= steps; i++) {
     const angle = (i / steps) * 2 * Math.PI
@@ -57,6 +56,23 @@ function createCirclePolygon(lat: number, lon: number): number[][][] {
     ])
   }
   return [points]
+}
+
+// Compute a good circle radius for multi-region countries based on centroid spread
+function computeRegionRadius(regions: Region[]): number {
+  if (regions.length <= 1) return 0.5
+  let maxDist = 0
+  for (let i = 0; i < regions.length; i++) {
+    for (let j = i + 1; j < regions.length; j++) {
+      const dlat = regions[i].centroid_lat - regions[j].centroid_lat
+      const dlon = regions[i].centroid_lon - regions[j].centroid_lon
+      const dist = Math.sqrt(dlat * dlat + dlon * dlon)
+      if (dist > maxDist) maxDist = dist
+    }
+  }
+  // Target: circles that fill ~60% of the average spacing between regions
+  const avgSpacing = maxDist / Math.sqrt(regions.length)
+  return Math.max(0.8, Math.min(3.5, avgSpacing * 0.55))
 }
 
 // Centroid lookup for countries missing from Natural Earth 110m
@@ -214,6 +230,7 @@ async function main() {
 
   for (const [countryCode, countryRegions] of regionsByCountry) {
     const isMultiRegion = countryRegions.length > 1
+    const regionRadius = isMultiRegion ? computeRegionRadius(countryRegions) : 0.5
 
     // Find the Natural Earth feature for this country
     // Two-pass: prefer exact ISO match over ADM0_A3 prefix (avoids N. Cyprus shadowing Cyprus)
@@ -232,6 +249,8 @@ async function main() {
       if (useCircle) {
         const lat = override?.[0] ?? region.centroid_lat
         const lon = override?.[1] ?? region.centroid_lon
+        // Island overrides get small circles; mainland multi-region gets scaled circles
+        const radius = override ? 0.5 : regionRadius
 
         if (lat == null || lon == null) {
           // Last resort: use CENTROIDS map for countries missing from NE
@@ -268,11 +287,11 @@ async function main() {
           },
           geometry: {
             type: 'Polygon',
-            coordinates: createCirclePolygon(lat, lon),
+            coordinates: createCirclePolygon(lat, lon, radius),
           },
         })
         fallback++
-        console.log(`  + ${region.geojson_id} (centroid circle${override ? ' override' : ''})`)
+        console.log(`  + ${region.geojson_id} (centroid circle r=${radius.toFixed(1)}°${override ? ' override' : ''})`)
         continue
       }
 
