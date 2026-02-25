@@ -100,70 +100,44 @@ const CENTROIDS: Record<string, [number, number]> = {
 
 // Region-level centroid overrides for sub-national island regions
 // These get their own circle polygon instead of sharing the parent country polygon
+// Only for islands truly OUTSIDE their parent country's NE 110m polygon.
+// Do NOT add islands already covered by NE (Sicily, Crete, Hainan, Borneo, etc.)
 const REGION_OVERRIDES: Record<string, [number, number]> = {
-  // Portugal - Atlantic islands
+  // Portugal - Atlantic islands (1000+ km from mainland)
   'pt-azores-sao-miguel': [37.749, -25.668],
   'pt-azores-pico-faial': [38.468, -28.530],
   'pt-azores-flores': [39.451, -31.187],
   'pt-madeira': [32.651, -16.908],
-  // Spain - island groups
-  'es-islands': [28.291, -16.630],  // Canary Islands centroid
-  // Ecuador - Galápagos
+  // Spain - Canary Islands (1100 km from mainland)
+  'es-islands': [28.291, -16.630],
+  // Ecuador - Galápagos (1000 km offshore)
   'ec-galapagos': [-0.953, -90.966],
-  // Brazil - Fernando de Noronha
+  // Brazil - Fernando de Noronha (350 km offshore)
   'br-noronha': [-3.854, -32.424],
-  // Chile - Easter Island
+  // Chile - Easter Island (3500 km offshore)
   'cl-easter': [-27.113, -109.350],
-  // Tanzania - Zanzibar
-  'tz-zanzibar': [-6.165, 39.187],
-  // USA - Hawaii
+  // USA - Hawaii (3800 km from CONUS)
   'us-hawaii': [20.798, -156.331],
-  // China - Hainan
-  'cn-hainan': [19.200, 109.735],
-  // South Korea - Jeju
+  // South Korea - Jeju (below KR polygon southern edge)
   'kr-jeju': [33.400, 126.570],
-  // Japan - Okinawa / Miyako-Yaeyama
+  // Japan - Okinawa / Miyako-Yaeyama (far south of JP polygons)
   'jp-okinawa-main': [26.335, 127.800],
   'jp-miyako-yaeyama': [24.340, 124.157],
-  // Philippines - remote islands
+  // Philippines - Batanes (north of PH polygon)
   'ph-batanes': [20.449, 121.970],
-  'ph-siargao': [9.848, 126.045],
-  'ph-palawan': [9.835, 118.738],
-  // Indonesia - spread out archipelago
-  'id-bali': [-8.340, 115.092],
+  // Indonesia - islands between NE polygons
   'id-lombok-gili': [-8.565, 116.351],
-  'id-komodo-flores': [-8.548, 119.889],
   'id-raja-ampat': [-0.230, 130.524],
-  'id-sulawesi-togean': [-0.355, 121.954],
-  // Malaysia - island regions
+  // Malaysia - Langkawi (west of peninsular polygon edge)
   'my-langkawi': [6.350, 99.800],
-  'my-borneo-sabah': [5.978, 116.075],
-  'my-borneo-sarawak': [2.471, 111.846],
-  'my-perhentian-east': [5.925, 102.731],
-  // Vietnam - Phu Quoc
-  'vn-phu-quoc': [10.227, 103.967],
-  // Greece - island groups (distinct from mainland)
-  'gr-crete': [35.240, 24.470],
-  'gr-cyclades': [36.883, 25.133],
+  // Greece - Dodecanese & Ionian (outside NE polygon edges)
   'gr-dodecanese': [36.435, 27.125],
   'gr-ionian': [39.620, 19.920],
-  // Italy - Sicily & Sardinia
-  'it-sicily': [37.600, 14.015],
-  // Madagascar - coast (Nosy Be)
-  'mg-coast': [-13.333, 48.268],
-  // Fiji - main island
-  'fj-islands': [-17.771, 177.951],
-  // New Zealand - distinct islands
-  'nz-auckland': [-36.848, 174.763],
-  'nz-fiordland': [-45.414, 167.718],
-  'nz-queenstown': [-44.501, 168.749],
 }
 
 // Extra island polygons missing from NE 110m that should mirror an existing region
-// These create additional circle features pointing to the same region geojson_id
 const EXTRA_ISLANDS: { geojson_id: string; country_code: string; name: string; lat: number; lon: number }[] = [
   { geojson_id: 'fr-provence', country_code: 'FR', name: 'Corsica', lat: 42.039, lon: 9.013 },
-  { geojson_id: 'it-sicily', country_code: 'IT', name: 'Sardinia', lat: 40.121, lon: 9.013 },
 ]
 
 function matchCountry(feature: GeoJSONFeature, countryCode: string): boolean {
