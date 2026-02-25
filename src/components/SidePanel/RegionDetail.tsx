@@ -116,7 +116,7 @@ export default function RegionDetail({ region }: Props) {
 
       {/* Climate stats */}
       <div className="grid grid-cols-2 gap-2 mt-4">
-        <div className="bg-cream border border-off-black/30 rounded-lg p-2">
+        <div className="bg-cream border border-off-black/30 rounded-lg px-2 py-1">
           <div className="text-[10px] font-display text-off-black/60">Temp High / Low</div>
           <div className="text-lg font-mono font-bold">
             {region.avg_temp_max_c !== null
@@ -124,19 +124,19 @@ export default function RegionDetail({ region }: Props) {
               : region.avg_temp_c !== null ? `${Math.round(region.avg_temp_c)}°C` : '—'}
           </div>
         </div>
-        <div className="bg-cream border border-off-black/30 rounded-lg p-2">
+        <div className="bg-cream border border-off-black/30 rounded-lg px-2 py-1">
           <div className="text-[10px] font-display text-off-black/60">Sunshine</div>
           <div className="text-lg font-mono font-bold">
             {region.avg_sunshine_hours !== null ? `${region.avg_sunshine_hours}h` : '—'}
           </div>
         </div>
-        <div className="bg-cream border border-off-black/30 rounded-lg p-2">
+        <div className="bg-cream border border-off-black/30 rounded-lg px-2 py-1">
           <div className="text-[10px] font-display text-off-black/60">Rainfall</div>
           <div className="text-lg font-mono font-bold">
             {region.avg_rainfall_mm !== null ? `${region.avg_rainfall_mm}mm` : '—'}
           </div>
         </div>
-        <div className="bg-cream border border-off-black/30 rounded-lg p-2">
+        <div className="bg-cream border border-off-black/30 rounded-lg px-2 py-1">
           <div className="text-[10px] font-display text-off-black/60">Sea Temp</div>
           <div className="text-lg font-mono font-bold">
             {region.avg_sea_temp_c !== null ? `${region.avg_sea_temp_c}°C` : '—'}
@@ -146,12 +146,12 @@ export default function RegionDetail({ region }: Props) {
 
       {/* Cost & Best Months */}
       <div className="grid grid-cols-2 gap-2 mt-3">
-        <div className="bg-cream border border-off-black/30 rounded-lg p-2">
+        <div className="bg-cream border border-off-black/30 rounded-lg px-2 py-1">
           <div className="text-[10px] font-display text-off-black/60">Cost</div>
           <div className="text-lg font-mono font-bold">{costLabel(costTier)}</div>
           <div className="text-[10px] font-display text-off-black/50">{BUDGET_LABELS[costTier]}</div>
         </div>
-        <div className="bg-cream border border-off-black/30 rounded-lg p-2">
+        <div className="bg-cream border border-off-black/30 rounded-lg px-2 py-1">
           <div className="text-[10px] font-display text-off-black/60">Best Months</div>
           <div className="flex flex-col gap-0.5 mt-0.5">
             {top3Months.map((m, i) => (
@@ -206,6 +206,34 @@ export default function RegionDetail({ region }: Props) {
             )
           })}
 
+          {/* Rainfall row */}
+          {sortedMonths.map((m) => (
+            <div
+              key={`rain-${m.month}`}
+              className={`text-[8px] font-mono py-0.5 ${
+                m.rainfall_mm !== null && m.rainfall_mm > 150
+                  ? 'text-red font-bold'
+                  : 'text-off-black/50'
+              }`}
+            >
+              {m.rainfall_mm !== null ? `${Math.round(m.rainfall_mm)}` : '—'}
+            </div>
+          ))}
+
+          {/* Humidity row */}
+          {sortedMonths.map((m) => (
+            <div
+              key={`hum-${m.month}`}
+              className={`text-[8px] font-mono py-0.5 ${
+                m.humidity_pct !== null && m.humidity_pct > 75
+                  ? 'text-red font-bold'
+                  : 'text-off-black/50'
+              }`}
+            >
+              {m.humidity_pct !== null ? `${Math.round(m.humidity_pct)}%` : '—'}
+            </div>
+          ))}
+
           {/* Busyness row */}
           {sortedMonths.map((m) => (
             <div key={`busy-${m.month}`} className="flex justify-center py-0.5">
@@ -215,38 +243,19 @@ export default function RegionDetail({ region }: Props) {
               />
             </div>
           ))}
+
+          {/* Monsoon row — only if any month has monsoon */}
+          {sortedMonths.some((m) => m.has_monsoon) &&
+            sortedMonths.map((m) => (
+              <div key={`monsoon-${m.month}`} className="text-[8px] py-0.5 text-center">
+                {m.has_monsoon ? '⛈' : ''}
+              </div>
+            ))}
         </div>
       </div>
 
       {/* Monthly Scores */}
       <div className="mt-4 space-y-3">
-        {/* Crowds */}
-        <div>
-          <h3 className="font-display font-bold text-sm mb-1.5">Monthly Crowds</h3>
-          <div className="grid grid-cols-12 gap-0.5">
-            {sortedMonths.map((m) => {
-              const pct = ((m.busyness - 1) / 4) * 100
-              return (
-                <div key={`crowd-${m.month}`} className="flex flex-col items-center gap-0.5">
-                  <div className="w-full h-8 bg-off-black/5 rounded-sm relative overflow-hidden border border-off-black/10">
-                    <div
-                      className="absolute bottom-0 w-full rounded-sm transition-all"
-                      style={{
-                        height: `${Math.max(pct, 8)}%`,
-                        backgroundColor: busynessColor(m.busyness),
-                        opacity: 0.7,
-                      }}
-                    />
-                  </div>
-                  <span className={`text-[8px] font-mono ${selectedMonths.includes(m.month) ? 'font-bold text-red' : 'text-off-black/50'}`}>
-                    {m.busyness}
-                  </span>
-                </div>
-              )
-            })}
-          </div>
-        </div>
-
         {/* Weather Score */}
         <div>
           <h3 className="font-display font-bold text-sm mb-1.5">Monthly Weather</h3>
@@ -267,6 +276,33 @@ export default function RegionDetail({ region }: Props) {
                   </div>
                   <span className={`text-[8px] font-mono ${selectedMonths.includes(m.month) ? 'font-bold text-red' : 'text-off-black/50'}`}>
                     {score}
+                  </span>
+                </div>
+              )
+            })}
+          </div>
+        </div>
+
+        {/* Crowds */}
+        <div>
+          <h3 className="font-display font-bold text-sm mb-1.5">Monthly Crowds</h3>
+          <div className="grid grid-cols-12 gap-0.5">
+            {sortedMonths.map((m) => {
+              const pct = ((m.busyness - 1) / 4) * 100
+              return (
+                <div key={`crowd-${m.month}`} className="flex flex-col items-center gap-0.5">
+                  <div className="w-full h-8 bg-off-black/5 rounded-sm relative overflow-hidden border border-off-black/10">
+                    <div
+                      className="absolute bottom-0 w-full rounded-sm transition-all"
+                      style={{
+                        height: `${Math.max(pct, 8)}%`,
+                        backgroundColor: busynessColor(m.busyness),
+                        opacity: 0.7,
+                      }}
+                    />
+                  </div>
+                  <span className={`text-[8px] font-mono ${selectedMonths.includes(m.month) ? 'font-bold text-red' : 'text-off-black/50'}`}>
+                    {m.busyness}
                   </span>
                 </div>
               )
