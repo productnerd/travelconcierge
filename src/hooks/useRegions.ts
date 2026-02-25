@@ -82,7 +82,12 @@ export function useRegions() {
       if (selectedMonthData.length === 0) return null
 
       const avgBusyness = avg(selectedMonthData.map((m) => m.busyness)) ?? 3
-      const avgTemp = avg(selectedMonthData.map((m) => m.temp_avg_c))
+      // Daytime-weighted avg: 75% max (day) + 25% min (night)
+      const avgTemp = avg(selectedMonthData.map((m) =>
+        m.temp_max_c !== null && m.temp_min_c !== null
+          ? 0.75 * m.temp_max_c + 0.25 * m.temp_min_c
+          : m.temp_avg_c
+      ))
       const avgTempMin = avg(selectedMonthData.map((m) => m.temp_min_c))
       const avgTempMax = avg(selectedMonthData.map((m) => m.temp_max_c))
       const avgRainfall = avg(selectedMonthData.map((m) => m.rainfall_mm))

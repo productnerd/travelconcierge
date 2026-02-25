@@ -2,7 +2,7 @@
  * Travel scoring algorithms.
  *
  * Good Weather Score (0–100): weighted sub-scores × multiplicative penalties.
- * Extreme conditions (monsoon, 40°C+ heat, heavy rain, humid heat) apply
+ * Extreme conditions (monsoon, 40°C+ heat, heavy rain, humid heat, high wind) apply
  * hard penalty multipliers so they can't be compensated by other factors.
  *
  * Best Time to Visit (0–100): geometric mean of weather quality and quietness.
@@ -96,14 +96,25 @@ function humidHeatPenalty(avgC: number | null, humPct: number | null): number {
   return 1 - 0.40 * heatExcess * humExcess // worst case ×0.60
 }
 
+/**
+ * High wind penalty: >30 km/h starts dragging score down.
+ * 30 km/h → ×1.0 (fresh breeze, manageable), 60 km/h+ → ×0.30 (gale force).
+ * Catches persistently windy destinations (Patagonia, Iceland coast, etc.).
+ */
+function highWindPenalty(kmh: number | null): number {
+  if (kmh === null || kmh <= 30) return 1
+  if (kmh >= 60) return 0.30
+  return 1 - 0.70 * ((kmh - 30) / 30)
+}
+
 // ── Weights ──────────────────────────────────────────────────────────
 
 const W_TEMP = 0.30
 const W_RAIN = 0.25
 const W_SUN = 0.15
-const W_CLOUD = 0.10
+const W_CLOUD = 0.05
 const W_HUMIDITY = 0.15
-const W_WIND = 0.05
+const W_WIND = 0.10
 const W_SEA = 0.08 // borrows proportionally from others for coastal
 
 // ── Exported scoring ─────────────────────────────────────────────────
@@ -180,13 +191,14 @@ export function goodWeatherScore(d: ClimateInput): number {
       W_WIND * w
   }
 
-  // Multiplicative penalties use perceived temp — extreme conditions can't be compensated
+  // Multiplicative penalties — extreme conditions can't be compensated
   const penalty =
     monsoonPenalty(d.has_monsoon) *
     heatComfortPenalty(feltTemp) *
     coldComfortPenalty(feltTemp) *
     heavyRainPenalty(d.rainfall_mm) *
-    humidHeatPenalty(feltTemp, d.humidity_pct)
+    humidHeatPenalty(feltTemp, d.humidity_pct) *
+    highWindPenalty(d.wind_speed_kmh)
 
   return 100 * base * penalty
 }

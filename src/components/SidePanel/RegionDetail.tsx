@@ -5,8 +5,10 @@ import type { FilteredRegion } from '@/hooks/useRegions'
 import { busynessColor, busynessLabel, countryFlag } from '@/types'
 import { useFilterStore } from '@/store/filterStore'
 import { scoreColor, goodWeatherScore, bestTimeScore, type ClimateInput } from '@/utils/scoring'
+import { COST_INDEX, costLabel, safetyLabel } from '@/data/costIndex'
 
 const MONTH_LABELS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+const BUDGET_LABELS: Record<number, string> = { 1: '$15–25/day', 2: '$25–50/day', 3: '$50–100/day', 4: '$100–200/day', 5: '$200+/day' }
 
 interface Props {
   region: FilteredRegion
@@ -44,6 +46,15 @@ export default function RegionDetail({ region }: Props) {
       }
     })
   }, [sortedMonths, algorithmPreset])
+
+  // Top 3 months by bestTime score
+  const top3Months = useMemo(() => {
+    const indexed = monthlyScores.map((s, i) => ({ score: s.bestTime, month: i + 1 }))
+    return indexed.sort((a, b) => b.score - a.score).slice(0, 3)
+  }, [monthlyScores])
+  const top3Set = new Set(top3Months.map((m) => m.month))
+
+  const costTier = COST_INDEX[region.country_code] ?? 3
 
   return (
     <div className="p-4">
@@ -94,7 +105,7 @@ export default function RegionDetail({ region }: Props) {
           className="inline-flex items-center gap-1 px-2 py-1 text-xs font-display font-bold rounded-lg border-2 border-off-black text-white"
           style={{ backgroundColor: scoreColor(region.bestTimeScore) }}
         >
-          Crowds & Weather {region.bestTimeScore}
+          Best Time {region.bestTimeScore}
         </span>
       </div>
 
@@ -133,6 +144,33 @@ export default function RegionDetail({ region }: Props) {
         </div>
       </div>
 
+      {/* Cost & Best Months */}
+      <div className="grid grid-cols-2 gap-2 mt-3">
+        <div className="bg-cream border border-off-black/30 rounded-lg p-2">
+          <div className="text-[10px] font-display text-off-black/60">Cost</div>
+          <div className="text-lg font-mono font-bold">{costLabel(costTier)}</div>
+          <div className="text-[10px] font-display text-off-black/50">{BUDGET_LABELS[costTier]}</div>
+        </div>
+        <div className="bg-cream border border-off-black/30 rounded-lg p-2">
+          <div className="text-[10px] font-display text-off-black/60">Best Months</div>
+          <div className="flex flex-col gap-0.5 mt-0.5">
+            {top3Months.map((m, i) => (
+              <div key={m.month} className="flex items-center justify-between">
+                <span className="text-sm font-display font-bold">
+                  {i === 0 ? '🥇' : i === 1 ? '🥈' : '🥉'} {MONTH_LABELS[m.month - 1]}
+                </span>
+                <span
+                  className="text-[10px] font-mono font-bold px-1.5 py-0.5 rounded text-white"
+                  style={{ backgroundColor: scoreColor(m.score) }}
+                >
+                  {m.score}
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
       {/* Monthly table */}
       <div className="mt-4">
         <h3 className="font-display font-bold text-sm mb-2">Monthly Climate</h3>
@@ -149,19 +187,24 @@ export default function RegionDetail({ region }: Props) {
             </div>
           ))}
 
-          {/* Temp row */}
-          {sortedMonths.map((m) => (
-            <div
-              key={`temp-${m.month}`}
-              className={`text-[9px] font-mono py-0.5 rounded ${
-                selectedMonths.includes(m.month)
-                  ? 'bg-red/10 font-bold'
-                  : ''
-              }`}
-            >
-              {m.temp_avg_c !== null ? `${Math.round(m.temp_avg_c)}°` : '—'}
-            </div>
-          ))}
+          {/* Temp row (daytime-weighted: 75% max + 25% min) */}
+          {sortedMonths.map((m) => {
+            const wt = m.temp_max_c !== null && m.temp_min_c !== null
+              ? 0.75 * m.temp_max_c + 0.25 * m.temp_min_c
+              : m.temp_avg_c
+            return (
+              <div
+                key={`temp-${m.month}`}
+                className={`text-[9px] font-mono py-0.5 rounded ${
+                  selectedMonths.includes(m.month)
+                    ? 'bg-red/10 font-bold'
+                    : ''
+                }`}
+              >
+                {wt !== null ? `${Math.round(wt)}°` : '—'}
+              </div>
+            )
+          })}
 
           {/* Busyness row */}
           {sortedMonths.map((m) => (
@@ -233,23 +276,34 @@ export default function RegionDetail({ region }: Props) {
 
         {/* Best Time Score */}
         <div>
-          <h3 className="font-display font-bold text-sm mb-1.5">Monthly Crowds & Weather</h3>
+          <h3 className="font-display font-bold text-sm mb-1.5">Best Time ™️</h3>
           <div className="grid grid-cols-12 gap-0.5">
             {sortedMonths.map((m, i) => {
               const score = monthlyScores[i].bestTime
+              const isTop3 = top3Set.has(m.month)
               return (
                 <div key={`best-${m.month}`} className="flex flex-col items-center gap-0.5">
-                  <div className="w-full h-8 bg-off-black/5 rounded-sm relative overflow-hidden border border-off-black/10">
+                  <div
+                    className={`w-full h-8 rounded-sm relative overflow-hidden ${
+                      isTop3
+                        ? 'bg-amber/15 border-2 border-amber'
+                        : 'bg-off-black/5 border border-off-black/10'
+                    }`}
+                  >
                     <div
                       className="absolute bottom-0 w-full rounded-sm transition-all"
                       style={{
                         height: `${Math.max(score, 4)}%`,
                         backgroundColor: scoreColor(score),
-                        opacity: 0.7,
+                        opacity: isTop3 ? 0.9 : 0.7,
                       }}
                     />
                   </div>
-                  <span className={`text-[8px] font-mono ${selectedMonths.includes(m.month) ? 'font-bold text-red' : 'text-off-black/50'}`}>
+                  <span className={`text-[8px] font-mono ${
+                    isTop3
+                      ? 'font-bold text-off-black'
+                      : selectedMonths.includes(m.month) ? 'font-bold text-red' : 'text-off-black/50'
+                  }`}>
                     {score}
                   </span>
                 </div>
