@@ -5,7 +5,7 @@ import type { FilteredRegion } from '@/hooks/useRegions'
 import { busynessColor, busynessLabel, countryFlag } from '@/types'
 import { useFilterStore } from '@/store/filterStore'
 import { scoreColor, goodWeatherScore, bestTimeScore, type ClimateInput } from '@/utils/scoring'
-import { COST_INDEX, costLabel, safetyLabel } from '@/data/costIndex'
+import { COST_INDEX, costLabel } from '@/data/costIndex'
 
 const MONTH_LABELS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
 const BUDGET_LABELS: Record<number, string> = { 1: '$15–25/day', 2: '$25–50/day', 3: '$50–100/day', 4: '$100–200/day', 5: '$200+/day' }
