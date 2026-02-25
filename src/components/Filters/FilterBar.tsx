@@ -26,81 +26,81 @@ export default function FilterBar() {
 
   return (
     <div className="border-b-2 border-off-black bg-cream px-3 md:px-4 py-2 md:py-3 shrink-0">
-      {/* Row 1: Months + core filters (scrollable on mobile) */}
-      <div className="flex items-center gap-3 md:gap-4 overflow-x-auto pb-1 scrollbar-thin">
-        <MonthSelector />
+      {/* Row 1: Scrollable filters + pinned right buttons */}
+      <div className="flex items-center gap-2">
+        {/* Scrollable filters */}
+        <div className="flex items-center gap-3 md:gap-4 overflow-x-auto pb-1 scrollbar-thin flex-1 min-w-0">
+          <MonthSelector />
 
-        <div className="w-px h-6 bg-off-black/20 shrink-0" />
+          <div className="w-px h-6 bg-off-black/20 shrink-0" />
 
-        <BusynessFilter />
+          <BusynessFilter />
 
-        <div className="w-px h-6 bg-off-black/20 shrink-0 hidden md:block" />
+          <div className="w-px h-6 bg-off-black/20 shrink-0 hidden md:block" />
 
-        {/* More filters toggle on mobile */}
-        <button
-          onClick={() => setExpanded(!expanded)}
-          className="md:hidden px-2 py-1 text-[10px] font-display font-bold rounded border-2 border-off-black bg-cream shrink-0"
-        >
-          {expanded ? 'Less' : 'More'}
-        </button>
+          {/* More filters toggle on mobile */}
+          <button
+            onClick={() => setExpanded(!expanded)}
+            className="md:hidden px-2 py-1 text-[10px] font-display font-bold rounded border-2 border-off-black bg-cream shrink-0"
+          >
+            {expanded ? 'Less' : 'More'}
+          </button>
 
-        {/* Desktop-only inline filters */}
-        <div className="hidden md:flex items-center gap-4">
-          <TempFilter />
+          {/* Desktop-only inline filters */}
+          <div className="hidden md:flex items-center gap-4">
+            <TempFilter />
 
-          <div className="w-px h-6 bg-off-black/20" />
+            <div className="w-px h-6 bg-off-black/20" />
 
-          <SunshineFilter />
+            <SunshineFilter />
 
-          <div className="w-px h-6 bg-off-black/20" />
+            <div className="w-px h-6 bg-off-black/20" />
 
-          {/* Rainfall */}
-          <div className="flex items-center gap-2">
-            <span className="text-xs font-display font-bold">Rain:</span>
-            <input
-              type="range"
-              min={0}
-              max={500}
-              step={10}
-              value={rainfallMax ?? 500}
-              onChange={(e) => {
-                const v = Number(e.target.value)
-                setFilter('rainfallMax', v >= 500 ? null : v)
-              }}
-              className="w-20 h-1 accent-red"
-            />
-            <span className="text-xs font-mono">{rainfallMax ?? '∞'}mm</span>
+            {/* Rainfall */}
+            <div className="flex items-center gap-2">
+              <span className="text-xs font-display font-bold">Rain:</span>
+              <input
+                type="range"
+                min={0}
+                max={500}
+                step={10}
+                value={rainfallMax ?? 500}
+                onChange={(e) => {
+                  const v = Number(e.target.value)
+                  setFilter('rainfallMax', v >= 500 ? null : v)
+                }}
+                className="w-20 h-1 accent-red"
+              />
+              <span className="text-xs font-mono">{rainfallMax ?? '∞'}mm</span>
+            </div>
           </div>
         </div>
 
-        {/* Hide risky toggle — pushed to far right */}
-        <div className="ml-auto shrink-0" />
-        <button
-          onClick={() => setHideRisky(!hideRisky)}
-          title="Hide regions with Risky or Avoid travel advisories"
-          className={`
-            px-2 py-1 text-[10px] font-display font-bold rounded-lg border-2 border-off-black transition-colors shrink-0
-            ${hideRisky ? 'bg-red text-white' : 'bg-cream text-off-black hover:bg-red-light'}
-          `}
-        >
-          Hide Risky
-        </button>
+        {/* Pinned right: Hide Risky + Shortlist */}
+        <div className="flex items-center gap-2 shrink-0">
+          <button
+            onClick={() => setHideRisky(!hideRisky)}
+            title="Hide regions with Risky or Avoid travel advisories"
+            className={`
+              px-2 py-1 text-[10px] font-display font-bold rounded-lg border-2 border-off-black transition-colors
+              ${hideRisky ? 'bg-red text-white' : 'bg-cream text-off-black hover:bg-red-light'}
+            `}
+          >
+            Hide Risky
+          </button>
 
-        {/* Shortlist toggle */}
-        {shortlistedCount > 0 && (
-          <>
-            <div className="w-px h-6 bg-off-black/20 shrink-0" />
+          {shortlistedCount > 0 && (
             <button
               onClick={() => setShowShortlistOnly(!showShortlistOnly)}
               className={`
-                flex items-center gap-1 px-2 py-1 text-xs font-display font-bold rounded-lg border-2 border-off-black transition-colors shrink-0
+                flex items-center gap-1 px-2 py-1 text-xs font-display font-bold rounded-lg border-2 border-off-black transition-colors
                 ${showShortlistOnly ? 'bg-red text-white' : 'bg-cream text-off-black hover:bg-red-light'}
               `}
             >
               &#10084; {shortlistedCount}
             </button>
-          </>
-        )}
+          )}
+        </div>
       </div>
 
       {/* Mobile expanded filters */}

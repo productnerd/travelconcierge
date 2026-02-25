@@ -108,7 +108,7 @@ export default function RegionCards({ regions }: Props) {
         {regions.length} region{regions.length !== 1 ? 's' : ''}
       </p>
 
-      <div className="flex flex-col gap-4">
+      <div className="flex flex-col gap-5">
         {sorted.map((region) => (
           <RegionCard key={region.slug} region={region} />
         ))}
