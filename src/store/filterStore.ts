@@ -53,7 +53,7 @@ const initialState: FilterState = {
   selectedActivities: [],
   selectedLandscapes: [],
   showShortlistOnly: false,
-  hideRisky: false,
+  hideRisky: true,
   agentAppliedKeys: [],
   colorMode: 'overall' as ColorMode,
   algorithmPreset: 'balanced' as AlgorithmPreset,
@@ -114,7 +114,7 @@ export const useFilterStore = create<FilterState & FilterActions>((set) => ({
       selectedActivities: [],
       selectedLandscapes: [],
       showShortlistOnly: false,
-      hideRisky: false,
+      hideRisky: true,
     }
     set((s) => ({
       ...s,

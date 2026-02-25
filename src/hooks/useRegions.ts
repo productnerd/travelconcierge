@@ -96,6 +96,8 @@ export function useRegions() {
 
       const climateInput: ClimateInput = {
         temp_avg_c: avgTemp,
+        temp_min_c: avgTempMin,
+        temp_max_c: avgTempMax,
         rainfall_mm: avgRainfall,
         sunshine_hours_day: avgSunshine,
         cloud_cover_pct: avgCloud,

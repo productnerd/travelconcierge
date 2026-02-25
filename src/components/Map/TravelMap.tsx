@@ -170,9 +170,13 @@ export default function TravelMap({ regions, geojson }: Props) {
                       1, '#3B7A4A', 2, '#6BAF78', 3, '#F5C842', 4, '#D93B2B', 5, '#8B1A10',
                     ]
                   : [
-                      'interpolate', ['linear'],
+                      'step',
                       ['get', colorMode === 'weather' ? 'weatherScore' : colorMode === 'bestTime' ? 'bestTimeScore' : 'overallScore'],
-                      0, '#8B1A10', 20, '#D93B2B', 40, '#F5C842', 60, '#6BAF78', 80, '#3B7A4A',
+                      '#8B1A10',   // < 20: Bad
+                      20, '#D93B2B', // 20–39: Poor
+                      40, '#F5C842', // 40–59: Fair
+                      60, '#6BAF78', // 60–79: Good
+                      80, '#3B7A4A', // 80+: Excellent
                     ],
               ],
               'fill-opacity': [

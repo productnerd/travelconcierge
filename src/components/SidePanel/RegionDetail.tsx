@@ -92,7 +92,7 @@ export default function RegionDetail({ region }: Props) {
           className="inline-flex items-center gap-1 px-2 py-1 text-xs font-display font-bold rounded-lg border-2 border-off-black text-white"
           style={{ backgroundColor: scoreColor(region.bestTimeScore) }}
         >
-          Best Time {region.bestTimeScore}
+          Crowds & Weather {region.bestTimeScore}
         </span>
       </div>
 
@@ -229,7 +229,7 @@ export default function RegionDetail({ region }: Props) {
 
         {/* Best Time Score */}
         <div>
-          <h3 className="font-display font-bold text-sm mb-1.5">Monthly Best Time</h3>
+          <h3 className="font-display font-bold text-sm mb-1.5">Monthly Crowds & Weather</h3>
           <div className="grid grid-cols-12 gap-0.5">
             {sortedMonths.map((m, i) => {
               const score = monthlyScores[i].bestTime

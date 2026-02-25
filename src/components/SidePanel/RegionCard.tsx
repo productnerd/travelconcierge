@@ -24,7 +24,7 @@ export default function RegionCard({ region }: Props) {
     <div
       onClick={() => selectRegion(region.slug)}
       className={`
-        relative bg-cream border-2 rounded-xl p-5 cursor-pointer transition-colors
+        relative bg-cream border-2 rounded-xl p-6 cursor-pointer transition-colors
         ${selectedSlug === region.slug ? 'border-red' : 'border-off-black hover:border-red'}
       `}
     >

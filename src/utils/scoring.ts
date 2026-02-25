@@ -1,23 +1,26 @@
 /**
  * Travel scoring algorithms.
  *
- * Good Weather Score (0–100): weighted combination of 7 climate sub-scores.
+ * Good Weather Score (0–100): weighted sub-scores × multiplicative penalties.
+ * Extreme conditions (monsoon, 40°C+ heat, heavy rain, humid heat) apply
+ * hard penalty multipliers so they can't be compensated by other factors.
+ *
  * Best Time to Visit (0–100): geometric mean of weather quality and quietness.
  */
 
-// ── Sub-score functions ──────────────────────────────────────────────
+// ── Sub-score functions (0–1) ───────────────────────────────────────
 
-/** Temperature comfort: Gaussian around 22–28 °C sweet spot. */
+/** Temperature comfort: Gaussian around 22–27 °C sweet spot, tight sigma. */
 function tempScore(avgC: number): number {
-  if (avgC >= 22 && avgC <= 28) return 1
-  const dist = avgC < 22 ? 22 - avgC : avgC - 28
-  const sigma = avgC < 22 ? 8 : 6
+  if (avgC >= 22 && avgC <= 27) return 1
+  const dist = avgC < 22 ? 22 - avgC : avgC - 27
+  const sigma = avgC < 22 ? 6 : 4
   return Math.exp(-(dist * dist) / (2 * sigma * sigma))
 }
 
-/** Rainfall penalty: logistic decay, inflection at 80 mm. */
+/** Rainfall: logistic decay, inflection at 60 mm, steep power. */
 function rainScore(mm: number): number {
-  return 1 / (1 + Math.pow(mm / 80, 2.5))
+  return 1 / (1 + Math.pow(mm / 60, 3))
 }
 
 /** Sunshine reward: linear up to 10 h/day cap. */
@@ -30,10 +33,10 @@ function cloudScore(pct: number): number {
   return 1 - pct / 100
 }
 
-/** Humidity comfort: perfect ≤ 60 %, power decay above. */
+/** Humidity comfort: perfect ≤ 55 %, power decay above. */
 function humidityScore(pct: number): number {
-  if (pct <= 60) return 1
-  return Math.max(0, 1 - Math.pow((pct - 60) / 40, 1.5))
+  if (pct <= 55) return 1
+  return Math.max(0, 1 - Math.pow((pct - 55) / 45, 1.8))
 }
 
 /** Wind: OK ≤ 20 km/h, quadratic decay 20–50, 0 above. */
@@ -43,31 +46,72 @@ function windScore(kmh: number): number {
   return 1 - Math.pow((kmh - 20) / 30, 2)
 }
 
-/** Monsoon: binary penalty. */
-function monsoonScore(hasMonsoon: boolean): number {
-  return hasMonsoon ? 0 : 1
-}
-
 /** Sea temperature: Gaussian centred at 26 °C, σ = 5. */
 function seaTempScore(seaC: number): number {
   return Math.exp(-Math.pow(seaC - 26, 2) / (2 * 25))
 }
 
+// ── Multiplicative penalty functions (0–1, where 1 = no penalty) ────
+
+/** Monsoon: hard cap at ×0.30 — monsoon season = Bad weather. */
+function monsoonPenalty(hasMonsoon: boolean): number {
+  return hasMonsoon ? 0.30 : 1
+}
+
+/**
+ * Heat comfort penalty: perceived temp above 29 °C starts dragging score down.
+ * 29 °C → ×1.0 (comfortable), 43 °C+ → ×0.15 (unbearable).
+ * This catches hot+dry places (Dubai, Sahara) where rain/sun/cloud all score perfectly.
+ */
+function heatComfortPenalty(feltC: number | null): number {
+  if (feltC === null || feltC <= 29) return 1
+  if (feltC >= 43) return 0.15
+  return 1 - 0.85 * ((feltC - 29) / 14)
+}
+
+/**
+ * Cold comfort penalty: perceived temp below 5 °C starts dragging score down.
+ * 5 °C → ×1.0 (cool but fine), −15 °C → ×0.20 (harsh winter).
+ */
+function coldComfortPenalty(feltC: number | null): number {
+  if (feltC === null || feltC >= 5) return 1
+  if (feltC <= -15) return 0.20
+  return 1 - 0.80 * ((5 - feltC) / 20)
+}
+
+/** Heavy rain (non-monsoon): progressive decay above 200 mm. */
+function heavyRainPenalty(mm: number | null): number {
+  if (mm === null || mm <= 200) return 1
+  if (mm >= 400) return 0.30
+  return 1 - 0.70 * ((mm - 200) / 200)
+}
+
+/** Humid heat combo: >30 °C AND >75% humidity = oppressive. */
+function humidHeatPenalty(avgC: number | null, humPct: number | null): number {
+  if (avgC === null || humPct === null) return 1
+  if (avgC <= 30 || humPct <= 75) return 1
+  // Both beyond threshold — scale penalty by how far beyond
+  const heatExcess = Math.min((avgC - 30) / 10, 1) // 0–1 over 30–40°C
+  const humExcess = Math.min((humPct - 75) / 25, 1) // 0–1 over 75–100%
+  return 1 - 0.40 * heatExcess * humExcess // worst case ×0.60
+}
+
 // ── Weights ──────────────────────────────────────────────────────────
 
 const W_TEMP = 0.30
-const W_RAIN = 0.20
+const W_RAIN = 0.25
 const W_SUN = 0.15
 const W_CLOUD = 0.10
-const W_HUMIDITY = 0.10
+const W_HUMIDITY = 0.15
 const W_WIND = 0.05
-const W_MONSOON = 0.10
 const W_SEA = 0.08 // borrows proportionally from others for coastal
 
 // ── Exported scoring ─────────────────────────────────────────────────
 
 export interface ClimateInput {
   temp_avg_c: number | null
+  temp_min_c: number | null
+  temp_max_c: number | null
   rainfall_mm: number | null
   sunshine_hours_day: number | null
   cloud_cover_pct: number | null
@@ -78,45 +122,73 @@ export interface ClimateInput {
   busyness: number // 1–5
 }
 
+/** Daytime-weighted temp: 75% max + 25% min (travelers explore during the day). */
+function daytimeTemp(d: ClimateInput): number | null {
+  if (d.temp_max_c !== null && d.temp_min_c !== null) {
+    return 0.75 * d.temp_max_c + 0.25 * d.temp_min_c
+  }
+  return d.temp_avg_c
+}
+
+/** Humidity makes heat feel worse. Returns perceived temperature. */
+function perceivedTemp(tempC: number, humPct: number | null): number {
+  if (humPct === null || tempC <= 25 || humPct <= 40) return tempC
+  const excessTemp = tempC - 25
+  const excessHum = (humPct - 40) / 100
+  return tempC + excessTemp * excessHum * 1.5
+}
+
 /**
  * Good Weather Score (0–100).
- * For coastal regions with sea_temp data, 8 % of weight is allocated to sea
- * temperature and the other weights are scaled down by 0.92.
+ * Base = weighted average of sub-scores.
+ * Then multiplied by penalty factors for extreme conditions.
+ * This ensures monsoon/extreme heat/heavy rain can't be compensated.
  */
 export function goodWeatherScore(d: ClimateInput): number {
-  const t = d.temp_avg_c !== null ? tempScore(d.temp_avg_c) : 0.5
+  // Use daytime-weighted temp, then apply humidity heat amplification
+  const rawTemp = daytimeTemp(d)
+  const feltTemp = rawTemp !== null ? perceivedTemp(rawTemp, d.humidity_pct) : null
+
+  const t = feltTemp !== null ? tempScore(feltTemp) : 0.5
   const r = d.rainfall_mm !== null ? rainScore(d.rainfall_mm) : 0.5
   const s = d.sunshine_hours_day !== null ? sunScore(d.sunshine_hours_day) : 0.5
   const c = d.cloud_cover_pct !== null ? cloudScore(d.cloud_cover_pct) : 0.5
   const h = d.humidity_pct !== null ? humidityScore(d.humidity_pct) : 0.5
   const w = d.wind_speed_kmh !== null ? windScore(d.wind_speed_kmh) : 0.5
-  const m = monsoonScore(d.has_monsoon)
 
+  // Base weighted average (monsoon handled as multiplier, not weight)
+  let base: number
   const isCoastal = d.sea_temp_c !== null
   if (isCoastal) {
     const sea = seaTempScore(d.sea_temp_c!)
-    const scale = 1 - W_SEA // 0.92
-    return 100 * (
+    const scale = 1 - W_SEA
+    base =
       W_TEMP * scale * t +
       W_RAIN * scale * r +
       W_SUN * scale * s +
       W_CLOUD * scale * c +
       W_HUMIDITY * scale * h +
       W_WIND * scale * w +
-      W_MONSOON * scale * m +
       W_SEA * sea
-    )
+  } else {
+    base =
+      W_TEMP * t +
+      W_RAIN * r +
+      W_SUN * s +
+      W_CLOUD * c +
+      W_HUMIDITY * h +
+      W_WIND * w
   }
 
-  return 100 * (
-    W_TEMP * t +
-    W_RAIN * r +
-    W_SUN * s +
-    W_CLOUD * c +
-    W_HUMIDITY * h +
-    W_WIND * w +
-    W_MONSOON * m
-  )
+  // Multiplicative penalties use perceived temp — extreme conditions can't be compensated
+  const penalty =
+    monsoonPenalty(d.has_monsoon) *
+    heatComfortPenalty(feltTemp) *
+    coldComfortPenalty(feltTemp) *
+    heavyRainPenalty(d.rainfall_mm) *
+    humidHeatPenalty(feltTemp, d.humidity_pct)
+
+  return 100 * base * penalty
 }
 
 // ── Presets ──────────────────────────────────────────────────────────
