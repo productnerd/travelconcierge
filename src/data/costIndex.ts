@@ -32,6 +32,8 @@ export const COST_INDEX: Record<string, number> = {
   // Oceania
   AU: 4, FJ: 3, KI: 3, MH: 3, FM: 3, NR: 4, NZ: 4, PW: 4, PG: 3, WS: 3,
   SB: 3, TO: 3, TV: 3, VU: 3,
+  // Territory islands
+  PF: 5, AW: 4, TC: 5, CK: 4, FO: 5, RE: 4, CW: 3, GP: 3, MQ: 3, BM: 5, PR: 3,
 }
 
 export function costLabel(tier: number): string {

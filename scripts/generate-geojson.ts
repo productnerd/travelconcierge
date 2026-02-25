@@ -96,6 +96,18 @@ const CENTROIDS: Record<string, [number, number]> = {
   // Asian
   BH: [26.066, 50.558],     // Bahrain
   SG: [1.352, 103.820],     // Singapore
+  // New territory islands
+  PF: [-17.687, -149.406],  // French Polynesia
+  AW: [12.509, -69.969],    // Aruba
+  TC: [21.694, -71.798],    // Turks & Caicos
+  CK: [-21.237, -159.778],  // Cook Islands
+  FO: [61.892, -6.912],     // Faroe Islands
+  RE: [-21.115, 55.536],    // Réunion
+  CW: [12.170, -68.984],    // Curaçao
+  GP: [16.265, -61.551],    // Guadeloupe
+  MQ: [14.641, -61.024],    // Martinique
+  BM: [32.308, -64.751],    // Bermuda
+  PR: [18.221, -66.590],    // Puerto Rico
 }
 
 // Region-level centroid overrides for sub-national island regions
@@ -108,8 +120,9 @@ const REGION_OVERRIDES: Record<string, [number, number]> = {
   'pt-azores-pico-faial': [38.468, -28.530],
   'pt-azores-flores': [39.451, -31.187],
   'pt-madeira': [32.651, -16.908],
-  // Spain - Canary Islands (1100 km from mainland)
-  'es-islands': [28.291, -16.630],
+  // Spain - Canary Islands (1100 km from mainland) + Balearics (offshore)
+  'es-canary': [28.291, -16.630],
+  'es-balearic': [39.571, 2.654],
   // Ecuador - Galápagos (1000 km offshore)
   'ec-galapagos': [-0.953, -90.966],
   // Brazil - Fernando de Noronha (350 km offshore)
@@ -130,14 +143,25 @@ const REGION_OVERRIDES: Record<string, [number, number]> = {
   'id-raja-ampat': [-0.230, 130.524],
   // Malaysia - Langkawi (west of peninsular polygon edge)
   'my-langkawi': [6.350, 99.800],
-  // Greece - Dodecanese & Ionian (outside NE polygon edges)
+  // Greece - Dodecanese, Ionian, NE Aegean (outside NE polygon edges)
   'gr-dodecanese': [36.435, 27.125],
   'gr-ionian': [39.620, 19.920],
+  'gr-ne-aegean': [39.100, 26.300],
+  // Croatia - Dalmatian islands (offshore from mainland polygon)
+  'hr-islands': [43.172, 16.441],
+  // Italy - Aeolian Islands (north of Sicily, tiny volcanic chain)
+  'it-aeolian': [38.560, 14.960],
+  // Honduras - Roatán (offshore Caribbean)
+  'hn-roatan': [16.320, -86.530],
+  // France - Corsica (separate from mainland FR polygon)
+  'fr-corsica': [42.039, 9.013],
+  // Italy - Sardinia (separate circle, NE polygon is mainland-focused)
+  'it-sardinia': [40.121, 9.013],
 }
 
 // Extra island polygons missing from NE 110m that should mirror an existing region
 const EXTRA_ISLANDS: { geojson_id: string; country_code: string; name: string; lat: number; lon: number }[] = [
-  { geojson_id: 'fr-provence', country_code: 'FR', name: 'Corsica', lat: 42.039, lon: 9.013 },
+  // Corsica is now its own region (fr-corsica) with a REGION_OVERRIDE — no longer mirrors fr-provence
 ]
 
 function matchCountry(feature: GeoJSONFeature, countryCode: string): boolean {
