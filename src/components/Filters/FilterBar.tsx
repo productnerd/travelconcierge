@@ -18,6 +18,8 @@ export default function FilterBar() {
   const selectedLandscapes = useFilterStore((s) => s.selectedLandscapes)
   const showShortlistOnly = useFilterStore((s) => s.showShortlistOnly)
   const setShowShortlistOnly = useFilterStore((s) => s.setShowShortlistOnly)
+  const hideRisky = useFilterStore((s) => s.hideRisky)
+  const setHideRisky = useFilterStore((s) => s.setHideRisky)
   const rainfallMax = useFilterStore((s) => s.rainfallMax)
   const setFilter = useFilterStore((s) => s.setFilter)
   const shortlistedCount = useShortlistStore((s) => s.shortlistedSlugs.length)
@@ -70,6 +72,19 @@ export default function FilterBar() {
             <span className="text-xs font-mono">{rainfallMax ?? '∞'}mm</span>
           </div>
         </div>
+
+        {/* Hide risky toggle */}
+        <div className="w-px h-6 bg-off-black/20 shrink-0" />
+        <button
+          onClick={() => setHideRisky(!hideRisky)}
+          title="Hide regions with Risky or Avoid travel advisories"
+          className={`
+            px-2 py-1 text-[10px] font-display font-bold rounded-lg border-2 border-off-black transition-colors shrink-0
+            ${hideRisky ? 'bg-red text-white' : 'bg-cream text-off-black hover:bg-red-light'}
+          `}
+        >
+          Hide Risky
+        </button>
 
         {/* Shortlist toggle */}
         {shortlistedCount > 0 && (

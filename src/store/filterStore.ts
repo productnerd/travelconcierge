@@ -14,6 +14,7 @@ export interface FilterState {
   selectedActivities: string[]
   selectedLandscapes: string[]
   showShortlistOnly: boolean
+  hideRisky: boolean
   agentAppliedKeys: string[]
   colorMode: ColorMode
   algorithmPreset: AlgorithmPreset
@@ -31,6 +32,7 @@ interface FilterActions {
   toggleActivity: (activity: string) => void
   toggleLandscape: (landscape: string) => void
   setShowShortlistOnly: (show: boolean) => void
+  setHideRisky: (hide: boolean) => void
   setFilter: (key: string, value: unknown) => void
   clearFilter: (key: string) => void
   setFilters: (filters: Partial<FilterState>, fromAgent?: boolean) => void
@@ -51,6 +53,7 @@ const initialState: FilterState = {
   selectedActivities: [],
   selectedLandscapes: [],
   showShortlistOnly: false,
+  hideRisky: false,
   agentAppliedKeys: [],
   colorMode: 'overall' as ColorMode,
   algorithmPreset: 'balanced' as AlgorithmPreset,
@@ -97,6 +100,7 @@ export const useFilterStore = create<FilterState & FilterActions>((set) => ({
     })),
 
   setShowShortlistOnly: (show) => set({ showShortlistOnly: show }),
+  setHideRisky: (hide) => set({ hideRisky: hide }),
 
   setFilter: (key, value) => set({ [key]: value } as Partial<FilterState>),
 
@@ -110,6 +114,7 @@ export const useFilterStore = create<FilterState & FilterActions>((set) => ({
       selectedActivities: [],
       selectedLandscapes: [],
       showShortlistOnly: false,
+      hideRisky: false,
     }
     set((s) => ({
       ...s,

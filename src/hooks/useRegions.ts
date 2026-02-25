@@ -4,6 +4,7 @@ import { useFilterStore } from '@/store/filterStore'
 import { useShortlistStore } from '@/store/shortlistStore'
 import type { RegionWithMonths } from '@/types'
 import { goodWeatherScore, bestTimeScore, type ClimateInput } from '@/utils/scoring'
+import { SAFETY_TIER } from '@/data/costIndex'
 
 export interface FilteredRegion {
   id: string
@@ -148,6 +149,9 @@ export function useRegions() {
         const hasLandscape = filters.selectedLandscapes.some((l) => r.landscape_type.includes(l))
         if (!hasLandscape) return false
       }
+
+      // Safety filter — hide Risky (tier 3) and Avoid (tier 4)
+      if (filters.hideRisky && (SAFETY_TIER[r.country_code] ?? 1) > 2) return false
 
       // Shortlist-only filter
       if (filters.showShortlistOnly && !shortlistedSlugs.includes(r.slug)) return false
