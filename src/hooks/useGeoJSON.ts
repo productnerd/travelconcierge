@@ -5,7 +5,7 @@ export function useGeoJSON() {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    fetch('/regions.geojson')
+    fetch(`${import.meta.env.BASE_URL}regions.geojson`)
       .then((res) => {
         if (!res.ok) throw new Error('GeoJSON not found')
         return res.json()

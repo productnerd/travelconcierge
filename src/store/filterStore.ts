@@ -2,6 +2,7 @@ import { create } from 'zustand'
 import type { AlgorithmPreset } from '@/utils/scoring'
 
 export type ColorMode = 'busyness' | 'weather' | 'bestTime'
+export type SortBy = 'bestTime' | 'distance' | 'cost' | 'name'
 
 export interface FilterState {
   selectedMonths: number[]
@@ -16,6 +17,8 @@ export interface FilterState {
   agentAppliedKeys: string[]
   colorMode: ColorMode
   algorithmPreset: AlgorithmPreset
+  sortBy: SortBy
+  userLocation: [number, number] | null
 }
 
 interface FilterActions {
@@ -33,6 +36,8 @@ interface FilterActions {
   setFilters: (filters: Partial<FilterState>, fromAgent?: boolean) => void
   setColorMode: (mode: ColorMode) => void
   setAlgorithmPreset: (preset: AlgorithmPreset) => void
+  setSortBy: (sort: SortBy) => void
+  setUserLocation: (loc: [number, number] | null) => void
   resetAll: () => void
 }
 
@@ -49,6 +54,8 @@ const initialState: FilterState = {
   agentAppliedKeys: [],
   colorMode: 'busyness' as ColorMode,
   algorithmPreset: 'balanced' as AlgorithmPreset,
+  sortBy: 'bestTime' as SortBy,
+  userLocation: null,
 }
 
 export const useFilterStore = create<FilterState & FilterActions>((set) => ({
@@ -122,6 +129,8 @@ export const useFilterStore = create<FilterState & FilterActions>((set) => ({
 
   setColorMode: (mode) => set({ colorMode: mode }),
   setAlgorithmPreset: (preset) => set({ algorithmPreset: preset }),
+  setSortBy: (sort) => set({ sortBy: sort }),
+  setUserLocation: (loc) => set({ userLocation: loc }),
 
   resetAll: () => set(initialState),
 }))

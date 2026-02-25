@@ -4,6 +4,7 @@ import { useShortlistStore } from '@/store/shortlistStore'
 import { useFilterStore } from '@/store/filterStore'
 import { busynessColor, busynessLabel, countryFlag } from '@/types'
 import { scoreColor } from '@/utils/scoring'
+import { COST_INDEX, costLabel } from '@/data/costIndex'
 
 interface Props {
   region: FilteredRegion
@@ -75,6 +76,11 @@ export default function RegionCard({ region }: Props) {
         {region.avg_sunshine_hours !== null && (
           <span className="text-[10px] font-mono">{region.avg_sunshine_hours}h sun</span>
         )}
+
+        {/* Cost */}
+        <span className="text-[10px] font-mono text-off-black/50">
+          {costLabel(COST_INDEX[region.country_code] ?? 3)}
+        </span>
       </div>
     </div>
   )
