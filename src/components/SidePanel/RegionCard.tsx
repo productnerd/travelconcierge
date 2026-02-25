@@ -1,10 +1,9 @@
 import type { FilteredRegion } from '@/hooks/useRegions'
 import { useUIStore } from '@/store/uiStore'
 import { useShortlistStore } from '@/store/shortlistStore'
-import { useFilterStore } from '@/store/filterStore'
-import { busynessColor, busynessLabel, countryFlag } from '@/types'
+import { countryFlag } from '@/types'
 import { scoreColor } from '@/utils/scoring'
-import { COST_INDEX, costLabel, safetyLabel } from '@/data/costIndex'
+import { COST_INDEX, costLabel, safetyLabel, safetyMultiplier } from '@/data/costIndex'
 
 interface Props {
   region: FilteredRegion
@@ -15,7 +14,11 @@ export default function RegionCard({ region }: Props) {
   const selectedSlug = useUIStore((s) => s.selectedRegionSlug)
   const toggle = useShortlistStore((s) => s.toggle)
   const isShortlisted = useShortlistStore((s) => s.shortlistedSlugs.includes(region.slug))
-  const colorMode = useFilterStore((s) => s.colorMode)
+
+  const costTier = COST_INDEX[region.country_code] ?? 3
+  const overallScore = Math.round(
+    (region.bestTimeScore * 0.75 + (120 - costTier * 20) * 0.25) * safetyMultiplier(region.country_code)
+  )
 
   return (
     <div
@@ -50,22 +53,17 @@ export default function RegionCard({ region }: Props) {
 
       {/* Stats row */}
       <div className="flex items-center gap-2 mt-2">
-        {/* Primary pill: depends on color mode */}
-        {colorMode === 'busyness' ? (
-          <span
-            className="inline-flex items-center gap-1 px-1.5 py-0.5 text-[10px] font-display font-bold rounded border border-off-black text-white"
-            style={{ backgroundColor: busynessColor(region.avg_busyness) }}
-          >
-            {busynessLabel(region.avg_busyness)}
-          </span>
-        ) : (
-          <span
-            className="inline-flex items-center gap-1 px-1.5 py-0.5 text-[10px] font-display font-bold rounded border border-off-black text-white"
-            style={{ backgroundColor: scoreColor(colorMode === 'weather' ? region.weatherScore : region.bestTimeScore) }}
-          >
-            {colorMode === 'weather' ? `Weather ${region.weatherScore}` : `Best ${region.bestTimeScore}`}
-          </span>
-        )}
+        {/* Seasonal score pill — always shows overall score */}
+        <span
+          className="inline-flex items-center gap-1 px-1.5 py-0.5 text-[10px] font-display font-bold rounded border border-off-black text-white"
+          style={{ backgroundColor: scoreColor(overallScore) }}
+          title="Combines weather, crowds, cost, and safety"
+        >
+          Seasonal {overallScore}
+        </span>
+
+        {/* Busyness */}
+        <span className="text-[10px] font-mono text-off-black/70">{region.avg_busyness}/5</span>
 
         {/* Temp */}
         {region.avg_temp_c !== null && (

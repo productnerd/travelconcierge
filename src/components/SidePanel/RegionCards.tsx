@@ -21,12 +21,12 @@ function overallScore(region: FilteredRegion): number {
   return raw * safetyMultiplier(region.country_code)
 }
 
-const SORT_OPTIONS: { key: SortBy; label: string }[] = [
-  { key: 'overall', label: 'Overall' },
-  { key: 'bestTime', label: 'Best Time' },
-  { key: 'distance', label: 'Distance' },
-  { key: 'cost', label: 'Cost' },
-  { key: 'name', label: 'A–Z' },
+const SORT_OPTIONS: { key: SortBy; label: string; tip: string }[] = [
+  { key: 'overall', label: 'Overall', tip: 'Weather + crowds + cost + safety combined' },
+  { key: 'bestTime', label: 'Crowds & Weather', tip: 'Best combination of weather and low crowds' },
+  { key: 'distance', label: 'Distance', tip: 'Closest to your current location' },
+  { key: 'cost', label: 'Cost', tip: 'Daily travel budget, cheapest first' },
+  { key: 'name', label: 'A–Z', tip: 'Alphabetical by region name' },
 ]
 
 interface Props {
@@ -89,10 +89,11 @@ export default function RegionCards({ regions }: Props) {
       {/* Sort controls */}
       <div className="flex items-center gap-1 mb-3">
         <span className="text-[10px] font-display font-bold text-off-black/50 mr-1">Sort:</span>
-        {SORT_OPTIONS.map(({ key, label }) => (
+        {SORT_OPTIONS.map(({ key, label, tip }) => (
           <button
             key={key}
             onClick={() => handleSortClick(key)}
+            title={tip}
             className={`
               px-2 py-0.5 text-[10px] font-display font-bold rounded border-2 border-off-black transition-colors
               ${sortBy === key ? 'bg-off-black text-cream' : 'bg-cream text-off-black hover:bg-off-black/10'}

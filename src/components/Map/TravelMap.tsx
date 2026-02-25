@@ -258,7 +258,7 @@ export default function TravelMap({ regions, geojson }: Props) {
                   className="inline-block w-2 h-2 rounded-full"
                   style={{ backgroundColor: busynessColor(hovered.busyness) }}
                 />
-                <span>{busynessLabel(hovered.busyness)}</span>
+                <span>{hovered.busyness}/5 · {busynessLabel(hovered.busyness)}</span>
               </>
             ) : (() => {
               const val = colorMode === 'weather' ? hovered.weatherScore
@@ -285,14 +285,15 @@ export default function TravelMap({ regions, geojson }: Props) {
         {/* Color mode toggle */}
         <div className="flex items-center gap-1 mb-2 flex-wrap">
           {([
-            { mode: 'overall' as ColorMode, label: 'Overall' },
-            { mode: 'busyness' as ColorMode, label: 'Crowds' },
-            { mode: 'weather' as ColorMode, label: 'Weather' },
-            { mode: 'bestTime' as ColorMode, label: 'Best Time' },
-          ]).map(({ mode, label }) => (
+            { mode: 'overall' as ColorMode, label: 'Overall', tip: 'Combines weather, crowds, cost, and safety' },
+            { mode: 'bestTime' as ColorMode, label: 'Crowds & Weather', tip: 'Best combination of good weather and low crowds' },
+            { mode: 'busyness' as ColorMode, label: 'Crowds', tip: 'Tourist crowd levels 1 (very quiet) to 5 (peak season)' },
+            { mode: 'weather' as ColorMode, label: 'Weather', tip: 'Temperature, rainfall, sunshine, humidity, wind, cloud cover' },
+          ]).map(({ mode, label, tip }) => (
             <button
               key={mode}
               onClick={() => setColorMode(mode)}
+              title={tip}
               className={`
                 px-2 py-1 text-[10px] font-display font-bold rounded-lg border-2 border-off-black transition-colors
                 ${colorMode === mode ? 'bg-off-black text-cream' : 'bg-cream text-off-black hover:bg-off-black/10'}
