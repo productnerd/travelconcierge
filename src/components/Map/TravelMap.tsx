@@ -7,6 +7,7 @@ import { useFilterStore } from '@/store/filterStore'
 import type { FilteredRegion } from '@/hooks/useRegions'
 import { busynessColor, busynessLabel } from '@/types'
 import { scoreColor, scoreLabel, PRESET_LABELS, type AlgorithmPreset } from '@/utils/scoring'
+import { COST_INDEX, safetyMultiplier } from '@/data/costIndex'
 import type { ColorMode } from '@/store/filterStore'
 import 'mapbox-gl/dist/mapbox-gl.css'
 
@@ -23,7 +24,7 @@ export default function TravelMap({ regions, geojson }: Props) {
   const [hovered, setHovered] = useState<{
     slug: string; lat: number; lon: number; name: string;
     busyness: number; temp: number | null;
-    weatherScore: number; bestTimeScore: number;
+    weatherScore: number; bestTimeScore: number; overallScore: number;
   } | null>(null)
   const selectRegion = useUIStore((s) => s.selectRegion)
   const selectedSlug = useUIStore((s) => s.selectedRegionSlug)
@@ -66,6 +67,9 @@ export default function TravelMap({ regions, geojson }: Props) {
             busyness: region?.avg_busyness ?? 0,
             weatherScore: region?.weatherScore ?? 0,
             bestTimeScore: region?.bestTimeScore ?? 0,
+            overallScore: region
+              ? (region.bestTimeScore * 0.75 + (120 - (COST_INDEX[region.country_code] ?? 3) * 20) * 0.25) * safetyMultiplier(region.country_code)
+              : 0,
             isFiltered: isFiltered ? 1 : 0,
             isEliminated: isEliminated ? 1 : 0,
             isHighlighted: isHighlighted ? 1 : 0,
@@ -108,6 +112,7 @@ export default function TravelMap({ regions, geojson }: Props) {
           temp: region.avg_temp_c,
           weatherScore: region.weatherScore,
           bestTimeScore: region.bestTimeScore,
+          overallScore: (region.bestTimeScore * 0.75 + (120 - (COST_INDEX[region.country_code] ?? 3) * 20) * 0.25) * safetyMultiplier(region.country_code),
         })
       }
     },
@@ -168,7 +173,7 @@ export default function TravelMap({ regions, geojson }: Props) {
                     ]
                   : [
                       'interpolate', ['linear'],
-                      ['get', colorMode === 'weather' ? 'weatherScore' : 'bestTimeScore'],
+                      ['get', colorMode === 'weather' ? 'weatherScore' : colorMode === 'bestTime' ? 'bestTimeScore' : 'overallScore'],
                       0, '#8B1A10', 20, '#D93B2B', 40, '#F5C842', 60, '#6BAF78', 80, '#3B7A4A',
                     ],
               ],
@@ -255,20 +260,21 @@ export default function TravelMap({ regions, geojson }: Props) {
                 />
                 <span>{busynessLabel(hovered.busyness)}</span>
               </>
-            ) : (
-              <>
-                <span
-                  className="inline-block w-2 h-2 rounded-full"
-                  style={{ backgroundColor: scoreColor(colorMode === 'weather' ? hovered.weatherScore : hovered.bestTimeScore) }}
-                />
-                <span>
-                  {colorMode === 'weather' ? hovered.weatherScore : hovered.bestTimeScore}/100
-                </span>
-                <span className="text-off-black/60">
-                  {scoreLabel(colorMode === 'weather' ? hovered.weatherScore : hovered.bestTimeScore)}
-                </span>
-              </>
-            )}
+            ) : (() => {
+              const val = colorMode === 'weather' ? hovered.weatherScore
+                : colorMode === 'bestTime' ? hovered.bestTimeScore
+                : Math.round(hovered.overallScore)
+              return (
+                <>
+                  <span
+                    className="inline-block w-2 h-2 rounded-full"
+                    style={{ backgroundColor: scoreColor(val) }}
+                  />
+                  <span>{val}/100</span>
+                  <span className="text-off-black/60">{scoreLabel(val)}</span>
+                </>
+              )
+            })()}
             {hovered.temp !== null && <span>· {Math.round(hovered.temp)}°C</span>}
           </div>
         </Popup>
@@ -277,8 +283,9 @@ export default function TravelMap({ regions, geojson }: Props) {
       {/* Legend + Color mode toggle */}
       <div className="absolute bottom-4 left-4 bg-cream border-2 border-off-black rounded-xl p-3 text-xs font-display">
         {/* Color mode toggle */}
-        <div className="flex items-center gap-1 mb-2">
+        <div className="flex items-center gap-1 mb-2 flex-wrap">
           {([
+            { mode: 'overall' as ColorMode, label: 'Overall' },
             { mode: 'busyness' as ColorMode, label: 'Crowds' },
             { mode: 'weather' as ColorMode, label: 'Weather' },
             { mode: 'bestTime' as ColorMode, label: 'Best Time' },
