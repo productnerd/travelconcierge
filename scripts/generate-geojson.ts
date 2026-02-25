@@ -58,23 +58,6 @@ function createCirclePolygon(lat: number, lon: number, radiusDeg = 0.5): number[
   return [points]
 }
 
-// Compute a good circle radius for multi-region countries based on centroid spread
-function computeRegionRadius(regions: Region[]): number {
-  if (regions.length <= 1) return 0.5
-  let maxDist = 0
-  for (let i = 0; i < regions.length; i++) {
-    for (let j = i + 1; j < regions.length; j++) {
-      const dlat = regions[i].centroid_lat - regions[j].centroid_lat
-      const dlon = regions[i].centroid_lon - regions[j].centroid_lon
-      const dist = Math.sqrt(dlat * dlat + dlon * dlon)
-      if (dist > maxDist) maxDist = dist
-    }
-  }
-  // Target: circles that fill ~60% of the average spacing between regions
-  const avgSpacing = maxDist / Math.sqrt(regions.length)
-  return Math.max(0.8, Math.min(3.5, avgSpacing * 0.55))
-}
-
 // Centroid lookup for countries missing from Natural Earth 110m
 // Format: [lat, lon]
 const CENTROIDS: Record<string, [number, number]> = {
@@ -175,6 +158,13 @@ const REGION_OVERRIDES: Record<string, [number, number]> = {
   'nz-fiordland': [-45.414, 167.718],
   'nz-queenstown': [-44.501, 168.749],
 }
+
+// Extra island polygons missing from NE 110m that should mirror an existing region
+// These create additional circle features pointing to the same region geojson_id
+const EXTRA_ISLANDS: { geojson_id: string; country_code: string; name: string; lat: number; lon: number }[] = [
+  { geojson_id: 'fr-provence', country_code: 'FR', name: 'Corsica', lat: 42.039, lon: 9.013 },
+  { geojson_id: 'it-sicily', country_code: 'IT', name: 'Sardinia', lat: 40.121, lon: 9.013 },
+]
 
 function matchCountry(feature: GeoJSONFeature, countryCode: string): boolean {
   const props = feature.properties
@@ -303,6 +293,25 @@ async function main() {
       matched++
       console.log(`  + ${region.geojson_id} -> ${neName} (${countryCode})`)
     }
+  }
+
+  // Add extra island features (islands missing from NE 110m that mirror an existing region)
+  for (const island of EXTRA_ISLANDS) {
+    outputFeatures.push({
+      type: 'Feature',
+      properties: {
+        NAME: island.name,
+        geojson_id: island.geojson_id,
+        region_slug: island.geojson_id,
+        country_code: island.country_code,
+      },
+      geometry: {
+        type: 'Polygon',
+        coordinates: createCirclePolygon(island.lat, island.lon),
+      },
+    })
+    fallback++
+    console.log(`  + ${island.name} -> ${island.geojson_id} (extra island circle)`)
   }
 
   console.log(`\nMatched: ${matched}, Fallback: ${fallback}, Total features: ${outputFeatures.length}\n`)
