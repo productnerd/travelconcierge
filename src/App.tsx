@@ -1,3 +1,4 @@
+import { useEffect, useRef } from 'react'
 import FilterBar from '@/components/Filters/FilterBar'
 import TravelMap from '@/components/Map/TravelMap'
 import SidePanel from '@/components/SidePanel/SidePanel'
@@ -8,6 +9,7 @@ import { useGeoJSON } from '@/hooks/useGeoJSON'
 import { useAgent } from '@/hooks/useAgent'
 import { useShareableLink } from '@/hooks/useShareableLink'
 import { useUIStore } from '@/store/uiStore'
+import { useFilterStore } from '@/store/filterStore'
 
 function App() {
   const { regions, loading: regionsLoading } = useRegions()
@@ -15,6 +17,17 @@ function App() {
   const { messages, loading: agentLoading, sendMessage, answerDecisionQuestion } = useAgent()
   const toggleSidePanel = useUIStore((s) => s.toggleSidePanel)
   const sidePanelOpen = useUIStore((s) => s.sidePanelOpen)
+  const selectRegion = useUIStore((s) => s.selectRegion)
+
+  // Deselect region when filters or color mode change
+  const filterKey = useFilterStore((s) =>
+    `${s.selectedMonths}-${s.busynessMax}-${s.hideRisky}-${s.colorMode}-${s.algorithmPreset}-${s.tempMin}-${s.tempMax}-${s.sunshineMin}-${s.rainfallMax}-${s.selectedActivities.length}-${s.selectedLandscapes.length}`
+  )
+  const isMount = useRef(true)
+  useEffect(() => {
+    if (isMount.current) { isMount.current = false; return }
+    selectRegion(null)
+  }, [filterKey, selectRegion])
 
   // Hydrate from URL params on mount
   useShareableLink()
