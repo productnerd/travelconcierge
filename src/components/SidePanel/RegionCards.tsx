@@ -23,7 +23,7 @@ function overallScore(region: FilteredRegion): number {
 
 const SORT_OPTIONS: { key: SortBy; label: string; tip: string }[] = [
   { key: 'overall', label: 'Overall', tip: 'Weather + crowds + cost + safety combined' },
-  { key: 'bestTime', label: 'Crowds & Weather', tip: 'Best combination of weather and low crowds' },
+  { key: 'bestTime', label: 'Best Time', tip: 'Best combination of weather and low crowds' },
   { key: 'distance', label: 'Distance', tip: 'Closest to your current location' },
   { key: 'cost', label: 'Cost', tip: 'Daily travel budget, cheapest first' },
   { key: 'name', label: 'A–Z', tip: 'Alphabetical by region name' },

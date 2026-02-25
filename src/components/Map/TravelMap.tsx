@@ -288,7 +288,7 @@ export default function TravelMap({ regions, geojson }: Props) {
         <div className="flex items-center gap-1.5 mb-3 flex-wrap">
           {([
             { mode: 'overall' as ColorMode, label: 'Overall', tip: 'Combines weather, crowds, cost, and safety' },
-            { mode: 'bestTime' as ColorMode, label: 'Crowds & Weather', tip: 'Best combination of good weather and low crowds' },
+            { mode: 'bestTime' as ColorMode, label: 'Best Time', tip: 'Best combination of good weather and low crowds' },
             { mode: 'busyness' as ColorMode, label: 'Crowds', tip: 'Tourist crowd levels 1 (very quiet) to 5 (peak season)' },
             { mode: 'weather' as ColorMode, label: 'Weather', tip: 'Temperature, rainfall, sunshine, humidity, wind, cloud cover' },
           ]).map(({ mode, label, tip }) => (
