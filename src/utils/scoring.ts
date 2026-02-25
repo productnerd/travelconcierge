@@ -75,7 +75,7 @@ export interface ClimateInput {
   wind_speed_kmh: number | null
   has_monsoon: boolean
   sea_temp_c: number | null
-  busyness: number // 1–5
+  busyness: number // 1–10
 }
 
 /**
@@ -138,8 +138,8 @@ const PRESET_ALPHA: Record<AlgorithmPreset, number> = {
 export function bestTimeScore(d: ClimateInput, preset: AlgorithmPreset = 'balanced'): number {
   const alpha = PRESET_ALPHA[preset]
   const W = goodWeatherScore(d) / 100
-  // busyness 1→Q=1.0, busyness 5→Q=0.2 (linear, gentler floor than before)
-  const Q = Math.max(1 - (d.busyness - 1) * 0.2, 0.2)
+  // busyness 1→Q=1.0, busyness 10→Q=0.1 (linear, gentler floor than before)
+  const Q = Math.max(1 - (d.busyness - 1) * 0.1, 0.1)
   return 100 * Math.pow(W, alpha) * Math.pow(Q, 1 - alpha)
 }
 

@@ -81,7 +81,7 @@ export function useRegions() {
 
       if (selectedMonthData.length === 0) return null
 
-      const avgBusyness = avg(selectedMonthData.map((m) => m.busyness)) ?? 3
+      const avgBusyness = avg(selectedMonthData.map((m) => m.busyness)) ?? 5
       const avgTemp = avg(selectedMonthData.map((m) => m.temp_avg_c))
       const avgTempMin = avg(selectedMonthData.map((m) => m.temp_min_c))
       const avgTempMax = avg(selectedMonthData.map((m) => m.temp_max_c))

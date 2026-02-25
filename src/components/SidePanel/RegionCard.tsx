@@ -63,7 +63,7 @@ export default function RegionCard({ region }: Props) {
         </span>
 
         {/* Busyness */}
-        <span className="text-[10px] font-mono text-off-black/70">{region.avg_busyness}/5</span>
+        <span className="text-[10px] font-mono text-off-black/70">{region.avg_busyness}/10</span>
 
         {/* Temp */}
         {region.avg_temp_c !== null && (

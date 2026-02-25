@@ -45,7 +45,7 @@ interface FilterActions {
 
 const initialState: FilterState = {
   selectedMonths: [new Date().getMonth() + 1],
-  busynessMax: 5,
+  busynessMax: 10,
   tempMin: null,
   tempMax: null,
   sunshineMin: null,
@@ -106,7 +106,7 @@ export const useFilterStore = create<FilterState & FilterActions>((set) => ({
 
   clearFilter: (key) => {
     const defaults: Record<string, unknown> = {
-      busynessMax: 5,
+      busynessMax: 10,
       tempMin: null,
       tempMax: null,
       sunshineMin: null,

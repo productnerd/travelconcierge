@@ -1,9 +1,10 @@
 import { useFilterStore } from '@/store/filterStore'
 
 const OPTIONS = [
-  { label: 'Any', value: 5 },
-  { label: 'Quiet', value: 2 },
-  { label: 'Moderate', value: 3 },
+  { label: 'Any', value: 10 },
+  { label: 'Quiet', value: 4 },
+  { label: 'Moderate', value: 6 },
+  { label: 'Busy', value: 8 },
 ]
 
 export default function BusynessFilter() {
