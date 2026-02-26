@@ -5,6 +5,7 @@ import { useFilterStore } from '@/store/filterStore'
 import { countryFlag } from '@/types'
 import { scoreColor } from '@/utils/scoring'
 import { COST_INDEX, costLabel, safetyLabel, overallScore as computeOverall } from '@/data/costIndex'
+import { cuisineScore } from '@/data/cuisineScore'
 
 interface Props {
   region: FilteredRegion
@@ -75,6 +76,13 @@ export default function RegionCard({ region }: Props) {
         {/* Sunshine */}
         {region.avg_sunshine_hours !== null && (
           <span className="text-[10px] font-mono">{region.avg_sunshine_hours}h sun</span>
+        )}
+
+        {/* Cuisine score — when food selected */}
+        {selectedActivities.includes('food') && (
+          <span className="text-[10px] font-mono" title="TasteAtlas 2025 cuisine rating">
+            🍽️ {(cuisineScore(region.country_code) / 10).toFixed(1)}
+          </span>
         )}
 
         {/* Cost */}
