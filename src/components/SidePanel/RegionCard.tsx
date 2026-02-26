@@ -18,7 +18,6 @@ export default function RegionCard({ region }: Props) {
   const isShortlisted = useShortlistStore((s) => s.shortlistedSlugs.includes(region.slug))
   const selectedActivities = useFilterStore((s) => s.selectedActivities)
 
-  const costTier = COST_INDEX[region.country_code] ?? 3
   const overall = Math.round(computeOverall(region.bestTimeScore, region.country_code, selectedActivities))
 
   return (

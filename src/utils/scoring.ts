@@ -89,10 +89,6 @@ export function estimateSnowCm(tempMinC: number | null, rainfallMm: number | nul
 
 // ── Multiplicative penalty functions (0–1, where 1 = no penalty) ────
 
-/** Monsoon: hard cap at ×0.30 — monsoon season = Bad weather. */
-function monsoonPenalty(hasMonsoon: boolean): number {
-  return hasMonsoon ? 0.30 : 1
-}
 
 /**
  * Heat comfort penalty: perceived temp above 29 °C starts dragging score down.
