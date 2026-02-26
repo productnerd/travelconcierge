@@ -282,7 +282,7 @@ export default function RegionDetail({ region }: Props) {
           {selectedActivities.includes('skiing') && <>
             <div className="col-span-12 text-[8px] text-off-black/40 mt-1 cursor-help" title="Estimated snow depth based on temperature and precipitation">❄️ Snow</div>
             {sortedMonths.map((m) => {
-              const snowCm = estimateSnowCm(m.temp_max_c, m.rainfall_mm)
+              const snowCm = estimateSnowCm(m.temp_min_c, m.rainfall_mm)
               return (
                 <div
                   key={`snow-${m.month}`}
