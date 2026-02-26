@@ -117,6 +117,8 @@ const REGION_OVERRIDES: Record<string, [number, number]> = {
 const ADMIN1_FORCE: Record<string, string> = {
   'ZA:Western Cape': 'za-cape-town',
   'ZA:Northern Cape': 'za-cape-town',
+  'ES:Huesca': 'es-pyrenees',
+  'ES:Lleida': 'es-pyrenees',
 }
 
 // Get iso_a2 from an admin_1 feature (handles both upper/lowercase property names)
