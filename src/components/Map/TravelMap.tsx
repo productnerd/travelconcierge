@@ -7,7 +7,7 @@ import { useFilterStore } from '@/store/filterStore'
 import type { FilteredRegion } from '@/hooks/useRegions'
 import { busynessColor, busynessLabel } from '@/types'
 import { scoreColor, scoreLabel } from '@/utils/scoring'
-import { COST_INDEX, safetyMultiplier } from '@/data/costIndex'
+import { overallScore } from '@/data/costIndex'
 import type { ColorMode } from '@/store/filterStore'
 import 'mapbox-gl/dist/mapbox-gl.css'
 
@@ -33,6 +33,7 @@ export default function TravelMap({ regions, geojson }: Props) {
   const shortlistedSlugs = useShortlistStore((s) => s.shortlistedSlugs)
   const colorMode = useFilterStore((s) => s.colorMode)
   const setColorMode = useFilterStore((s) => s.setColorMode)
+  const selectedActivities = useFilterStore((s) => s.selectedActivities)
 
   // Build a lookup: geojson_id → region data
   const regionByGeojsonId = useMemo(() => {
@@ -66,7 +67,7 @@ export default function TravelMap({ regions, geojson }: Props) {
             weatherScore: region?.weatherScore ?? 0,
             bestTimeScore: region?.bestTimeScore ?? 0,
             overallScore: region
-              ? (region.bestTimeScore * 0.75 + (120 - (COST_INDEX[region.country_code] ?? 3) * 20) * 0.25) * safetyMultiplier(region.country_code)
+              ? overallScore(region.bestTimeScore, region.country_code, selectedActivities)
               : 0,
             isFiltered: isFiltered ? 1 : 0,
             isEliminated: isEliminated ? 1 : 0,
@@ -76,7 +77,7 @@ export default function TravelMap({ regions, geojson }: Props) {
         }
       }),
     } as GeoJSON.FeatureCollection
-  }, [geojson, regionByGeojsonId, eliminatedSlugs, highlightedSlugs, selectedSlug])
+  }, [geojson, regionByGeojsonId, eliminatedSlugs, highlightedSlugs, selectedSlug, selectedActivities])
 
   const handleClick = useCallback(
     (e: MapMouseEvent) => {
@@ -110,7 +111,7 @@ export default function TravelMap({ regions, geojson }: Props) {
           temp: region.avg_temp_c,
           weatherScore: region.weatherScore,
           bestTimeScore: region.bestTimeScore,
-          overallScore: (region.bestTimeScore * 0.75 + (120 - (COST_INDEX[region.country_code] ?? 3) * 20) * 0.25) * safetyMultiplier(region.country_code),
+          overallScore: overallScore(region.bestTimeScore, region.country_code, selectedActivities),
         })
       }
     },

@@ -145,3 +145,23 @@ export function safetyLabel(countryCode: string): string | null {
   if (tier === 3) return 'Risky'
   return 'Avoid'
 }
+
+// ── Overall score ─────────────────────────────────────────────────────
+import { cuisineScore } from './cuisineScore'
+
+/**
+ * Overall score: bestTime (75%) + cost (25%), × safety, × cuisine boost when food selected.
+ * When food activity is selected, cuisine quality blends into the score:
+ *   raw = bestTime * 0.55 + cost * 0.20 + cuisineScore * 0.25
+ * Otherwise:
+ *   raw = bestTime * 0.75 + cost * 0.25
+ */
+export function overallScore(bestTimeScore: number, countryCode: string, activities: string[] = []): number {
+  const costTier = COST_INDEX[countryCode] ?? 3
+  const costValue = 120 - costTier * 20 // 1→100, 2→80, 3→60, 4→40, 5→20
+  const hasFood = activities.includes('food')
+  const raw = hasFood
+    ? bestTimeScore * 0.55 + costValue * 0.20 + cuisineScore(countryCode) * 0.25
+    : bestTimeScore * 0.75 + costValue * 0.25
+  return raw * safetyMultiplier(countryCode)
+}

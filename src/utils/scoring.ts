@@ -71,6 +71,13 @@ function surfWindScore(kmh: number): number {
   return Math.exp(-Math.pow(kmh - 22, 2) / (2 * 64))
 }
 
+/** Hiking temperature: Gaussian centred at 17 °C (ideal: 10–24 °C), σ = 7. */
+function hikingTempScore(avgC: number): number {
+  if (avgC >= 10 && avgC <= 24) return 1
+  const dist = avgC < 10 ? 10 - avgC : avgC - 24
+  return Math.exp(-(dist * dist) / (2 * 49))
+}
+
 /** Estimated snow depth (cm) from temp + rainfall. Rough 10:1 snow ratio. */
 export function estimateSnowCm(tempMaxC: number | null, rainfallMm: number | null): number {
   if (tempMaxC === null || rainfallMm === null || rainfallMm <= 0) return 0
@@ -135,6 +142,14 @@ function highWindPenalty(kmh: number | null): number {
   return 1 - 0.70 * ((kmh - 30) / 30)
 }
 
+/** No-snow penalty for skiing: warm months with no snow chance → near-zero score. */
+function noSnowPenalty(tempMaxC: number | null, rainfallMm: number | null): number {
+  const snow = snowLikelihoodScore(tempMaxC, rainfallMm)
+  if (snow >= 0.4) return 1       // decent snow conditions
+  if (snow >= 0.3) return 0.50    // marginal
+  return 0.10                     // no snow → hard penalty (like monsoon)
+}
+
 // ── Weights ──────────────────────────────────────────────────────────
 
 const W_TEMP = 0.30
@@ -187,7 +202,9 @@ export function goodWeatherScore(d: ClimateInput, activities: string[] = []): nu
   const hasSkiing = activities.includes('skiing')
   const hasBeach = activities.includes('beach')
   const hasSurfing = activities.includes('surfing')
-  const hasDiving = activities.includes('diving') || activities.includes('snorkeling') || activities.includes('freediving')
+  const hasFreediving = activities.includes('freediving')
+  const hasDiving = activities.includes('diving') || hasFreediving
+  const hasHiking = activities.includes('hiking')
 
   // Use daytime-weighted temp, then apply humidity heat amplification
   const rawTemp = daytimeTemp(d)
@@ -201,13 +218,18 @@ export function goodWeatherScore(d: ClimateInput, activities: string[] = []): nu
   const w = d.wind_speed_kmh !== null ? windScore(d.wind_speed_kmh) : 0.5
 
   // Activity-aware sub-score overrides
-  const effectiveTemp = hasSkiing && feltTemp !== null ? skiTempScore(feltTemp) : t
+  const effectiveTemp = hasSkiing && feltTemp !== null
+    ? skiTempScore(feltTemp)
+    : hasHiking && feltTemp !== null
+      ? hikingTempScore(feltTemp)
+      : t
   const effectiveWind = hasSurfing && d.wind_speed_kmh !== null ? surfWindScore(d.wind_speed_kmh) : w
 
   // Determine sea temp weight based on activity
   const isCoastal = d.sea_temp_c !== null
   let seaWeight = W_SEA
   if (hasBeach && isCoastal) seaWeight = 0.25
+  else if (hasFreediving && isCoastal) seaWeight = 0.20
   else if (hasDiving && isCoastal) seaWeight = 0.15
   const effectiveSeaWeight = isCoastal ? seaWeight : 0
 
@@ -227,6 +249,15 @@ export function goodWeatherScore(d: ClimateInput, activities: string[] = []): nu
       rem * 0.10 * c +
       rem * 0.20 * h +
       rem * 0.20 * effectiveWind
+  } else if (hasHiking) {
+    // Hiking: cooler temps preferred, rain matters more, sunshine matters more
+    base =
+      0.25 * effectiveTemp +  // hiking temp curve centered at 17°C
+      0.30 * r +              // rain boosted (trails become miserable)
+      0.20 * s +              // sunshine boosted (daylight for trails)
+      0.05 * c +
+      0.10 * h +
+      0.10 * effectiveWind
   } else if (effectiveSeaWeight > 0) {
     const sea = seaTempScore(d.sea_temp_c!)
     const scale = 1 - effectiveSeaWeight
@@ -251,14 +282,24 @@ export function goodWeatherScore(d: ClimateInput, activities: string[] = []): nu
   // Multiplicative penalties — extreme conditions can't be compensated
   // Skiing: skip heat/cold penalties (cold is good for skiing)
   // Surfing: shift wind penalty threshold up by 15 km/h
-  const windForPenalty = hasSurfing ? Math.max(0, (d.wind_speed_kmh ?? 0) - 15) : d.wind_speed_kmh
+  // Diving/freediving: monsoon destroys visibility → harsher penalty (×0.15)
+  // Freediving: calmer water needed → wind threshold lower (25 km/h instead of 30)
+  const windForPenalty = hasSurfing
+    ? Math.max(0, (d.wind_speed_kmh ?? 0) - 15)
+    : hasFreediving
+      ? Math.max(0, (d.wind_speed_kmh ?? 0) + 5) // stricter: penalize from 25 km/h
+      : d.wind_speed_kmh
+  const monsoon = d.has_monsoon
+    ? (hasDiving ? 0.15 : 0.30)  // diving/freediving: visibility destroyed
+    : 1
   const penalty =
-    monsoonPenalty(d.has_monsoon) *
+    monsoon *
     (hasSkiing ? 1 : heatComfortPenalty(feltTemp)) *
     (hasSkiing ? 1 : coldComfortPenalty(feltTemp)) *
     heavyRainPenalty(d.rainfall_mm) *
     (hasSkiing ? 1 : humidHeatPenalty(feltTemp, d.humidity_pct)) *
-    highWindPenalty(windForPenalty)
+    highWindPenalty(windForPenalty) *
+    (hasSkiing ? noSnowPenalty(d.temp_max_c, d.rainfall_mm) : 1)
 
   return 100 * base * penalty
 }

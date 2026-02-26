@@ -6,6 +6,7 @@ import { busynessColor, busynessLabel, countryFlag } from '@/types'
 import { useFilterStore } from '@/store/filterStore'
 import { scoreColor, goodWeatherScore, bestTimeScore, estimateSnowCm, type ClimateInput } from '@/utils/scoring'
 import { COST_INDEX, costLabel } from '@/data/costIndex'
+import { cuisineScore } from '@/data/cuisineScore'
 
 const MONTH_LABELS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
 const BUDGET_LABELS: Record<number, string> = { 1: '$15–25/day', 2: '$25–50/day', 3: '$50–100/day', 4: '$100–200/day', 5: '$200+/day' }
@@ -113,6 +114,32 @@ export default function RegionDetail({ region }: Props) {
       {/* Description */}
       {region.description && (
         <p className="text-sm text-off-black/80 mt-3 leading-relaxed">{region.description}</p>
+      )}
+
+      {/* Cuisine tags + score — when food activity selected */}
+      {selectedActivities.includes('food') && (
+        <div className="mt-3">
+          <div className="flex items-center gap-2 mb-1">
+            <span className="text-[10px] font-display text-off-black/60">🍽️ Cuisine</span>
+            <span
+              className="text-[10px] font-mono font-bold px-1.5 py-0.5 rounded text-white"
+              style={{ backgroundColor: scoreColor(cuisineScore(region.country_code)) }}
+              title={`TasteAtlas 2025 cuisine rating: ${(cuisineScore(region.country_code) / 10).toFixed(1)}/10`}
+            >
+              {(cuisineScore(region.country_code) / 10).toFixed(1)}/10
+            </span>
+            <span className="text-[8px] text-off-black/30 italic">TasteAtlas 2025</span>
+          </div>
+          {region.cuisine_tags && region.cuisine_tags.length > 0 && (
+            <div className="flex flex-wrap gap-1">
+              {region.cuisine_tags.map((tag) => (
+                <span key={tag} className="px-2 py-0.5 text-[10px] font-display bg-cream border border-off-black/20 rounded-full">
+                  {tag}
+                </span>
+              ))}
+            </div>
+          )}
+        </div>
       )}
 
       {/* Climate stats */}
@@ -271,7 +298,7 @@ export default function RegionDetail({ region }: Props) {
           </>}
 
           {/* Sea temp row — when beach/diving activities selected + coastal */}
-          {(selectedActivities.includes('beach') || selectedActivities.includes('diving') || selectedActivities.includes('snorkeling') || selectedActivities.includes('freediving')) && region.is_coastal && <>
+          {(selectedActivities.includes('beach') || selectedActivities.includes('diving') || selectedActivities.includes('freediving')) && region.is_coastal && <>
             <div className="col-span-12 text-[8px] text-off-black/40 mt-1 cursor-help" title="Sea surface temperature">🌊 Sea</div>
             {sortedMonths.map((m) => (
               <div

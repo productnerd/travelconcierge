@@ -1,9 +1,10 @@
 import type { FilteredRegion } from '@/hooks/useRegions'
 import { useUIStore } from '@/store/uiStore'
 import { useShortlistStore } from '@/store/shortlistStore'
+import { useFilterStore } from '@/store/filterStore'
 import { countryFlag } from '@/types'
 import { scoreColor } from '@/utils/scoring'
-import { COST_INDEX, costLabel, safetyLabel, safetyMultiplier } from '@/data/costIndex'
+import { COST_INDEX, costLabel, safetyLabel, overallScore as computeOverall } from '@/data/costIndex'
 
 interface Props {
   region: FilteredRegion
@@ -14,11 +15,10 @@ export default function RegionCard({ region }: Props) {
   const selectedSlug = useUIStore((s) => s.selectedRegionSlug)
   const toggle = useShortlistStore((s) => s.toggle)
   const isShortlisted = useShortlistStore((s) => s.shortlistedSlugs.includes(region.slug))
+  const selectedActivities = useFilterStore((s) => s.selectedActivities)
 
   const costTier = COST_INDEX[region.country_code] ?? 3
-  const overallScore = Math.round(
-    (region.bestTimeScore * 0.75 + (120 - costTier * 20) * 0.25) * safetyMultiplier(region.country_code)
-  )
+  const overall = Math.round(computeOverall(region.bestTimeScore, region.country_code, selectedActivities))
 
   return (
     <div
@@ -56,10 +56,10 @@ export default function RegionCard({ region }: Props) {
         {/* Seasonal score pill — always shows overall score */}
         <span
           className="inline-flex items-center gap-1 px-1.5 py-0.5 text-[10px] font-display font-bold rounded border border-off-black text-white"
-          style={{ backgroundColor: scoreColor(overallScore) }}
+          style={{ backgroundColor: scoreColor(overall) }}
           title="Combines weather, crowds, cost, and safety"
         >
-          Seasonal {overallScore}
+          Seasonal {overall}
         </span>
 
         {/* Busyness */}

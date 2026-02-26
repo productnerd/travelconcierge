@@ -41,8 +41,9 @@ function App() {
     skiing: '⛷️ Snow conditions taken into account',
     surfing: '🏄 Wind conditions optimized for surfing',
     diving: '🤿 Sea conditions taken into account',
-    snorkeling: '🤿 Sea conditions taken into account',
-    freediving: '🤿 Sea conditions taken into account',
+    freediving: '🤿 Calm water & sea conditions prioritized',
+    hiking: '🥾 Cooler temperatures preferred for hiking',
+    food: '🍽️ Cuisine highlights shown',
   }
 
   useEffect(() => {
