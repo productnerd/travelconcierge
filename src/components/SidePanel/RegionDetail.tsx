@@ -4,7 +4,7 @@ import { useShortlistStore } from '@/store/shortlistStore'
 import type { FilteredRegion } from '@/hooks/useRegions'
 import { busynessColor, busynessLabel, countryFlag } from '@/types'
 import { useFilterStore } from '@/store/filterStore'
-import { scoreColor, goodWeatherScore, bestTimeScore, type ClimateInput } from '@/utils/scoring'
+import { scoreColor, goodWeatherScore, bestTimeScore, estimateSnowCm, type ClimateInput } from '@/utils/scoring'
 import { COST_INDEX, costLabel } from '@/data/costIndex'
 
 const MONTH_LABELS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
@@ -20,6 +20,7 @@ export default function RegionDetail({ region }: Props) {
   const isShortlisted = useShortlistStore((s) => s.shortlistedSlugs.includes(region.slug))
   const selectedMonths = useFilterStore((s) => s.selectedMonths)
   const algorithmPreset = useFilterStore((s) => s.algorithmPreset)
+  const selectedActivities = useFilterStore((s) => s.selectedActivities)
 
   // Sort months by month number
   const sortedMonths = [...region.months].sort((a, b) => a.month - b.month)
@@ -41,11 +42,11 @@ export default function RegionDetail({ region }: Props) {
         busyness: m.busyness,
       }
       return {
-        weather: Math.round(goodWeatherScore(input)),
-        bestTime: Math.round(bestTimeScore(input, algorithmPreset)),
+        weather: Math.round(goodWeatherScore(input, selectedActivities)),
+        bestTime: Math.round(bestTimeScore(input, algorithmPreset, selectedActivities)),
       }
     })
-  }, [sortedMonths, algorithmPreset])
+  }, [sortedMonths, algorithmPreset, selectedActivities])
 
   // Top 3 months by bestTime score
   const top3Months = useMemo(() => {
@@ -246,6 +247,41 @@ export default function RegionDetail({ region }: Props) {
             {sortedMonths.map((m) => (
               <div key={`monsoon-${m.month}`} className="text-[8px] py-0.5 text-center" title={m.has_monsoon ? 'Monsoon season' : ''}>
                 {m.has_monsoon ? '⛈' : ''}
+              </div>
+            ))}
+          </>}
+
+          {/* Snow estimate row — only when skiing selected */}
+          {selectedActivities.includes('skiing') && <>
+            <div className="col-span-12 text-[8px] text-off-black/40 mt-1 cursor-help" title="Estimated snow depth based on temperature and precipitation">❄️ Snow</div>
+            {sortedMonths.map((m) => {
+              const snowCm = estimateSnowCm(m.temp_max_c, m.rainfall_mm)
+              return (
+                <div
+                  key={`snow-${m.month}`}
+                  className={`text-[8px] font-mono py-0.5 ${
+                    snowCm > 30 ? 'text-sky-600 font-bold' : snowCm > 0 ? 'text-sky-400' : 'text-off-black/30'
+                  }`}
+                  title={snowCm > 0 ? `~${snowCm}cm estimated snow` : 'No snow expected'}
+                >
+                  {snowCm > 0 ? `${snowCm}` : '—'}
+                </div>
+              )
+            })}
+          </>}
+
+          {/* Sea temp row — when beach/diving activities selected + coastal */}
+          {(selectedActivities.includes('beach') || selectedActivities.includes('diving') || selectedActivities.includes('snorkeling') || selectedActivities.includes('freediving')) && region.is_coastal && <>
+            <div className="col-span-12 text-[8px] text-off-black/40 mt-1 cursor-help" title="Sea surface temperature">🌊 Sea</div>
+            {sortedMonths.map((m) => (
+              <div
+                key={`sea-${m.month}`}
+                className={`text-[8px] font-mono py-0.5 ${
+                  m.sea_temp_c !== null && m.sea_temp_c >= 24 ? 'text-sky-600 font-bold' : 'text-off-black/50'
+                }`}
+                title={m.sea_temp_c !== null ? `${Math.round(m.sea_temp_c)}°C sea temp` : undefined}
+              >
+                {m.sea_temp_c !== null ? `${Math.round(m.sea_temp_c)}°` : '—'}
               </div>
             ))}
           </>}

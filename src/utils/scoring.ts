@@ -51,6 +51,34 @@ function seaTempScore(seaC: number): number {
   return Math.exp(-Math.pow(seaC - 26, 2) / (2 * 25))
 }
 
+/** Ski temperature: Gaussian centred at −2.5 °C (ideal: −5 to 0), σ = 4. */
+function skiTempScore(avgC: number): number {
+  return Math.exp(-Math.pow(avgC + 2.5, 2) / (2 * 16))
+}
+
+/** Snow likelihood from temp + precipitation. */
+function snowLikelihoodScore(tempMaxC: number | null, rainfallMm: number | null): number {
+  if (tempMaxC === null || rainfallMm === null) return 0.3
+  if (tempMaxC <= 2 && rainfallMm > 30) return 1.0
+  if (tempMaxC <= 2 && rainfallMm > 0) return 0.7
+  if (tempMaxC <= 2) return 0.4 // cold but dry
+  if (tempMaxC <= 5 && rainfallMm > 30) return 0.3
+  return 0.1
+}
+
+/** Surfing wind: Gaussian centred at 22 km/h (ideal: 15–30), σ = 8. */
+function surfWindScore(kmh: number): number {
+  return Math.exp(-Math.pow(kmh - 22, 2) / (2 * 64))
+}
+
+/** Estimated snow depth (cm) from temp + rainfall. Rough 10:1 snow ratio. */
+export function estimateSnowCm(tempMaxC: number | null, rainfallMm: number | null): number {
+  if (tempMaxC === null || rainfallMm === null || rainfallMm <= 0) return 0
+  if (tempMaxC <= 0) return Math.round(rainfallMm * 1.0) // 10:1 ratio (mm rain → cm snow)
+  if (tempMaxC <= 2) return Math.round(rainfallMm * 0.5) // partial mix
+  return 0
+}
+
 // ── Multiplicative penalty functions (0–1, where 1 = no penalty) ────
 
 /** Monsoon: hard cap at ×0.30 — monsoon season = Bad weather. */
@@ -155,7 +183,12 @@ function perceivedTemp(tempC: number, humPct: number | null): number {
  * Then multiplied by penalty factors for extreme conditions.
  * This ensures monsoon/extreme heat/heavy rain can't be compensated.
  */
-export function goodWeatherScore(d: ClimateInput): number {
+export function goodWeatherScore(d: ClimateInput, activities: string[] = []): number {
+  const hasSkiing = activities.includes('skiing')
+  const hasBeach = activities.includes('beach')
+  const hasSurfing = activities.includes('surfing')
+  const hasDiving = activities.includes('diving') || activities.includes('snorkeling') || activities.includes('freediving')
+
   // Use daytime-weighted temp, then apply humidity heat amplification
   const rawTemp = daytimeTemp(d)
   const feltTemp = rawTemp !== null ? perceivedTemp(rawTemp, d.humidity_pct) : null
@@ -167,38 +200,65 @@ export function goodWeatherScore(d: ClimateInput): number {
   const h = d.humidity_pct !== null ? humidityScore(d.humidity_pct) : 0.5
   const w = d.wind_speed_kmh !== null ? windScore(d.wind_speed_kmh) : 0.5
 
-  // Base weighted average (monsoon handled as multiplier, not weight)
-  let base: number
+  // Activity-aware sub-score overrides
+  const effectiveTemp = hasSkiing && feltTemp !== null ? skiTempScore(feltTemp) : t
+  const effectiveWind = hasSurfing && d.wind_speed_kmh !== null ? surfWindScore(d.wind_speed_kmh) : w
+
+  // Determine sea temp weight based on activity
   const isCoastal = d.sea_temp_c !== null
-  if (isCoastal) {
-    const sea = seaTempScore(d.sea_temp_c!)
-    const scale = 1 - W_SEA
+  let seaWeight = W_SEA
+  if (hasBeach && isCoastal) seaWeight = 0.25
+  else if (hasDiving && isCoastal) seaWeight = 0.15
+  const effectiveSeaWeight = isCoastal ? seaWeight : 0
+
+  // Base weighted average
+  let base: number
+  if (hasSkiing) {
+    // Ski mode: ski temp curve + snow likelihood, no sea temp
+    const snow = snowLikelihoodScore(d.temp_max_c, d.rainfall_mm)
+    const W_TEMP_SKI = 0.25
+    const W_SNOW = 0.25
+    const rem = 1 - W_TEMP_SKI - W_SNOW // 0.50
     base =
-      W_TEMP * scale * t +
+      W_TEMP_SKI * effectiveTemp +
+      W_SNOW * snow +
+      rem * 0.30 * r +
+      rem * 0.20 * s +
+      rem * 0.10 * c +
+      rem * 0.20 * h +
+      rem * 0.20 * effectiveWind
+  } else if (effectiveSeaWeight > 0) {
+    const sea = seaTempScore(d.sea_temp_c!)
+    const scale = 1 - effectiveSeaWeight
+    base =
+      W_TEMP * scale * effectiveTemp +
       W_RAIN * scale * r +
       W_SUN * scale * s +
       W_CLOUD * scale * c +
       W_HUMIDITY * scale * h +
-      W_WIND * scale * w +
-      W_SEA * sea
+      W_WIND * scale * effectiveWind +
+      effectiveSeaWeight * sea
   } else {
     base =
-      W_TEMP * t +
+      W_TEMP * effectiveTemp +
       W_RAIN * r +
       W_SUN * s +
       W_CLOUD * c +
       W_HUMIDITY * h +
-      W_WIND * w
+      W_WIND * effectiveWind
   }
 
   // Multiplicative penalties — extreme conditions can't be compensated
+  // Skiing: skip heat/cold penalties (cold is good for skiing)
+  // Surfing: shift wind penalty threshold up by 15 km/h
+  const windForPenalty = hasSurfing ? Math.max(0, (d.wind_speed_kmh ?? 0) - 15) : d.wind_speed_kmh
   const penalty =
     monsoonPenalty(d.has_monsoon) *
-    heatComfortPenalty(feltTemp) *
-    coldComfortPenalty(feltTemp) *
+    (hasSkiing ? 1 : heatComfortPenalty(feltTemp)) *
+    (hasSkiing ? 1 : coldComfortPenalty(feltTemp)) *
     heavyRainPenalty(d.rainfall_mm) *
-    humidHeatPenalty(feltTemp, d.humidity_pct) *
-    highWindPenalty(d.wind_speed_kmh)
+    (hasSkiing ? 1 : humidHeatPenalty(feltTemp, d.humidity_pct)) *
+    highWindPenalty(windForPenalty)
 
   return 100 * base * penalty
 }
@@ -219,9 +279,9 @@ const PRESET_ALPHA: Record<AlgorithmPreset, number> = {
  * where W = goodWeather / 100, Q = quietness on a 0.2–1.0 scale.
  * Q floor of 0.2 ensures peak season doesn't obliterate the score.
  */
-export function bestTimeScore(d: ClimateInput, preset: AlgorithmPreset = 'balanced'): number {
+export function bestTimeScore(d: ClimateInput, preset: AlgorithmPreset = 'balanced', activities: string[] = []): number {
   const alpha = PRESET_ALPHA[preset]
-  const W = goodWeatherScore(d) / 100
+  const W = goodWeatherScore(d, activities) / 100
   // busyness 1→Q=1.0, busyness 5→Q=0.2 (linear, gentler floor than before)
   const Q = Math.max(1 - (d.busyness - 1) * 0.2, 0.2)
   return 100 * Math.pow(W, alpha) * Math.pow(Q, 1 - alpha)

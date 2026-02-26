@@ -1,5 +1,6 @@
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState, useCallback } from 'react'
 import FilterBar from '@/components/Filters/FilterBar'
+import Toast from '@/components/ui/Toast'
 import TravelMap from '@/components/Map/TravelMap'
 import SidePanel from '@/components/SidePanel/SidePanel'
 import AgentBar from '@/components/Agent/AgentBar'
@@ -19,15 +20,48 @@ function App() {
   const sidePanelOpen = useUIStore((s) => s.sidePanelOpen)
   const selectRegion = useUIStore((s) => s.selectRegion)
 
-  // Deselect region when filters or color mode change
+  // Deselect region when filters or color mode change (but not month selection)
   const filterKey = useFilterStore((s) =>
-    `${s.selectedMonths}-${s.busynessMax}-${s.hideRisky}-${s.colorMode}-${s.algorithmPreset}-${s.tempMin}-${s.tempMax}-${s.sunshineMin}-${s.rainfallMax}-${s.selectedActivities.length}-${s.selectedLandscapes.length}`
+    `${s.busynessMax}-${s.hideRisky}-${s.colorMode}-${s.algorithmPreset}-${s.tempMin}-${s.tempMax}-${s.sunshineMin}-${s.rainfallMax}-${s.selectedActivities.length}-${s.selectedLandscapes.length}`
   )
   const isMount = useRef(true)
   useEffect(() => {
     if (isMount.current) { isMount.current = false; return }
     selectRegion(null)
   }, [filterKey, selectRegion])
+
+  // Activity-aware scoring toasts
+  const selectedActivities = useFilterStore((s) => s.selectedActivities)
+  const [toasts, setToasts] = useState<{ id: number; message: string }[]>([])
+  const toastIdRef = useRef(0)
+  const prevActivitiesRef = useRef<string[]>([])
+
+  const ACTIVITY_TOASTS: Record<string, string> = {
+    beach: '🏖️ Sea temperature taken into account',
+    skiing: '⛷️ Snow conditions taken into account',
+    surfing: '🏄 Wind conditions optimized for surfing',
+    diving: '🤿 Sea conditions taken into account',
+    snorkeling: '🤿 Sea conditions taken into account',
+    freediving: '🤿 Sea conditions taken into account',
+  }
+
+  useEffect(() => {
+    const prev = prevActivitiesRef.current
+    const added = selectedActivities.filter((a) => !prev.includes(a))
+    prevActivitiesRef.current = selectedActivities
+
+    for (const activity of added) {
+      const msg = ACTIVITY_TOASTS[activity]
+      if (msg && !toasts.some((t) => t.message === msg)) {
+        const id = ++toastIdRef.current
+        setToasts((t) => [...t, { id, message: msg }])
+      }
+    }
+  }, [selectedActivities])
+
+  const removeToast = useCallback((id: number) => {
+    setToasts((t) => t.filter((toast) => toast.id !== id))
+  }, [])
 
   // Hydrate from URL params on mount
   useShareableLink()
@@ -80,6 +114,11 @@ function App() {
 
       {/* Agent Bar (bottom) */}
       <AgentBar onSend={sendMessage} loading={agentLoading} />
+
+      {/* Activity-aware scoring toasts */}
+      {toasts.map((toast) => (
+        <Toast key={toast.id} message={toast.message} onDone={() => removeToast(toast.id)} />
+      ))}
     </div>
   )
 }

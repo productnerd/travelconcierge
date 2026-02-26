@@ -8,7 +8,7 @@ import { useFilterStore } from '@/store/filterStore'
 import { useShortlistStore } from '@/store/shortlistStore'
 
 const ACTIVITIES = ['surfing', 'hiking', 'diving', 'freediving', 'snorkeling', 'cultural', 'food', 'safari', 'skiing', 'beach', 'wildlife', 'adventure']
-const LANDSCAPES = ['beach', 'mountain', 'jungle', 'desert', 'city', 'island']
+const LANDSCAPES = ['seaside', 'mountain', 'jungle', 'desert', 'city', 'island']
 
 export default function FilterBar() {
   const [expanded, setExpanded] = useState(false)

@@ -124,8 +124,8 @@ export function useRegions() {
         avg_humidity_pct: avgHumidity !== null ? Math.round(avgHumidity) : null,
         avg_sea_temp_c: avgSeaTemp !== null ? Math.round(avgSeaTemp * 10) / 10 : null,
         has_monsoon: hasMonsoon,
-        weatherScore: Math.round(goodWeatherScore(climateInput)),
-        bestTimeScore: Math.round(bestTimeScore(climateInput, algorithmPreset)),
+        weatherScore: Math.round(goodWeatherScore(climateInput, filters.selectedActivities)),
+        bestTimeScore: Math.round(bestTimeScore(climateInput, algorithmPreset, filters.selectedActivities)),
         months: region.travel_region_months,
       } as FilteredRegion
     })
