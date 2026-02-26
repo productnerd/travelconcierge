@@ -15,6 +15,17 @@ export function useAgent() {
   const filters = useFilterStore()
   const ui = useUIStore()
 
+  const getCurrentFilters = () => ({
+    selectedMonths: filters.selectedMonths,
+    busynessMax: filters.busynessMax,
+    tempMin: filters.tempMin,
+    tempMax: filters.tempMax,
+    sunshineMin: filters.sunshineMin,
+    rainfallMax: filters.rainfallMax,
+    selectedActivities: filters.selectedActivities,
+    selectedLandscapes: filters.selectedLandscapes,
+  })
+
   const sendMessage = useCallback(async (userText: string) => {
     const userMsg: AgentMessage = { role: 'user', content: userText }
     setMessages((prev) => [...prev, userMsg])
@@ -30,16 +41,7 @@ export function useAgent() {
         { role: 'user' as const, content: userText },
       ]
 
-      const currentFilters = {
-        selectedMonths: filters.selectedMonths,
-        busynessMax: filters.busynessMax,
-        tempMin: filters.tempMin,
-        tempMax: filters.tempMax,
-        sunshineMin: filters.sunshineMin,
-        rainfallMax: filters.rainfallMax,
-        selectedActivities: filters.selectedActivities,
-        selectedLandscapes: filters.selectedLandscapes,
-      }
+      const currentFilters = getCurrentFilters()
 
       // Call edge function
       const { data, error } = await supabase.functions.invoke('travel-compass', {
@@ -119,12 +121,7 @@ export function useAgent() {
       const { data, error } = await supabase.functions.invoke('travel-compass', {
         body: {
           messages: toolResultMessages,
-          currentFilters: {
-            selectedMonths: filters.selectedMonths,
-            busynessMax: filters.busynessMax,
-            tempMin: filters.tempMin,
-            tempMax: filters.tempMax,
-          },
+          currentFilters: getCurrentFilters(),
         },
       })
 
@@ -170,8 +167,9 @@ export function useAgent() {
         return { success: true, question_shown: true }
       }
 
-      case 'query_regions': {
-        // This will be executed server-side by the edge function
+      case 'query_regions':
+      case 'get_best_months': {
+        // Executed server-side by the edge function
         return { note: 'Executed server-side' }
       }
 
