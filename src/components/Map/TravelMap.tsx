@@ -298,7 +298,7 @@ export default function TravelMap({ regions, geojson }: Props) {
               onClick={() => setColorMode(mode)}
               title={tip}
               className={`
-                px-2 py-1 text-[8px] font-display font-bold rounded-lg border-2 border-off-black transition-colors uppercase
+                px-1.5 py-0.5 text-[10px] font-display font-bold rounded border-2 border-off-black transition-colors uppercase
                 ${colorMode === mode ? 'bg-off-black text-cream' : 'bg-cream text-off-black hover:bg-off-black/10'}
               `}
             >

@@ -41,7 +41,7 @@ export default function FilterBar() {
           {/* More filters toggle on mobile */}
           <button
             onClick={() => setExpanded(!expanded)}
-            className="md:hidden px-2 py-1 text-[8px] font-display font-bold rounded border-2 border-off-black bg-cream shrink-0 uppercase"
+            className="md:hidden px-2 py-1 text-[10px] font-display font-bold rounded border-2 border-off-black bg-cream shrink-0 uppercase"
           >
             {expanded ? 'Less' : 'More'}
           </button>
@@ -82,7 +82,7 @@ export default function FilterBar() {
             onClick={() => setHideRisky(!hideRisky)}
             title="Hide regions with Risky or Avoid travel advisories"
             className={`
-              px-2 py-1 text-[8px] font-display font-bold rounded-lg border-2 border-off-black transition-colors uppercase
+              px-2 py-1 text-[10px] font-display font-bold rounded-lg border-2 border-off-black transition-colors uppercase
               ${hideRisky ? 'bg-red text-white' : 'bg-cream text-off-black hover:bg-red-light'}
             `}
           >
@@ -138,9 +138,9 @@ export default function FilterBar() {
               key={a}
               onClick={() => toggleActivity(a)}
               className={`
-                px-1.5 py-0.5 text-[8px] font-display rounded border-2 border-off-black transition-colors uppercase shrink-0
+                px-1.5 py-0.5 text-[10px] font-display font-bold rounded border-2 border-off-black transition-colors uppercase shrink-0
                 ${selectedActivities.includes(a)
-                  ? 'bg-red text-white font-bold'
+                  ? 'bg-red text-white'
                   : 'bg-cream text-off-black hover:bg-red-light'
                 }
               `}
@@ -159,9 +159,9 @@ export default function FilterBar() {
               key={l}
               onClick={() => toggleLandscape(l)}
               className={`
-                px-1.5 py-0.5 text-[8px] font-display rounded border-2 border-off-black transition-colors uppercase shrink-0
+                px-1.5 py-0.5 text-[10px] font-display font-bold rounded border-2 border-off-black transition-colors uppercase shrink-0
                 ${selectedLandscapes.includes(l)
-                  ? 'bg-red text-white font-bold'
+                  ? 'bg-red text-white'
                   : 'bg-cream text-off-black hover:bg-red-light'
                 }
               `}

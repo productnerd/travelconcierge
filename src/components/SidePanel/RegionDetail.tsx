@@ -128,7 +128,7 @@ export default function RegionDetail({ region }: Props) {
             >
               {(cuisineScore(region.country_code) / 10).toFixed(1)}/10
             </span>
-            <span className="text-[8px] text-off-black/30 italic">TasteAtlas 2025</span>
+            <span className="text-[9px] text-off-black/30 italic">TasteAtlas 2025</span>
           </div>
           {region.cuisine_tags && region.cuisine_tags.length > 0 && (
             <div className="flex flex-wrap gap-1">
@@ -219,7 +219,7 @@ export default function RegionDetail({ region }: Props) {
           ))}
 
           {/* Temp row */}
-          <div className="col-span-12 text-[8px] text-off-black/40 mt-1 cursor-help" title="Daytime-weighted temperature (75% high + 25% low)">🌡️ Temp</div>
+          <div className="col-span-12 text-[9px] text-off-black/40 mt-1 cursor-help" title="Daytime-weighted temperature (75% high + 25% low)">🌡️ Temp</div>
           {sortedMonths.map((m) => {
             const wt = m.temp_max_c !== null && m.temp_min_c !== null
               ? 0.75 * m.temp_max_c + 0.25 * m.temp_min_c
@@ -240,11 +240,11 @@ export default function RegionDetail({ region }: Props) {
           })}
 
           {/* Rainfall row */}
-          <div className="col-span-12 text-[8px] text-off-black/40 mt-1 cursor-help" title="Monthly rainfall in millimeters. Red = heavy rain (>150mm)">🌧️ Rain</div>
+          <div className="col-span-12 text-[9px] text-off-black/40 mt-1 cursor-help" title="Monthly rainfall in millimeters. Red = heavy rain (>150mm)">🌧️ Rain</div>
           {sortedMonths.map((m) => (
             <div
               key={`rain-${m.month}`}
-              className={`text-[8px] font-mono py-0.5 ${
+              className={`text-[9px] font-mono py-0.5 ${
                 m.rainfall_mm !== null && m.rainfall_mm > 150
                   ? 'text-red font-bold'
                   : 'text-off-black/50'
@@ -256,11 +256,11 @@ export default function RegionDetail({ region }: Props) {
           ))}
 
           {/* Humidity row */}
-          <div className="col-span-12 text-[8px] text-off-black/40 mt-1 cursor-help" title="Average humidity percentage. Red = oppressive (>75%)">💧 Humidity</div>
+          <div className="col-span-12 text-[9px] text-off-black/40 mt-1 cursor-help" title="Average humidity percentage. Red = oppressive (>75%)">💧 Humidity</div>
           {sortedMonths.map((m) => (
             <div
               key={`hum-${m.month}`}
-              className={`text-[8px] font-mono py-0.5 ${
+              className={`text-[9px] font-mono py-0.5 ${
                 m.humidity_pct !== null && m.humidity_pct > 75
                   ? 'text-red font-bold'
                   : 'text-off-black/50'
@@ -273,9 +273,9 @@ export default function RegionDetail({ region }: Props) {
 
           {/* Monsoon row — only if any month has monsoon */}
           {sortedMonths.some((m) => m.has_monsoon) && <>
-            <div className="col-span-12 text-[8px] text-off-black/40 mt-1 cursor-help" title="Monsoon season: heavy sustained rainfall with flooding risk">⛈️ Monsoon</div>
+            <div className="col-span-12 text-[9px] text-off-black/40 mt-1 cursor-help" title="Monsoon season: heavy sustained rainfall with flooding risk">⛈️ Monsoon</div>
             {sortedMonths.map((m) => (
-              <div key={`monsoon-${m.month}`} className="text-[8px] py-0.5 text-center" title={m.has_monsoon ? 'Monsoon season' : ''}>
+              <div key={`monsoon-${m.month}`} className="text-[9px] py-0.5 text-center" title={m.has_monsoon ? 'Monsoon season' : ''}>
                 {m.has_monsoon ? '⛈' : ''}
               </div>
             ))}
@@ -283,13 +283,13 @@ export default function RegionDetail({ region }: Props) {
 
           {/* Snow estimate row — only when skiing selected */}
           {selectedActivities.includes('skiing') && <>
-            <div className="col-span-12 text-[8px] text-off-black/40 mt-1 cursor-help" title="Estimated snow depth based on temperature and precipitation">❄️ Snow</div>
+            <div className="col-span-12 text-[9px] text-off-black/40 mt-1 cursor-help" title="Estimated snow depth based on temperature and precipitation">❄️ Snow</div>
             {sortedMonths.map((m) => {
               const snowCm = estimateSnowCm(m.temp_min_c, m.rainfall_mm)
               return (
                 <div
                   key={`snow-${m.month}`}
-                  className={`text-[8px] font-mono py-0.5 ${
+                  className={`text-[9px] font-mono py-0.5 ${
                     snowCm > 30 ? 'text-sky-600 font-bold' : snowCm > 0 ? 'text-sky-400' : 'text-off-black/30'
                   }`}
                   title={snowCm > 0 ? `~${snowCm}cm estimated snow` : 'No snow expected'}
@@ -302,11 +302,11 @@ export default function RegionDetail({ region }: Props) {
 
           {/* Sea temp row — when beach/diving activities selected + coastal */}
           {(selectedActivities.includes('beach') || selectedActivities.includes('diving') || selectedActivities.includes('freediving')) && region.is_coastal && <>
-            <div className="col-span-12 text-[8px] text-off-black/40 mt-1 cursor-help" title="Sea surface temperature">🌊 Sea</div>
+            <div className="col-span-12 text-[9px] text-off-black/40 mt-1 cursor-help" title="Sea surface temperature">🌊 Sea</div>
             {sortedMonths.map((m) => (
               <div
                 key={`sea-${m.month}`}
-                className={`text-[8px] font-mono py-0.5 ${
+                className={`text-[9px] font-mono py-0.5 ${
                   m.sea_temp_c !== null && m.sea_temp_c >= 24 ? 'text-sky-600 font-bold' : 'text-off-black/50'
                 }`}
                 title={m.sea_temp_c !== null ? `${Math.round(m.sea_temp_c)}°C sea temp` : undefined}
@@ -338,7 +338,7 @@ export default function RegionDetail({ region }: Props) {
                       }}
                     />
                   </div>
-                  <span className={`text-[8px] font-mono ${selectedMonths.includes(m.month) ? 'font-bold text-red' : 'text-off-black/50'}`}>
+                  <span className={`text-[9px] font-mono ${selectedMonths.includes(m.month) ? 'font-bold text-red' : 'text-off-black/50'}`}>
                     {score}
                   </span>
                 </div>
@@ -365,7 +365,7 @@ export default function RegionDetail({ region }: Props) {
                       }}
                     />
                   </div>
-                  <span className={`text-[8px] font-mono ${selectedMonths.includes(m.month) ? 'font-bold text-red' : 'text-off-black/50'}`}>
+                  <span className={`text-[9px] font-mono ${selectedMonths.includes(m.month) ? 'font-bold text-red' : 'text-off-black/50'}`}>
                     {m.busyness}
                   </span>
                 </div>
@@ -399,7 +399,7 @@ export default function RegionDetail({ region }: Props) {
                       }}
                     />
                   </div>
-                  <span className={`text-[8px] font-mono ${
+                  <span className={`text-[9px] font-mono ${
                     isTop3
                       ? 'font-bold text-off-black'
                       : selectedMonths.includes(m.month) ? 'font-bold text-red' : 'text-off-black/50'
@@ -421,7 +421,7 @@ export default function RegionDetail({ region }: Props) {
             {region.activities.map((a) => (
               <span
                 key={a}
-                className="px-2 py-0.5 text-[8px] font-display bg-cream border-2 border-off-black rounded-lg uppercase"
+                className="px-2 py-0.5 text-[10px] font-display font-bold bg-cream border-2 border-off-black rounded-lg uppercase"
               >
                 {a}
               </span>
@@ -438,7 +438,7 @@ export default function RegionDetail({ region }: Props) {
             {region.landscape_type.map((l) => (
               <span
                 key={l}
-                className="px-2 py-0.5 text-[8px] font-display bg-cream border-2 border-off-black rounded-lg uppercase"
+                className="px-2 py-0.5 text-[10px] font-display font-bold bg-cream border-2 border-off-black rounded-lg uppercase"
               >
                 {l}
               </span>
