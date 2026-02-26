@@ -6,7 +6,7 @@ export default function SunshineFilter() {
 
   return (
     <div className="flex items-center gap-2 shrink-0">
-      <span className="text-xs font-display font-bold">Sun:</span>
+      <span className="text-[10px] font-display font-bold uppercase">Sun:</span>
       <input
         type="range"
         min={0}

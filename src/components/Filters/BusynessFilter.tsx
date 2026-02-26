@@ -7,7 +7,7 @@ export default function BusynessFilter() {
 
   return (
     <div className="flex items-center gap-2">
-      <span className="text-xs font-display font-bold">Crowds:</span>
+      <span className="text-[10px] font-display font-bold uppercase">Crowds:</span>
       <input
         type="range"
         min={1}

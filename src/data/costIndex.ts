@@ -146,22 +146,48 @@ export function safetyLabel(countryCode: string): string | null {
   return 'Avoid'
 }
 
+// ── Ski lift day-pass prices (USD, 2024-25 season avg) ──────────────
+export const SKI_LIFT_PRICE: Record<string, number> = {
+  US: 155, AU: 130, AR: 115, CH: 105, NZ: 95,
+  AT: 86, CA: 75, FR: 75, NO: 72, IT: 72, DE: 72,
+  CL: 70, ES: 70, SE: 68, AD: 68, KR: 65, ZA: 60,
+  BG: 55, CN: 55, SI: 52, JP: 50, CZ: 50, RO: 50,
+  BA: 48, SK: 48, PL: 47, GB: 45, RS: 45, TR: 40,
+  GR: 38, LB: 35, GE: 25, MA: 25, IR: 20, ME: 18,
+  MK: 12, IN: 10,
+}
+
 // ── Overall score ─────────────────────────────────────────────────────
 import { cuisineScore } from './cuisineScore'
 
 /**
- * Overall score: bestTime (75%) + cost (25%), × safety, × cuisine boost when food selected.
- * When food activity is selected, cuisine quality blends into the score:
- *   raw = bestTime * 0.55 + cost * 0.20 + cuisineScore * 0.25
- * Otherwise:
- *   raw = bestTime * 0.75 + cost * 0.25
+ * Overall score: bestTime (75%) + cost (25%), × safety.
+ * When skiing selected, lift pass price blends into the cost component.
+ * When food selected, cuisine quality blends into the score.
  */
 export function overallScore(bestTimeScore: number, countryCode: string, activities: string[] = []): number {
   const costTier = COST_INDEX[countryCode] ?? 3
-  const costValue = 120 - costTier * 20 // 1→100, 2→80, 3→60, 4→40, 5→20
+  const baseCostValue = 120 - costTier * 20 // 1→100, 2→80, 3→60, 4→40, 5→20
+
+  // When skiing selected, blend lift pass cost into cost score
+  const hasSkiing = activities.includes('skiing')
+  let costValue = baseCostValue
+  if (hasSkiing) {
+    const liftPrice = SKI_LIFT_PRICE[countryCode] ?? 60
+    // Map $10–$180 to 100–0 (cheaper = better)
+    const liftScore = Math.max(0, Math.min(100, 100 * (1 - (liftPrice - 10) / 170)))
+    costValue = baseCostValue * 0.5 + liftScore * 0.5
+  }
+
   const hasFood = activities.includes('food')
   const raw = hasFood
     ? bestTimeScore * 0.55 + costValue * 0.20 + cuisineScore(countryCode) * 0.25
     : bestTimeScore * 0.75 + costValue * 0.25
   return raw * safetyMultiplier(countryCode)
+}
+
+/** Skiing cost label: base budget + lift pass */
+export function skiCostLabel(countryCode: string): string | null {
+  const lift = SKI_LIFT_PRICE[countryCode]
+  return lift ? `+$${lift}/day lift pass` : null
 }

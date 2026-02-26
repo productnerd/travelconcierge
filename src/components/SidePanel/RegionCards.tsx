@@ -84,14 +84,14 @@ export default function RegionCards({ regions }: Props) {
     <div className="p-4">
       {/* Sort controls */}
       <div className="flex items-center gap-1 mb-3">
-        <span className="text-[10px] font-display font-bold text-off-black/50 mr-1">Sort:</span>
+        <span className="text-[8px] font-display font-bold text-off-black/50 mr-1 uppercase">Sort:</span>
         {SORT_OPTIONS.map(({ key, label, tip }) => (
           <button
             key={key}
             onClick={() => handleSortClick(key)}
             title={tip}
             className={`
-              px-2 py-0.5 text-[10px] font-display font-bold rounded border-2 border-off-black transition-colors
+              px-2 py-0.5 text-[8px] font-display font-bold rounded border-2 border-off-black transition-colors uppercase
               ${sortBy === key ? 'bg-off-black text-cream' : 'bg-cream text-off-black hover:bg-off-black/10'}
             `}
           >
@@ -100,7 +100,7 @@ export default function RegionCards({ regions }: Props) {
         ))}
       </div>
 
-      <p className="text-xs font-display text-off-black/60 mb-3">
+      <p className="text-[10px] font-display text-off-black/60 mb-3 uppercase">
         {regions.length} region{regions.length !== 1 ? 's' : ''}
       </p>
 

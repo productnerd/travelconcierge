@@ -16,7 +16,7 @@ export default function MonthSelector() {
             key={month}
             onClick={() => toggleMonth(month)}
             className={`
-              px-1.5 md:px-2 py-0.5 md:py-1 text-[10px] md:text-xs font-display font-bold rounded-lg border-2 border-off-black transition-colors
+              px-1.5 md:px-2 py-0.5 md:py-1 text-[8px] md:text-[10px] font-display font-bold rounded-lg border-2 border-off-black transition-colors uppercase
               ${isSelected
                 ? 'bg-red text-white'
                 : 'bg-cream text-off-black hover:bg-red-light'

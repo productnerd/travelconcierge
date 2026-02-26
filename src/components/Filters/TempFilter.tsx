@@ -7,7 +7,7 @@ export default function TempFilter() {
 
   return (
     <div className="flex items-center gap-2 shrink-0">
-      <span className="text-xs font-display font-bold">Temp:</span>
+      <span className="text-[10px] font-display font-bold uppercase">Temp:</span>
       <input
         type="range"
         min={-10}

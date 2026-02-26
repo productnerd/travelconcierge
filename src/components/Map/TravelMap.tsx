@@ -253,7 +253,7 @@ export default function TravelMap({ regions, geojson }: Props) {
           anchor="bottom"
           offset={12}
         >
-          <div className="font-display text-sm font-bold">{hovered.name}</div>
+          <div className="font-display text-xs font-bold uppercase">{hovered.name}</div>
           <div className="flex items-center gap-2 mt-1 text-xs font-mono">
             {colorMode === 'busyness' ? (
               <>
@@ -284,7 +284,7 @@ export default function TravelMap({ regions, geojson }: Props) {
       )}
 
       {/* Legend + Color mode toggle */}
-      <div className="absolute bottom-4 left-4 bg-cream border-2 border-off-black rounded-xl p-4 text-xs font-display">
+      <div className="absolute bottom-4 left-4 bg-cream border-2 border-off-black rounded-xl p-4 text-[10px] font-display uppercase">
         {/* Color mode toggle */}
         <div className="flex items-center gap-1.5 mb-3 flex-wrap">
           {([
@@ -298,7 +298,7 @@ export default function TravelMap({ regions, geojson }: Props) {
               onClick={() => setColorMode(mode)}
               title={tip}
               className={`
-                px-2 py-1 text-[10px] font-display font-bold rounded-lg border-2 border-off-black transition-colors
+                px-2 py-1 text-[8px] font-display font-bold rounded-lg border-2 border-off-black transition-colors uppercase
                 ${colorMode === mode ? 'bg-off-black text-cream' : 'bg-cream text-off-black hover:bg-off-black/10'}
               `}
             >

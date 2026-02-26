@@ -44,7 +44,7 @@ export default function RegionCard({ region }: Props) {
       </button>
 
       {/* Region name */}
-      <h3 className="font-display font-bold text-sm pr-6 leading-tight">{region.name}</h3>
+      <h3 className="font-display font-bold text-xs pr-6 leading-tight uppercase">{region.name}</h3>
 
       {/* Country */}
       <p className="text-xs text-off-black/60 mt-0.5">
@@ -55,7 +55,7 @@ export default function RegionCard({ region }: Props) {
       <div className="flex items-center gap-2.5 mt-3">
         {/* Seasonal score pill — always shows overall score */}
         <span
-          className="inline-flex items-center gap-1 px-1.5 py-0.5 text-[10px] font-display font-bold rounded border border-off-black text-white"
+          className="inline-flex items-center gap-1 px-1.5 py-0.5 text-[8px] font-display font-bold rounded border border-off-black text-white uppercase"
           style={{ backgroundColor: scoreColor(overall) }}
           title="Combines weather, crowds, cost, and safety"
         >
@@ -91,7 +91,7 @@ export default function RegionCard({ region }: Props) {
 
         {/* Safety advisory */}
         {safetyLabel(region.country_code) && (
-          <span className={`text-[9px] font-display font-bold px-1 py-0.5 rounded ${
+          <span className={`text-[8px] font-display font-bold px-1 py-0.5 rounded uppercase ${
             safetyLabel(region.country_code) === 'Avoid' ? 'bg-red/20 text-red' :
             safetyLabel(region.country_code) === 'Risky' ? 'bg-orange-200 text-orange-700' :
             'bg-yellow-100 text-yellow-700'

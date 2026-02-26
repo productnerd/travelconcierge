@@ -5,7 +5,7 @@ import type { FilteredRegion } from '@/hooks/useRegions'
 import { busynessColor, busynessLabel, countryFlag } from '@/types'
 import { useFilterStore } from '@/store/filterStore'
 import { scoreColor, goodWeatherScore, bestTimeScore, estimateSnowCm, type ClimateInput } from '@/utils/scoring'
-import { COST_INDEX, costLabel } from '@/data/costIndex'
+import { COST_INDEX, costLabel, skiCostLabel } from '@/data/costIndex'
 import { cuisineScore } from '@/data/cuisineScore'
 
 const MONTH_LABELS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
@@ -63,7 +63,7 @@ export default function RegionDetail({ region }: Props) {
       {/* Back button */}
       <button
         onClick={() => selectRegion(null)}
-        className="flex items-center gap-1 text-xs font-display text-off-black/60 hover:text-off-black mb-3"
+        className="flex items-center gap-1 text-[10px] font-display text-off-black/60 hover:text-off-black mb-3 uppercase"
       >
         &#8592; Back to regions
       </button>
@@ -71,7 +71,7 @@ export default function RegionDetail({ region }: Props) {
       {/* Header */}
       <div className="flex items-start justify-between">
         <div>
-          <h2 className="font-display font-bold text-xl leading-tight">{region.name}</h2>
+          <h2 className="font-display font-bold text-lg leading-tight uppercase">{region.name}</h2>
           <p className="text-sm text-off-black/60 mt-0.5">
             {countryFlag(region.country_code)} {region.country_name}
           </p>
@@ -92,19 +92,19 @@ export default function RegionDetail({ region }: Props) {
       {/* Badges row */}
       <div className="flex flex-wrap items-center gap-2 mt-3">
         <span
-          className="inline-flex items-center gap-1 px-2 py-1 text-xs font-display font-bold rounded-lg border-2 border-off-black text-white"
+          className="inline-flex items-center gap-1 px-2 py-1 text-[10px] font-display font-bold rounded-lg border-2 border-off-black text-white uppercase"
           style={{ backgroundColor: busynessColor(region.avg_busyness) }}
         >
           {busynessLabel(region.avg_busyness)}
         </span>
         <span
-          className="inline-flex items-center gap-1 px-2 py-1 text-xs font-display font-bold rounded-lg border-2 border-off-black text-white"
+          className="inline-flex items-center gap-1 px-2 py-1 text-[10px] font-display font-bold rounded-lg border-2 border-off-black text-white uppercase"
           style={{ backgroundColor: scoreColor(region.weatherScore) }}
         >
           Weather {region.weatherScore}
         </span>
         <span
-          className="inline-flex items-center gap-1 px-2 py-1 text-xs font-display font-bold rounded-lg border-2 border-off-black text-white"
+          className="inline-flex items-center gap-1 px-2 py-1 text-[10px] font-display font-bold rounded-lg border-2 border-off-black text-white uppercase"
           style={{ backgroundColor: scoreColor(region.bestTimeScore) }}
         >
           Best Time {region.bestTimeScore}
@@ -178,6 +178,9 @@ export default function RegionDetail({ region }: Props) {
           <div className="text-[10px] font-display text-off-black/60">Cost</div>
           <div className="text-lg font-mono font-bold">{costLabel(costTier)}</div>
           <div className="text-[10px] font-display text-off-black/50">{BUDGET_LABELS[costTier]}</div>
+          {selectedActivities.includes('skiing') && skiCostLabel(region.country_code) && (
+            <div className="text-[10px] font-display text-sky-600 mt-0.5">❄️ {skiCostLabel(region.country_code)}</div>
+          )}
         </div>
         <div className="bg-cream border border-off-black/30 rounded-lg px-2 py-1">
           <div className="text-[10px] font-display text-off-black/60">Best Months</div>
@@ -201,7 +204,7 @@ export default function RegionDetail({ region }: Props) {
 
       {/* Monthly table */}
       <div className="mt-4">
-        <h3 className="font-display font-bold text-sm mb-2">Monthly Climate</h3>
+        <h3 className="font-display font-bold text-xs mb-2 uppercase">Monthly Climate</h3>
         <div className="grid grid-cols-12 gap-0.5 text-center overflow-x-auto min-w-[300px]">
           {/* Headers */}
           {MONTH_LABELS.map((label, i) => (
@@ -319,7 +322,7 @@ export default function RegionDetail({ region }: Props) {
       <div className="mt-4 space-y-3">
         {/* Weather Score */}
         <div>
-          <h3 className="font-display font-bold text-sm mb-1.5">Monthly Weather</h3>
+          <h3 className="font-display font-bold text-xs mb-1.5 uppercase">Monthly Weather</h3>
           <div className="grid grid-cols-12 gap-0.5">
             {sortedMonths.map((m, i) => {
               const score = monthlyScores[i].weather
@@ -346,7 +349,7 @@ export default function RegionDetail({ region }: Props) {
 
         {/* Crowds */}
         <div>
-          <h3 className="font-display font-bold text-sm mb-1.5">Monthly Crowds</h3>
+          <h3 className="font-display font-bold text-xs mb-1.5 uppercase">Monthly Crowds</h3>
           <div className="grid grid-cols-12 gap-0.5">
             {sortedMonths.map((m) => {
               const pct = ((m.busyness - 1) / 4) * 100
@@ -373,7 +376,7 @@ export default function RegionDetail({ region }: Props) {
 
         {/* Best Time Score */}
         <div>
-          <h3 className="font-display font-bold text-sm mb-1.5">Best Time ™️</h3>
+          <h3 className="font-display font-bold text-xs mb-1.5 uppercase">Best Time ™️</h3>
           <div className="grid grid-cols-12 gap-0.5">
             {sortedMonths.map((m, i) => {
               const score = monthlyScores[i].bestTime
@@ -413,12 +416,12 @@ export default function RegionDetail({ region }: Props) {
       {/* Activities */}
       {region.activities.length > 0 && (
         <div className="mt-4">
-          <h3 className="font-display font-bold text-sm mb-2">Activities</h3>
+          <h3 className="font-display font-bold text-xs mb-2 uppercase">Activities</h3>
           <div className="flex flex-wrap gap-1">
             {region.activities.map((a) => (
               <span
                 key={a}
-                className="px-2 py-0.5 text-[10px] font-display bg-cream border-2 border-off-black rounded-lg capitalize"
+                className="px-2 py-0.5 text-[8px] font-display bg-cream border-2 border-off-black rounded-lg uppercase"
               >
                 {a}
               </span>
@@ -430,12 +433,12 @@ export default function RegionDetail({ region }: Props) {
       {/* Landscape */}
       {region.landscape_type.length > 0 && (
         <div className="mt-3">
-          <h3 className="font-display font-bold text-sm mb-2">Landscape</h3>
+          <h3 className="font-display font-bold text-xs mb-2 uppercase">Landscape</h3>
           <div className="flex flex-wrap gap-1">
             {region.landscape_type.map((l) => (
               <span
                 key={l}
-                className="px-2 py-0.5 text-[10px] font-display bg-cream border-2 border-off-black rounded-lg capitalize"
+                className="px-2 py-0.5 text-[8px] font-display bg-cream border-2 border-off-black rounded-lg uppercase"
               >
                 {l}
               </span>

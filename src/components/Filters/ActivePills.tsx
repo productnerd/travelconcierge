@@ -55,7 +55,7 @@ export default function ActivePills() {
             }
           }}
           className={`
-            flex items-center gap-1 px-2 py-0.5 text-xs font-display rounded-lg border-2 border-off-black transition-colors
+            flex items-center gap-1 px-2 py-0.5 text-[10px] font-display rounded-lg border-2 border-off-black transition-colors uppercase
             ${pill.isAgent
               ? 'bg-red text-white'
               : 'bg-cream text-off-black hover:bg-red-light'
