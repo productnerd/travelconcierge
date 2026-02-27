@@ -37,12 +37,12 @@ function App() {
   const prevActivitiesRef = useRef<string[]>([])
 
   const ACTIVITY_TOASTS: Record<string, string> = {
-    beach: '🏖️ Sea temperature taken into account',
+    beach: '🏖️ Sea temperature & marine biodiversity taken into account',
     skiing: '⛷️ Snow conditions taken into account',
     surfing: '🏄 Wind conditions optimized for surfing',
-    diving: '🤿 Sea conditions taken into account',
-    freediving: '🤿 Calm water & sea conditions prioritized',
-    hiking: '🥾 Cooler temperatures preferred for hiking',
+    diving: '🤿 Sea conditions & marine biodiversity taken into account',
+    freediving: '🤿 Calm water, sea conditions & marine biodiversity prioritized',
+    hiking: '🥾 Cooler temperatures & biodiversity taken into account',
     food: '🍽️ Cuisine highlights shown',
   }
 
