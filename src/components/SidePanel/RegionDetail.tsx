@@ -195,7 +195,7 @@ export default function RegionDetail({ region }: Props) {
           className="inline-flex items-center gap-1 px-2 py-1 text-[10px] font-display font-bold rounded-lg border-2 border-off-black text-white uppercase"
           style={{ backgroundColor: scoreColor(region.bestTimeScore) }}
         >
-          Best Time {region.bestTimeScore}
+          Best Time to Visit {region.bestTimeScore}
         </span>
       </div>
 
@@ -372,7 +372,7 @@ export default function RegionDetail({ region }: Props) {
       <div className="mt-4 space-y-3">
         {/* Weather Score */}
         <div>
-          <h3 className="font-display font-bold text-xs mb-1.5 uppercase">Weather Score</h3>
+          <h3 className="font-display font-bold text-xs mb-1.5 uppercase">Overall Weather Score</h3>
           <div className="grid grid-cols-12 gap-0.5">
             {sortedMonths.map((m, i) => {
               const score = monthlyScores[i].weather
@@ -426,7 +426,7 @@ export default function RegionDetail({ region }: Props) {
 
         {/* Best Time Score */}
         <div>
-          <h3 className="font-display font-bold text-xs mb-1.5 uppercase cursor-help" title="Combined score: 80% weather quality + 20% crowd levels. Higher = better time to visit.">Best Time ™️</h3>
+          <h3 className="font-display font-bold text-xs mb-1.5 uppercase cursor-help" title="Combined score: 80% weather quality + 20% crowd levels. Higher = better time to visit.">Best Time to Visit ™️</h3>
           <div className="grid grid-cols-12 gap-0.5">
             {sortedMonths.map((m, i) => {
               const score = monthlyScores[i].bestTime
@@ -485,14 +485,25 @@ export default function RegionDetail({ region }: Props) {
         <div className="mt-3">
           <h3 className="font-display font-bold text-xs mb-2 uppercase">Landscape</h3>
           <div className="flex flex-wrap gap-1">
-            {region.landscape_type.map((l) => (
-              <span
-                key={l}
-                className="px-2 py-0.5 text-[10px] font-display font-bold bg-cream border-2 border-off-black rounded-lg uppercase"
-              >
-                {l}
-              </span>
-            ))}
+            {region.landscape_type.map((l) => {
+              const cfg: Record<string, { emoji: string; bg: string }> = {
+                seaside: { emoji: '🏖️', bg: 'bg-sky-100' },
+                mountain: { emoji: '⛰️', bg: 'bg-amber-100' },
+                jungle: { emoji: '🌿', bg: 'bg-emerald-100' },
+                desert: { emoji: '🏜️', bg: 'bg-yellow-100' },
+                city: { emoji: '🏙️', bg: 'bg-gray-200' },
+                island: { emoji: '🏝️', bg: 'bg-teal-100' },
+              }
+              const c = cfg[l]
+              return (
+                <span
+                  key={l}
+                  className={`px-2 py-0.5 text-[10px] font-display font-bold ${c?.bg ?? 'bg-cream'} border-2 border-off-black rounded-lg uppercase`}
+                >
+                  {c?.emoji ?? ''} {l}
+                </span>
+              )
+            })}
           </div>
         </div>
       )}

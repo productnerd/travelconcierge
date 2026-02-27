@@ -8,7 +8,15 @@ import { useFilterStore } from '@/store/filterStore'
 import { useShortlistStore } from '@/store/shortlistStore'
 
 const ACTIVITIES = ['surfing', 'hiking', 'diving', 'freediving', 'beach', 'skiing', 'food']
-const LANDSCAPES = ['seaside', 'mountain', 'jungle', 'desert', 'city', 'island']
+const LANDSCAPE_CONFIG: Record<string, { emoji: string; bg: string; activeBg: string }> = {
+  seaside: { emoji: '🏖️', bg: 'bg-sky-100', activeBg: 'bg-sky-500' },
+  mountain: { emoji: '⛰️', bg: 'bg-amber-100', activeBg: 'bg-amber-700' },
+  jungle: { emoji: '🌿', bg: 'bg-emerald-100', activeBg: 'bg-emerald-600' },
+  desert: { emoji: '🏜️', bg: 'bg-yellow-100', activeBg: 'bg-yellow-500' },
+  city: { emoji: '🏙️', bg: 'bg-gray-200', activeBg: 'bg-gray-600' },
+  island: { emoji: '🏝️', bg: 'bg-teal-100', activeBg: 'bg-teal-500' },
+}
+const LANDSCAPES = Object.keys(LANDSCAPE_CONFIG)
 
 export default function FilterBar() {
   const [expanded, setExpanded] = useState(false)
@@ -154,21 +162,22 @@ export default function FilterBar() {
 
         <div className="flex items-center gap-1 shrink-0">
           <span className="text-[10px] font-display font-bold mr-1 uppercase">Landscape:</span>
-          {LANDSCAPES.map((l) => (
-            <button
-              key={l}
-              onClick={() => toggleLandscape(l)}
-              className={`
-                px-1.5 py-0.5 text-[10px] font-display font-bold rounded border-2 border-off-black transition-colors uppercase shrink-0
-                ${selectedLandscapes.includes(l)
-                  ? 'bg-red text-white'
-                  : 'bg-cream text-off-black hover:bg-red-light'
-                }
-              `}
-            >
-              {l}
-            </button>
-          ))}
+          {LANDSCAPES.map((l) => {
+            const cfg = LANDSCAPE_CONFIG[l]
+            const active = selectedLandscapes.includes(l)
+            return (
+              <button
+                key={l}
+                onClick={() => toggleLandscape(l)}
+                className={`
+                  px-1.5 py-0.5 text-[10px] font-display font-bold rounded border-2 border-off-black transition-colors uppercase shrink-0
+                  ${active ? `${cfg.activeBg} text-white` : `${cfg.bg} text-off-black hover:opacity-80`}
+                `}
+              >
+                {cfg.emoji} {l}
+              </button>
+            )
+          })}
         </div>
       </div>
 

@@ -6,7 +6,7 @@ import { useShortlistStore } from '@/store/shortlistStore'
 import { useFilterStore } from '@/store/filterStore'
 import type { FilteredRegion } from '@/hooks/useRegions'
 import { busynessColor, busynessLabel, countryFlag } from '@/types'
-import { scoreColor, scoreLabel } from '@/utils/scoring'
+import { scoreColor, scoreLabel, bestTimeScore as computeBestTime, type ClimateInput } from '@/utils/scoring'
 import { overallScore } from '@/data/costIndex'
 import type { ColorMode } from '@/store/filterStore'
 import 'mapbox-gl/dist/mapbox-gl.css'
@@ -34,6 +34,28 @@ export default function TravelMap({ regions, geojson }: Props) {
   const colorMode = useFilterStore((s) => s.colorMode)
   const setColorMode = useFilterStore((s) => s.setColorMode)
   const selectedActivities = useFilterStore((s) => s.selectedActivities)
+  const selectedMonths = useFilterStore((s) => s.selectedMonths)
+  const algorithmPreset = useFilterStore((s) => s.algorithmPreset)
+
+  // Regions where selected month is in top 3 best months
+  const bestMonthSlugs = useMemo(() => {
+    const slugs = new Set<string>()
+    for (const r of regions) {
+      const monthScores = r.months.map((m) => {
+        const input: ClimateInput = {
+          temp_avg_c: m.temp_avg_c, temp_min_c: m.temp_min_c, temp_max_c: m.temp_max_c,
+          rainfall_mm: m.rainfall_mm, sunshine_hours_day: m.sunshine_hours_day,
+          cloud_cover_pct: m.cloud_cover_pct, humidity_pct: m.humidity_pct,
+          wind_speed_kmh: m.wind_speed_kmh, has_monsoon: m.has_monsoon,
+          sea_temp_c: m.sea_temp_c, busyness: m.busyness,
+        }
+        return { month: m.month, score: computeBestTime(input, algorithmPreset, selectedActivities) }
+      })
+      const top3 = monthScores.sort((a, b) => b.score - a.score).slice(0, 3).map((m) => m.month)
+      if (selectedMonths.some((m) => top3.includes(m))) slugs.add(r.slug)
+    }
+    return slugs
+  }, [regions, selectedMonths, algorithmPreset, selectedActivities])
 
   // Build a lookup: geojson_id → region data
   const regionByGeojsonId = useMemo(() => {
@@ -230,7 +252,7 @@ export default function TravelMap({ regions, geojson }: Props) {
             className="flex items-center gap-0.5 bg-cream/90 border border-off-black rounded px-1 py-0.5 text-[10px] font-mono cursor-pointer select-none"
             onClick={() => selectRegion(r.slug)}
           >
-            <span>{countryFlag(r.country_code)} {r.has_monsoon ? '⛈️' : r.avg_temp_c !== null ? `${Math.round(r.avg_temp_c)}°` : '—'}</span>
+            <span>{countryFlag(r.country_code)} {r.has_monsoon ? '⛈️' : r.avg_temp_c !== null ? `${Math.round(r.avg_temp_c)}°` : '—'}{bestMonthSlugs.has(r.slug) ? ' ✨' : ''}</span>
           </div>
         </Marker>
       ))}
@@ -296,7 +318,7 @@ export default function TravelMap({ regions, geojson }: Props) {
         <div className="flex items-center gap-1.5 mb-3 flex-wrap">
           {([
             { mode: 'overall' as ColorMode, label: 'Overall', tip: 'Combines weather, crowds, cost, and safety' },
-            { mode: 'bestTime' as ColorMode, label: 'Best Time', tip: 'Best combination of good weather and low crowds' },
+            { mode: 'bestTime' as ColorMode, label: 'Best Time to Visit', tip: 'Best combination of good weather and low crowds' },
             { mode: 'busyness' as ColorMode, label: 'Crowds', tip: 'Tourist crowd levels 1 (very quiet) to 5 (peak season)' },
             { mode: 'weather' as ColorMode, label: 'Weather', tip: 'Temperature, rainfall, sunshine, humidity, wind, cloud cover' },
           ]).map(({ mode, label, tip }) => (
