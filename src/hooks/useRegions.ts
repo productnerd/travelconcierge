@@ -4,7 +4,7 @@ import { useFilterStore } from '@/store/filterStore'
 import { useShortlistStore } from '@/store/shortlistStore'
 import type { RegionWithMonths } from '@/types'
 import { goodWeatherScore, bestTimeScore, type ClimateInput } from '@/utils/scoring'
-import { SAFETY_TIER } from '@/data/costIndex'
+import { SAFETY_TIER, COUNTRY_CONTINENT } from '@/data/costIndex'
 
 export interface FilteredRegion {
   id: string
@@ -155,6 +155,12 @@ export function useRegions() {
       if (filters.selectedLandscapes.length > 0) {
         const hasLandscape = filters.selectedLandscapes.some((l) => r.landscape_type.includes(l))
         if (!hasLandscape) return false
+      }
+
+      // Continent filter
+      if (filters.selectedContinents.length > 0) {
+        const continent = COUNTRY_CONTINENT[r.country_code]
+        if (!continent || !filters.selectedContinents.includes(continent)) return false
       }
 
       // Safety filter — hide Risky (tier 3) and Avoid (tier 4)

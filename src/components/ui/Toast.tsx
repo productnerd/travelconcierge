@@ -7,24 +7,33 @@ interface ToastProps {
 }
 
 export default function Toast({ message, duration = 3000, onDone }: ToastProps) {
-  const [visible, setVisible] = useState(true)
+  const [phase, setPhase] = useState<'enter' | 'visible' | 'exit'>('enter')
 
   useEffect(() => {
-    const timer = setTimeout(() => {
-      setVisible(false)
-      setTimeout(onDone, 300)
+    // Trigger enter animation on next frame
+    const enterTimer = requestAnimationFrame(() => setPhase('visible'))
+
+    const exitTimer = setTimeout(() => {
+      setPhase('exit')
+      setTimeout(onDone, 400)
     }, duration)
-    return () => clearTimeout(timer)
+
+    return () => {
+      cancelAnimationFrame(enterTimer)
+      clearTimeout(exitTimer)
+    }
   }, [duration, onDone])
 
   return (
     <div
-      className={`
-        fixed bottom-20 left-1/2 -translate-x-1/2 z-50
-        px-4 py-2 bg-off-black text-cream text-sm font-display rounded-lg
-        shadow-lg transition-opacity duration-300
-        ${visible ? 'opacity-100' : 'opacity-0'}
-      `}
+      className="fixed top-4 right-4 z-50 px-4 py-2 bg-off-black text-cream text-sm font-display rounded-lg shadow-lg"
+      style={{
+        transform: phase === 'visible' ? 'translateX(0)' : 'translateX(120%)',
+        opacity: phase === 'visible' ? 1 : 0,
+        transition: phase === 'exit'
+          ? 'transform 400ms cubic-bezier(0.4, 0, 0.8, 0.2), opacity 400ms cubic-bezier(0.4, 0, 0.8, 0.2)'
+          : 'transform 400ms cubic-bezier(0.16, 1, 0.3, 1), opacity 400ms cubic-bezier(0.16, 1, 0.3, 1)',
+      }}
     >
       {message}
     </div>

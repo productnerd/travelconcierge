@@ -83,7 +83,7 @@ export default function FilterBar() {
             title="Hide regions with Risky or Avoid travel advisories"
             className={`
               px-2 py-1 text-[10px] font-display font-bold rounded-lg border-2 border-off-black transition-colors uppercase
-              ${hideRisky ? 'bg-red text-white' : 'bg-cream text-off-black hover:bg-red-light'}
+              ${hideRisky ? 'bg-off-black text-cream' : 'bg-cream text-off-black hover:bg-off-black/10'}
             `}
           >
             Hide Risky

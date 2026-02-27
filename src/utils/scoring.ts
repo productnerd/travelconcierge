@@ -338,9 +338,9 @@ export function goodWeatherScore(d: ClimateInput, activities: string[] = []): nu
 export type AlgorithmPreset = 'weather-chaser' | 'balanced' | 'crowd-avoider'
 
 const PRESET_ALPHA: Record<AlgorithmPreset, number> = {
-  'weather-chaser': 0.95,
-  'balanced': 0.75,     // weather 75%, crowds 25%
-  'crowd-avoider': 0.05, // crowds 95%, weather 5%
+  'weather-chaser': 1.0,  // weather 100%, crowds 0%
+  'balanced': 0.80,       // weather 80%, crowds 20%
+  'crowd-avoider': 0.0,   // weather 0%, crowds 100%
 }
 
 /**

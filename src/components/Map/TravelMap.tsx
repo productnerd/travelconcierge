@@ -147,11 +147,17 @@ export default function TravelMap({ regions, geojson }: Props) {
       }}
       style={{ width: '100%', height: '100%' }}
       mapStyle="mapbox://styles/mapbox/light-v11"
+      projection={{ name: 'globe' }}
       interactiveLayerIds={['region-fill']}
       onClick={handleClick}
       onMouseMove={handleMouseMove}
       onMouseLeave={handleMouseLeave}
       cursor={hovered ? 'pointer' : 'grab'}
+      onLoad={(e) => {
+        const map = e.target
+        map.setPaintProperty('water', 'fill-color', '#A8E0F0')
+        map.setFog({ color: '#f8f4ea', 'high-color': '#c2d0e0', 'horizon-blend': 0.04 })
+      }}
     >
       {enrichedGeojson && (
         <Source id="travel-regions" type="geojson" data={enrichedGeojson} promoteId="geojson_id">

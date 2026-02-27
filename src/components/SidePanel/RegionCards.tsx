@@ -2,7 +2,7 @@ import { useMemo, useCallback } from 'react'
 import type { FilteredRegion } from '@/hooks/useRegions'
 import RegionCard from './RegionCard'
 import { useFilterStore, type SortBy } from '@/store/filterStore'
-import { COST_INDEX, overallScore } from '@/data/costIndex'
+import { COST_INDEX, overallScore, CONTINENTS } from '@/data/costIndex'
 
 function haversineKm(lat1: number, lon1: number, lat2: number, lon2: number): number {
   const R = 6371
@@ -34,6 +34,8 @@ export default function RegionCards({ regions }: Props) {
   const userLocation = useFilterStore((s) => s.userLocation)
   const setUserLocation = useFilterStore((s) => s.setUserLocation)
   const selectedActivities = useFilterStore((s) => s.selectedActivities)
+  const selectedContinents = useFilterStore((s) => s.selectedContinents)
+  const toggleContinent = useFilterStore((s) => s.toggleContinent)
 
   const handleSortClick = useCallback((key: SortBy) => {
     if (key === 'distance' && !userLocation) {
@@ -96,6 +98,23 @@ export default function RegionCards({ regions }: Props) {
             `}
           >
             {label}
+          </button>
+        ))}
+      </div>
+
+      {/* Continent filter */}
+      <div className="flex items-center gap-1 mb-3 flex-wrap">
+        <span className="text-[10px] font-display font-bold text-off-black/50 mr-1 uppercase">Region:</span>
+        {CONTINENTS.map((c) => (
+          <button
+            key={c}
+            onClick={() => toggleContinent(c)}
+            className={`
+              px-2 py-0.5 text-[10px] font-display font-bold rounded border-2 border-off-black transition-colors uppercase
+              ${selectedContinents.includes(c) ? 'bg-off-black text-cream' : 'bg-cream text-off-black hover:bg-off-black/10'}
+            `}
+          >
+            {c}
           </button>
         ))}
       </div>

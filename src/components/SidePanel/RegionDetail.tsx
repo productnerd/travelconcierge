@@ -10,7 +10,7 @@ import { cuisineScore } from '@/data/cuisineScore'
 import { getRegionDishes } from '@/data/regionalDishes'
 
 const MONTH_LABELS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
-const BUDGET_LABELS: Record<number, string> = { 1: '€15–25/day', 2: '€25–50/day', 3: '€50–100/day', 4: '€100–200/day', 5: '€200+/day' }
+const BUDGET_LABELS: Record<number, string> = { 1: '€15–25/day', 2: '€25–45/day', 3: '€45–95/day', 4: '€95–190/day', 5: '€190+/day' }
 
 function Sparkline({ label, unit, values, selectedMonths }: {
   label: string; unit: string; values: (number | null)[]; selectedMonths: number[]
@@ -330,7 +330,7 @@ export default function RegionDetail({ region }: Props) {
       <div className="mt-4 space-y-3">
         {/* Weather Score */}
         <div>
-          <h3 className="font-display font-bold text-xs mb-1.5 uppercase">Monthly Weather</h3>
+          <h3 className="font-display font-bold text-xs mb-1.5 uppercase">Weather Score</h3>
           <div className="grid grid-cols-12 gap-0.5">
             {sortedMonths.map((m, i) => {
               const score = monthlyScores[i].weather
@@ -384,7 +384,7 @@ export default function RegionDetail({ region }: Props) {
 
         {/* Best Time Score */}
         <div>
-          <h3 className="font-display font-bold text-xs mb-1.5 uppercase">Best Time ™️</h3>
+          <h3 className="font-display font-bold text-xs mb-1.5 uppercase cursor-help" title="Combined score: 80% weather quality + 20% crowd levels. Higher = better time to visit.">Best Time ™️</h3>
           <div className="grid grid-cols-12 gap-0.5">
             {sortedMonths.map((m, i) => {
               const score = monthlyScores[i].bestTime

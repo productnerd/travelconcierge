@@ -1,6 +1,53 @@
+// ── Continent lookup ──────────────────────────────────────────────────
+export type Continent = 'Europe' | 'Asia' | 'Africa' | 'North America' | 'South America' | 'Oceania'
+
+export const CONTINENTS: Continent[] = ['Europe', 'Asia', 'Africa', 'North America', 'South America', 'Oceania']
+
+export const COUNTRY_CONTINENT: Record<string, Continent> = {
+  // Europe
+  AL: 'Europe', AD: 'Europe', AT: 'Europe', BY: 'Europe', BE: 'Europe', BA: 'Europe', BG: 'Europe',
+  HR: 'Europe', CY: 'Europe', CZ: 'Europe', DK: 'Europe', EE: 'Europe', FI: 'Europe', FR: 'Europe',
+  DE: 'Europe', GR: 'Europe', HU: 'Europe', IS: 'Europe', IE: 'Europe', IT: 'Europe', XK: 'Europe',
+  LV: 'Europe', LI: 'Europe', LT: 'Europe', LU: 'Europe', MT: 'Europe', MD: 'Europe', MC: 'Europe',
+  ME: 'Europe', NL: 'Europe', MK: 'Europe', NO: 'Europe', PL: 'Europe', PT: 'Europe', RO: 'Europe',
+  RU: 'Europe', SM: 'Europe', RS: 'Europe', SK: 'Europe', SI: 'Europe', ES: 'Europe', SE: 'Europe',
+  CH: 'Europe', UA: 'Europe', GB: 'Europe', VA: 'Europe', FO: 'Europe',
+  // Asia
+  AF: 'Asia', AM: 'Asia', AZ: 'Asia', BH: 'Asia', BD: 'Asia', BT: 'Asia', BN: 'Asia', KH: 'Asia',
+  CN: 'Asia', GE: 'Asia', IN: 'Asia', ID: 'Asia', IR: 'Asia', IQ: 'Asia', IL: 'Asia', JP: 'Asia',
+  JO: 'Asia', KZ: 'Asia', KW: 'Asia', KG: 'Asia', LA: 'Asia', LB: 'Asia', MY: 'Asia', MV: 'Asia',
+  MM: 'Asia', MN: 'Asia', NP: 'Asia', KP: 'Asia', OM: 'Asia', PK: 'Asia', PS: 'Asia', PH: 'Asia',
+  QA: 'Asia', SA: 'Asia', SG: 'Asia', KR: 'Asia', LK: 'Asia', SY: 'Asia', TW: 'Asia', TJ: 'Asia',
+  TH: 'Asia', TL: 'Asia', TR: 'Asia', TM: 'Asia', AE: 'Asia', UZ: 'Asia', VN: 'Asia', YE: 'Asia',
+  // North America & Caribbean
+  US: 'North America', CA: 'North America', AG: 'North America', BS: 'North America', BB: 'North America',
+  BZ: 'North America', CR: 'North America', CU: 'North America', DM: 'North America', DO: 'North America',
+  SV: 'North America', GD: 'North America', GT: 'North America', HT: 'North America', HN: 'North America',
+  JM: 'North America', KN: 'North America', LC: 'North America', VC: 'North America', TT: 'North America',
+  NI: 'North America', PA: 'North America', MX: 'North America', AW: 'North America', TC: 'North America',
+  CW: 'North America', GP: 'North America', MQ: 'North America', BM: 'North America', PR: 'North America',
+  // South America
+  AR: 'South America', BO: 'South America', BR: 'South America', CL: 'South America', CO: 'South America',
+  EC: 'South America', GY: 'South America', PY: 'South America', PE: 'South America', SR: 'South America',
+  UY: 'South America', VE: 'South America',
+  // Africa
+  DZ: 'Africa', AO: 'Africa', BJ: 'Africa', BW: 'Africa', BF: 'Africa', BI: 'Africa', CV: 'Africa',
+  CM: 'Africa', CF: 'Africa', TD: 'Africa', KM: 'Africa', CG: 'Africa', CD: 'Africa', CI: 'Africa',
+  DJ: 'Africa', GQ: 'Africa', ER: 'Africa', SZ: 'Africa', ET: 'Africa', GA: 'Africa', GM: 'Africa',
+  GH: 'Africa', GN: 'Africa', GW: 'Africa', KE: 'Africa', LS: 'Africa', LR: 'Africa', LY: 'Africa',
+  MG: 'Africa', MW: 'Africa', ML: 'Africa', MR: 'Africa', MU: 'Africa', MZ: 'Africa', NA: 'Africa',
+  NE: 'Africa', NG: 'Africa', RW: 'Africa', ST: 'Africa', SN: 'Africa', SC: 'Africa', SL: 'Africa',
+  SO: 'Africa', ZA: 'Africa', SS: 'Africa', SD: 'Africa', TG: 'Africa', TN: 'Africa', UG: 'Africa',
+  ZM: 'Africa', ZW: 'Africa', MA: 'Africa', RE: 'Africa',
+  // Oceania
+  AU: 'Oceania', FJ: 'Oceania', KI: 'Oceania', MH: 'Oceania', FM: 'Oceania', NR: 'Oceania',
+  NZ: 'Oceania', PW: 'Oceania', PG: 'Oceania', WS: 'Oceania', SB: 'Oceania', TO: 'Oceania',
+  TV: 'Oceania', VU: 'Oceania', PF: 'Oceania', CK: 'Oceania',
+}
+
 // Daily travel budget tier per country (1=very cheap, 5=very expensive)
 // Based on Numbeo Cost of Living Index + backpacker budget estimates
-// 1: €15–25/day  2: €25–50/day  3: €50–100/day  4: €100–200/day  5: €200+/day
+// 1: €15–25/day  2: €25–45/day  3: €45–95/day  4: €95–190/day  5: €190+/day
 
 export const COST_INDEX: Record<string, number> = {
   // Europe
@@ -189,5 +236,5 @@ export function overallScore(bestTimeScore: number, countryCode: string, activit
 /** Skiing cost label: base budget + lift pass */
 export function skiCostLabel(countryCode: string): string | null {
   const lift = SKI_LIFT_PRICE[countryCode]
-  return lift ? `+$${lift}/day lift pass` : null
+  return lift ? `+€${Math.round(lift * 0.95)}/day lift pass` : null
 }

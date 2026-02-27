@@ -22,7 +22,7 @@ function App() {
 
   // Deselect region when filters or color mode change (but not month selection)
   const filterKey = useFilterStore((s) =>
-    `${s.busynessMax}-${s.hideRisky}-${s.colorMode}-${s.algorithmPreset}-${s.tempMin}-${s.tempMax}-${s.sunshineMin}-${s.rainfallMax}-${s.selectedActivities.length}-${s.selectedLandscapes.length}`
+    `${s.busynessMax}-${s.hideRisky}-${s.colorMode}-${s.algorithmPreset}-${s.tempMin}-${s.tempMax}-${s.sunshineMin}-${s.rainfallMax}-${s.selectedActivities.length}-${s.selectedLandscapes.length}-${s.selectedContinents.length}`
   )
   const isMount = useRef(true)
   useEffect(() => {

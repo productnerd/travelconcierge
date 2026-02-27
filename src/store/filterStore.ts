@@ -13,6 +13,7 @@ export interface FilterState {
   rainfallMax: number | null
   selectedActivities: string[]
   selectedLandscapes: string[]
+  selectedContinents: string[]
   showShortlistOnly: boolean
   hideRisky: boolean
   agentAppliedKeys: string[]
@@ -31,6 +32,7 @@ interface FilterActions {
   setRainfallMax: (max: number | null) => void
   toggleActivity: (activity: string) => void
   toggleLandscape: (landscape: string) => void
+  toggleContinent: (continent: string) => void
   setShowShortlistOnly: (show: boolean) => void
   setHideRisky: (hide: boolean) => void
   setFilter: (key: string, value: unknown) => void
@@ -52,6 +54,7 @@ const initialState: FilterState = {
   rainfallMax: null,
   selectedActivities: [],
   selectedLandscapes: [],
+  selectedContinents: [],
   showShortlistOnly: false,
   hideRisky: true,
   agentAppliedKeys: [],
@@ -99,6 +102,13 @@ export const useFilterStore = create<FilterState & FilterActions>((set) => ({
         : [...s.selectedLandscapes, landscape],
     })),
 
+  toggleContinent: (continent) =>
+    set((s) => ({
+      selectedContinents: s.selectedContinents.includes(continent)
+        ? s.selectedContinents.filter((c) => c !== continent)
+        : [...s.selectedContinents, continent],
+    })),
+
   setShowShortlistOnly: (show) => set({ showShortlistOnly: show }),
   setHideRisky: (hide) => set({ hideRisky: hide }),
 
@@ -113,6 +123,7 @@ export const useFilterStore = create<FilterState & FilterActions>((set) => ({
       rainfallMax: null,
       selectedActivities: [],
       selectedLandscapes: [],
+      selectedContinents: [],
       showShortlistOnly: false,
       hideRisky: true,
     }
