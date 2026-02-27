@@ -57,6 +57,20 @@ function Sparkline({ label, unit, values, selectedMonths }: {
   )
 }
 
+function monsoonSeverity(months: FilteredRegion['months'], selectedMonths: number[]):
+  { level: 'heavy' | 'moderate' | 'low'; label: string; icon: string } | null {
+  const monsoonMonths = months.filter(m =>
+    selectedMonths.includes(m.month) && m.has_monsoon
+  )
+  if (monsoonMonths.length === 0) return null
+
+  const avgRain = monsoonMonths.reduce((sum, m) => sum + (m.rainfall_mm ?? 0), 0) / monsoonMonths.length
+
+  if (avgRain > 300) return { level: 'heavy', label: 'HEAVY MONSOON RISK', icon: '⛈️' }
+  if (avgRain > 150) return { level: 'moderate', label: 'MODERATE MONSOON RISK', icon: '🌧️' }
+  return { level: 'low', label: 'LOW MONSOON RISK — END OF SEASON', icon: '🌦️' }
+}
+
 interface Props {
   region: FilteredRegion
 }
@@ -113,6 +127,22 @@ export default function RegionDetail({ region }: Props) {
       >
         &#8592; Back to regions
       </button>
+
+      {/* Monsoon warning */}
+      {(() => {
+        const severity = monsoonSeverity(region.months, selectedMonths)
+        if (!severity) return null
+        const style = severity.level === 'heavy'
+          ? 'bg-red/15 border-red/50'
+          : severity.level === 'moderate'
+          ? 'bg-amber/20 border-amber/50'
+          : 'bg-amber/10 border-amber/30'
+        return (
+          <div className={`${style} border-2 rounded-lg p-2 text-xs font-display font-bold mb-3 uppercase`}>
+            {severity.icon} {severity.label}
+          </div>
+        )
+      })()}
 
       {/* Header */}
       <div className="flex items-start justify-between">
@@ -455,12 +485,6 @@ export default function RegionDetail({ region }: Props) {
         </div>
       )}
 
-      {/* Monsoon warning */}
-      {region.has_monsoon && (
-        <div className="mt-4 bg-amber/20 border-2 border-off-black rounded-lg p-2 text-xs font-display">
-          Monsoon conditions possible during selected months
-        </div>
-      )}
     </div>
   )
 }

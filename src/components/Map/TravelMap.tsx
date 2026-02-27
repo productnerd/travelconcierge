@@ -230,7 +230,7 @@ export default function TravelMap({ regions, geojson }: Props) {
             className="flex items-center gap-0.5 bg-cream/90 border border-off-black rounded px-1 py-0.5 text-[10px] font-mono cursor-pointer select-none"
             onClick={() => selectRegion(r.slug)}
           >
-            <span>{countryFlag(r.country_code)} {r.avg_temp_c !== null ? `${Math.round(r.avg_temp_c)}°` : '—'}</span>
+            <span>{countryFlag(r.country_code)} {r.has_monsoon ? '⛈️' : r.avg_temp_c !== null ? `${Math.round(r.avg_temp_c)}°` : '—'}</span>
           </div>
         </Marker>
       ))}
