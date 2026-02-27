@@ -26,13 +26,7 @@ export default function ActivePills() {
     pills.push({ key: 'rainfallMax', label: `Rain ≤ ${filters.rainfallMax}mm`, isAgent: filters.agentAppliedKeys.includes('rainfallMax') })
   }
 
-  for (const a of filters.selectedActivities) {
-    pills.push({ key: `activity-${a}`, label: a, isAgent: filters.agentAppliedKeys.includes('selectedActivities') })
-  }
-
-  for (const l of filters.selectedLandscapes) {
-    pills.push({ key: `landscape-${l}`, label: l, isAgent: filters.agentAppliedKeys.includes('selectedLandscapes') })
-  }
+  // Activities and landscapes are toggled directly from the filter bar pills — no X-tags needed
 
   if (filters.showShortlistOnly) {
     pills.push({ key: 'showShortlistOnly', label: 'Shortlist only', isAgent: false })

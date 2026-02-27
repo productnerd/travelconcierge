@@ -40,8 +40,6 @@ export default function FilterBar() {
         <div className="flex items-center gap-3 md:gap-4 overflow-x-auto pb-1 scrollbar-thin flex-1 min-w-0">
           <MonthSelector />
 
-          <div className="w-px h-6 bg-off-black/20 shrink-0" />
-
           <BusynessFilter />
 
           <div className="w-px h-6 bg-off-black/20 shrink-0 hidden md:block" />
