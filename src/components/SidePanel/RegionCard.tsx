@@ -6,6 +6,7 @@ import { countryFlag } from '@/types'
 import { scoreColor, bestTimeScore as computeBestTime, type ClimateInput } from '@/utils/scoring'
 import { COST_INDEX, costLabel, safetyLabel, overallScore as computeOverall } from '@/data/costIndex'
 import { cuisineScore } from '@/data/cuisineScore'
+import { activeAdvisories } from '@/data/seasonalAdvisories'
 
 interface Props {
   region: FilteredRegion
@@ -99,6 +100,23 @@ export default function RegionCard({ region }: Props) {
             {safetyLabel(region.country_code)}
           </span>
         )}
+
+        {/* Seasonal advisories */}
+        {activeAdvisories(region.slug, selectedMonths, selectedActivities).map((adv) => (
+          <span
+            key={adv.label}
+            className={`text-[10px] font-display font-bold px-1 py-0.5 rounded uppercase ${
+              adv.penalty > 1
+                ? 'bg-green/15 text-green'
+                : adv.penalty < 0.5
+                ? 'bg-red/15 text-red'
+                : 'bg-amber/20 text-amber-700'
+            }`}
+            title={adv.label}
+          >
+            {adv.emoji} {adv.label}
+          </span>
+        ))}
 
       </div>
     </div>

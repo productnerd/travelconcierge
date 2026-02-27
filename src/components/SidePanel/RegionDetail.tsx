@@ -160,14 +160,21 @@ export default function RegionDetail({ region }: Props) {
       })()}
 
       {/* Seasonal advisory banners */}
-      {activeAdvisories(region.slug, selectedMonths, selectedActivities).map((adv) => (
-        <div
-          key={adv.label}
-          className={`${adv.penalty < 0.5 ? 'bg-red/15 border-red/50' : 'bg-amber/20 border-amber/50'} border-2 rounded-lg p-2 text-xs font-display font-bold mb-3 uppercase`}
-        >
-          {adv.emoji} {adv.label}
-        </div>
-      ))}
+      {activeAdvisories(region.slug, selectedMonths, selectedActivities).map((adv) => {
+        const style = adv.penalty > 1
+          ? 'bg-green/15 border-green/30'
+          : adv.penalty < 0.5
+          ? 'bg-red/15 border-red/50'
+          : 'bg-amber/20 border-amber/50'
+        return (
+          <div
+            key={adv.label}
+            className={`${style} border-2 rounded-lg p-2 text-xs font-display font-bold mb-3 uppercase`}
+          >
+            {adv.emoji} {adv.label}
+          </div>
+        )
+      })}
 
       {/* Best month banner */}
       {selectedMonths.some((m) => top3Set.has(m)) && (
