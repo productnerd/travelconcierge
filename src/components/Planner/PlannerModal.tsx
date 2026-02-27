@@ -1,4 +1,3 @@
-import { useMemo } from 'react'
 import { useUIStore } from '@/store/uiStore'
 import { useShortlistStore } from '@/store/shortlistStore'
 import { useFilterStore } from '@/store/filterStore'
@@ -29,14 +28,18 @@ export default function PlannerModal({ regions }: Props) {
   const algorithmPreset = useFilterStore((s) => s.algorithmPreset)
   const selectedActivities = useFilterStore((s) => s.selectedActivities)
 
+  if (!plannerOpen) return null
+
   // Build month → regions mapping for shortlisted regions
-  const monthMap = useMemo(() => {
+  // (computed only when modal is open)
+  const monthMap = (() => {
     const map: Record<number, { slug: string; name: string; countryCode: string; score: number }[]> = {}
     for (let i = 1; i <= 12; i++) map[i] = []
 
     const shortlisted = regions.filter((r) => shortlistedSlugs.includes(r.slug))
 
     for (const region of shortlisted) {
+      if (!region.months?.length) continue
       // Score all 12 months
       const monthScores = region.months.map((m) => {
         const input: ClimateInput = {
@@ -50,16 +53,14 @@ export default function PlannerModal({ regions }: Props) {
       })
 
       // Top 3 months
-      const top3 = monthScores.sort((a, b) => b.score - a.score).slice(0, 3)
+      const top3 = [...monthScores].sort((a, b) => b.score - a.score).slice(0, 3)
       for (const { month, score } of top3) {
         map[month].push({ slug: region.slug, name: region.name, countryCode: region.country_code, score })
       }
     }
 
     return map
-  }, [regions, shortlistedSlugs, algorithmPreset, selectedActivities])
-
-  if (!plannerOpen) return null
+  })()
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4" onClick={togglePlanner}>

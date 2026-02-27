@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, useCallback } from 'react'
+import { Component, useEffect, useRef, useState, useCallback, type ReactNode } from 'react'
 import FilterBar from '@/components/Filters/FilterBar'
 import Toast from '@/components/ui/Toast'
 import TravelMap from '@/components/Map/TravelMap'
@@ -12,6 +12,21 @@ import { useAgent } from '@/hooks/useAgent'
 import { useShareableLink } from '@/hooks/useShareableLink'
 import { useUIStore } from '@/store/uiStore'
 import { useFilterStore } from '@/store/filterStore'
+
+class MapErrorBoundary extends Component<{ children: ReactNode }, { hasError: boolean }> {
+  state = { hasError: false }
+  static getDerivedStateFromError() { return { hasError: true } }
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div className="flex items-center justify-center h-full text-off-black/40 font-display text-xs">
+          Map failed to load. Try refreshing.
+        </div>
+      )
+    }
+    return this.props.children
+  }
+}
 
 function App() {
   const { regions, loading: regionsLoading } = useRegions()
@@ -85,10 +100,12 @@ function App() {
               </div>
             </div>
           ) : (
-            <TravelMap
-              regions={regions}
-              geojson={geojson}
-            />
+            <MapErrorBoundary>
+              <TravelMap
+                regions={regions}
+                geojson={geojson}
+              />
+            </MapErrorBoundary>
           )}
 
           {/* Mobile: floating button to open side panel */}
