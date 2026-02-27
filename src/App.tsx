@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState, useCallback } from 'react'
+import { useEffect, useRef, useState, useCallback } from 'react'
 import FilterBar from '@/components/Filters/FilterBar'
 import Toast from '@/components/ui/Toast'
 import TravelMap from '@/components/Map/TravelMap'
@@ -11,16 +11,6 @@ import { useAgent } from '@/hooks/useAgent'
 import { useShareableLink } from '@/hooks/useShareableLink'
 import { useUIStore } from '@/store/uiStore'
 import { useFilterStore } from '@/store/filterStore'
-
-const DEFAULT_CREAM = '#F5F0E8'
-const LANDSCAPE_COLORS: Record<string, string> = {
-  seaside: '#D6EAF8',
-  mountain: '#E8D5C4',
-  jungle: '#D5E8D4',
-  desert: '#F5EDCF',
-  city: '#E0E0E0',
-  island: '#D1F0ED',
-}
 
 function App() {
   const { regions, loading: regionsLoading } = useRegions()
@@ -77,36 +67,8 @@ function App() {
   // Hydrate from URL params on mount
   useShareableLink()
 
-  // Landscape-themed background
-  const selectedLandscapes = useFilterStore((s) => s.selectedLandscapes)
-  const themeBackground = useMemo(() => {
-    if (selectedLandscapes.length === 0) return null
-    if (selectedLandscapes.length === 1) return LANDSCAPE_COLORS[selectedLandscapes[0]] ?? null
-    // Multiple: diagonal gradient
-    const colors = selectedLandscapes.map((l) => LANDSCAPE_COLORS[l]).filter(Boolean)
-    if (colors.length === 0) return null
-    return `linear-gradient(135deg, ${colors.join(', ')})`
-  }, [selectedLandscapes])
-
-  // Update CSS variable for bg-cream so all components auto-update
-  useEffect(() => {
-    const root = document.documentElement
-    if (selectedLandscapes.length === 0) {
-      root.style.setProperty('--color-cream', DEFAULT_CREAM)
-    } else if (selectedLandscapes.length === 1) {
-      root.style.setProperty('--color-cream', LANDSCAPE_COLORS[selectedLandscapes[0]] ?? DEFAULT_CREAM)
-    } else {
-      // For gradient: set variable to first color (cards etc.), gradient applied on root div
-      root.style.setProperty('--color-cream', LANDSCAPE_COLORS[selectedLandscapes[0]] ?? DEFAULT_CREAM)
-    }
-    return () => { root.style.setProperty('--color-cream', DEFAULT_CREAM) }
-  }, [selectedLandscapes])
-
   return (
-    <div
-      className="h-full w-full flex flex-col bg-cream transition-colors duration-300"
-      style={themeBackground ? { background: themeBackground } : undefined}
-    >
+    <div className="h-full w-full flex flex-col bg-cream">
       {/* Filter Bar */}
       <FilterBar />
 

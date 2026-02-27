@@ -8,6 +8,8 @@ import { scoreColor, goodWeatherScore, bestTimeScore, estimateSnowCm, type Clima
 import { COST_INDEX, costLabel, skiCostLabel } from '@/data/costIndex'
 import { cuisineScore } from '@/data/cuisineScore'
 import { getRegionDishes } from '@/data/regionalDishes'
+import { biodiversityScore, biodiversityMetrics } from '@/data/biodiversity'
+import { NATIVE_WILDLIFE, NATIVE_FLORA } from '@/data/wildlife'
 
 const MONTH_LABELS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
 const BUDGET_LABELS: Record<number, string> = { 1: '€15–25/day', 2: '€25–45/day', 3: '€45–95/day', 4: '€95–190/day', 5: '€190+/day' }
@@ -290,6 +292,42 @@ export default function RegionDetail({ region }: Props) {
           ) : null
         })()}
       </div>
+
+      {/* Biodiversity */}
+      {(() => {
+        const bioScore = biodiversityScore(region.country_code)
+        const metrics = biodiversityMetrics(region.country_code)
+        const animals = NATIVE_WILDLIFE[region.country_code] ?? []
+        const flora = NATIVE_FLORA[region.country_code] ?? []
+        return metrics.length > 0 ? (
+          <div className="bg-cream border border-off-black/30 rounded-lg px-2 py-1.5 mt-3">
+            <div className="flex items-center gap-2 mb-1">
+              <span className="text-[10px] font-display text-off-black/60">🌿 Biodiversity</span>
+              <span
+                className="text-xs font-mono font-bold px-2 py-1 rounded text-white"
+                style={{ backgroundColor: scoreColor(bioScore) }}
+              >
+                {(bioScore / 10).toFixed(1)}/10
+              </span>
+              <span className="text-[9px] text-off-black/30 italic ml-auto">{metrics.join(' · ')}</span>
+            </div>
+            {(animals.length > 0 || flora.length > 0) && (
+              <div className="flex flex-wrap gap-1">
+                {animals.map((a) => (
+                  <span key={a.name} className="px-2 py-0.5 text-[10px] font-display bg-white border border-off-black/20 rounded-full">
+                    {a.emoji} {a.name}
+                  </span>
+                ))}
+                {flora.map((f) => (
+                  <span key={f.name} className="px-2 py-0.5 text-[10px] font-display bg-white border border-off-black/20 rounded-full">
+                    {f.emoji} {f.name}
+                  </span>
+                ))}
+              </div>
+            )}
+          </div>
+        ) : null
+      })()}
 
       {/* Monthly Climate — sparkline graphs */}
       <div className="mt-4">

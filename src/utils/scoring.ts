@@ -8,6 +8,7 @@
  * Best Time to Visit (0–100): geometric mean of weather quality and quietness × safety.
  */
 import { safetyMultiplier } from '@/data/costIndex'
+import { BIODIVERSITY } from '@/data/biodiversity'
 
 // ── Sub-score functions (0–1) ───────────────────────────────────────
 
@@ -356,7 +357,24 @@ export function bestTimeScore(d: ClimateInput, preset: AlgorithmPreset = 'balanc
   const W = goodWeatherScore(d, activities) / 100
   // busyness 1→Q=1.0, busyness 5→Q=0.2 (linear, gentler floor than before)
   const Q = Math.max(1 - (d.busyness - 1) * 0.2, 0.2)
-  const raw = 100 * Math.pow(W, alpha) * Math.pow(Q, 1 - alpha)
+  let raw = 100 * Math.pow(W, alpha) * Math.pow(Q, 1 - alpha)
+
+  // Biodiversity factor: ±15% for relevant activities (does NOT affect overallScore)
+  if (countryCode) {
+    const bio = BIODIVERSITY[countryCode]
+    if (bio) {
+      const hasWater = activities.some(a => ['diving', 'freediving', 'beach'].includes(a))
+      const hasHiking = activities.includes('hiking')
+      if (hasWater && bio.marine !== undefined) {
+        raw *= 0.85 + 0.15 * (bio.marine / 100)
+      }
+      if (hasHiking) {
+        const t = bio.protected !== undefined ? bio.index * 0.6 + bio.protected * 0.4 : bio.index
+        raw *= 0.85 + 0.15 * (t / 100)
+      }
+    }
+  }
+
   return countryCode ? raw * safetyMultiplier(countryCode) : raw
 }
 
