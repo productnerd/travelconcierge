@@ -3,7 +3,7 @@ import FilterBar from '@/components/Filters/FilterBar'
 import Toast from '@/components/ui/Toast'
 import TravelMap from '@/components/Map/TravelMap'
 import SidePanel from '@/components/SidePanel/SidePanel'
-import AgentBar from '@/components/Agent/AgentBar'
+// import AgentBar from '@/components/Agent/AgentBar'
 import AgentPanel from '@/components/Agent/AgentPanel'
 import { useRegions } from '@/hooks/useRegions'
 import { useGeoJSON } from '@/hooks/useGeoJSON'
@@ -15,7 +15,7 @@ import { useFilterStore } from '@/store/filterStore'
 function App() {
   const { regions, loading: regionsLoading } = useRegions()
   const { geojson } = useGeoJSON()
-  const { messages, loading: agentLoading, sendMessage, answerDecisionQuestion } = useAgent()
+  const { messages, loading: agentLoading, sendMessage: _sendMessage, answerDecisionQuestion } = useAgent()
   const toggleSidePanel = useUIStore((s) => s.toggleSidePanel)
   const sidePanelOpen = useUIStore((s) => s.sidePanelOpen)
   const selectRegion = useUIStore((s) => s.selectRegion)
@@ -114,7 +114,7 @@ function App() {
       />
 
       {/* Agent Bar (bottom) — hidden for now, will re-enable later */}
-      {/* <AgentBar onSend={sendMessage} loading={agentLoading} /> */}
+      {/* <AgentBar onSend={_sendMessage} loading={agentLoading} /> */}
 
       {/* Activity-aware scoring toasts */}
       {toasts.map((toast) => (
