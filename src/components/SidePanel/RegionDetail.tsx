@@ -12,18 +12,18 @@ import { getRegionDishes } from '@/data/regionalDishes'
 const MONTH_LABELS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
 const BUDGET_LABELS: Record<number, string> = { 1: '€15–25/day', 2: '€25–45/day', 3: '€45–95/day', 4: '€95–190/day', 5: '€190+/day' }
 
-function Sparkline({ label, unit, values, selectedMonths }: {
-  label: string; unit: string; values: (number | null)[]; selectedMonths: number[]
+function Sparkline({ label, unit, values, selectedMonths, showLabels }: {
+  label: string; unit: string; values: (number | null)[]; selectedMonths: number[]; showLabels?: boolean
 }) {
   const nums = values.map((v) => v ?? 0)
   const min = Math.min(...nums)
   const max = Math.max(...nums)
   const range = max - min || 1
-  const pad = range * 0.15
+  const pad = range * (showLabels ? 0.4 : 0.2)
   const yMin = min - pad
   const yMax = max + pad
-  const W = 240
-  const H = 28
+  const W = 300
+  const H = showLabels ? 60 : 42
   const toX = (i: number) => (i / 11) * W
   const toY = (v: number) => H - ((v - yMin) / (yMax - yMin)) * H
 
@@ -33,7 +33,7 @@ function Sparkline({ label, unit, values, selectedMonths }: {
   return (
     <div>
       <div className="text-[9px] text-off-black/40 mb-0.5 cursor-help" title={`Monthly ${label} (${unit})`}>{label}</div>
-      <svg viewBox={`0 0 ${W} ${H}`} className="w-full" style={{ height: 28 }} preserveAspectRatio="none">
+      <svg viewBox={`0 0 ${W} ${H}`} className="w-full">
         <polygon points={areaPoints} fill="currentColor" className="text-off-black/5" />
         <polyline points={points} fill="none" stroke="currentColor" strokeWidth="1.5" className="text-off-black/40" />
         {nums.map((v, i) => (
@@ -41,11 +41,23 @@ function Sparkline({ label, unit, values, selectedMonths }: {
             key={i}
             cx={toX(i)}
             cy={toY(v)}
-            r={selectedMonths.includes(i + 1) ? 3.5 : 2}
+            r={selectedMonths.includes(i + 1) ? 4 : 3}
             className={selectedMonths.includes(i + 1) ? 'fill-red' : 'fill-off-black/30'}
           >
             <title>{MONTH_LABELS[i]}: {values[i] !== null ? `${Math.round(values[i]!)}${unit}` : '—'}</title>
           </circle>
+        ))}
+        {showLabels && nums.map((v, i) => (
+          <text
+            key={`lbl-${i}`}
+            x={toX(i)}
+            y={toY(v) - 7}
+            textAnchor="middle"
+            fontSize="8"
+            className={selectedMonths.includes(i + 1) ? 'fill-red' : 'fill-off-black/50'}
+          >
+            {values[i] !== null ? `${Math.round(values[i]!)}°` : ''}
+          </text>
         ))}
       </svg>
       <div className="grid grid-cols-12 gap-0.5 text-center">
@@ -192,33 +204,6 @@ export default function RegionDetail({ region }: Props) {
         <p className="text-sm text-off-black/80 mt-3 leading-relaxed">{region.description}</p>
       )}
 
-      {/* Local Cuisine */}
-      <div className="bg-cream border border-off-black/30 rounded-lg px-2 py-1.5 mt-3">
-        <div className="flex items-center gap-2 mb-1">
-          <span className="text-[10px] font-display text-off-black/60">🍽️ Local Cuisine</span>
-          <span
-            className="text-xs font-mono font-bold px-2 py-1 rounded text-white"
-            style={{ backgroundColor: scoreColor(cuisineScore(region.country_code)) }}
-            title={`TasteAtlas 2025 cuisine rating: ${(cuisineScore(region.country_code) / 10).toFixed(1)}/10`}
-          >
-            {(cuisineScore(region.country_code) / 10).toFixed(1)}/10
-          </span>
-          <span className="text-[9px] text-off-black/30 italic">TasteAtlas 2025</span>
-        </div>
-        {region.cuisine_tags && region.cuisine_tags.length > 0 && (() => {
-          const dishes = getRegionDishes(region.cuisine_tags)
-          return dishes.length > 0 ? (
-            <div className="flex flex-wrap gap-1">
-              {dishes.map((d) => (
-                <span key={d.name} className="px-2 py-0.5 text-[10px] font-display bg-white border border-off-black/20 rounded-full">
-                  {d.emoji} {d.name}
-                </span>
-              ))}
-            </div>
-          ) : null
-        })()}
-      </div>
-
       {/* Climate stats */}
       <div className="grid grid-cols-2 gap-2 mt-4">
         <div className="bg-cream border border-off-black/30 rounded-lg px-2 py-1">
@@ -279,6 +264,33 @@ export default function RegionDetail({ region }: Props) {
         </div>
       </div>
 
+      {/* Local Cuisine */}
+      <div className="bg-cream border border-off-black/30 rounded-lg px-2 py-1.5 mt-3">
+        <div className="flex items-center gap-2 mb-1">
+          <span className="text-[10px] font-display text-off-black/60">🍽️ Local Cuisine</span>
+          <span
+            className="text-xs font-mono font-bold px-2 py-1 rounded text-white"
+            style={{ backgroundColor: scoreColor(cuisineScore(region.country_code)) }}
+            title={`TasteAtlas 2025 cuisine rating: ${(cuisineScore(region.country_code) / 10).toFixed(1)}/10`}
+          >
+            {(cuisineScore(region.country_code) / 10).toFixed(1)}/10
+          </span>
+          <span className="text-[9px] text-off-black/30 italic ml-auto">TasteAtlas 2025</span>
+        </div>
+        {region.cuisine_tags && region.cuisine_tags.length > 0 && (() => {
+          const dishes = getRegionDishes(region.cuisine_tags)
+          return dishes.length > 0 ? (
+            <div className="flex flex-wrap gap-1">
+              {dishes.map((d) => (
+                <span key={d.name} className="px-2 py-0.5 text-[10px] font-display bg-white border border-off-black/20 rounded-full">
+                  {d.emoji} {d.name}
+                </span>
+              ))}
+            </div>
+          ) : null
+        })()}
+      </div>
+
       {/* Monthly Climate — sparkline graphs */}
       <div className="mt-4">
         <h3 className="font-display font-bold text-xs mb-2 uppercase">Monthly Climate</h3>
@@ -290,7 +302,7 @@ export default function RegionDetail({ region }: Props) {
                 ? 0.75 * m.temp_max_c + 0.25 * m.temp_min_c
                 : m.temp_avg_c
             )
-            return <Sparkline label="🌡️ Temp" unit="°C" values={values} selectedMonths={selectedMonths} />
+            return <Sparkline label="🌡️ Temp" unit="°C" values={values} selectedMonths={selectedMonths} showLabels />
           })()}
 
           {/* Rainfall sparkline */}
