@@ -39,7 +39,7 @@ export default function FilterBar() {
       {/* Row 1: Scrollable filters + pinned right buttons */}
       <div className="flex items-center gap-2">
         {/* Scrollable filters */}
-        <div className="flex items-center gap-3 md:gap-4 overflow-x-auto pb-1 scrollbar-thin flex-1 min-w-0">
+        <div className="flex items-center gap-3 md:gap-4 overflow-x-auto flex-1 min-w-0">
           <MonthSelector />
 
           <BusynessFilter />
@@ -87,14 +87,6 @@ export default function FilterBar() {
         {/* Pinned right: Planner + Hide Risky + Shortlist */}
         <div className="flex items-center gap-2 shrink-0">
           <button
-            onClick={togglePlanner}
-            title="Trip Planner"
-            className="px-2 py-1 text-[10px] font-display font-bold rounded-lg border-2 border-off-black transition-colors uppercase bg-cream text-off-black hover:bg-off-black/10"
-          >
-            &#128197;
-          </button>
-
-          <button
             onClick={() => setHideRisky(!hideRisky)}
             title="Hide regions with Risky or Avoid travel advisories"
             className={`
@@ -106,15 +98,25 @@ export default function FilterBar() {
           </button>
 
           {shortlistedCount > 0 && (
-            <button
-              onClick={() => setShowShortlistOnly(!showShortlistOnly)}
-              className={`
-                flex items-center gap-1 px-2 py-1 text-[10px] font-display font-bold rounded-lg border-2 border-off-black transition-colors uppercase
-                ${showShortlistOnly ? 'bg-red text-white' : 'bg-cream text-off-black hover:bg-red-light'}
-              `}
-            >
-              &#10084; {shortlistedCount}
-            </button>
+            <>
+              <button
+                onClick={togglePlanner}
+                title="Trip Planner"
+                className="px-2 py-1 text-[10px] font-display font-bold rounded-lg border-2 border-off-black transition-colors uppercase bg-cream text-off-black hover:bg-off-black/10"
+              >
+                &#128197;
+              </button>
+
+              <button
+                onClick={() => setShowShortlistOnly(!showShortlistOnly)}
+                className={`
+                  flex items-center gap-1 px-2 py-1 text-[10px] font-display font-bold rounded-lg border-2 border-off-black transition-colors uppercase
+                  ${showShortlistOnly ? 'bg-red text-white' : 'bg-cream text-off-black hover:bg-red-light'}
+                `}
+              >
+                &#10084; {shortlistedCount}
+              </button>
+            </>
           )}
         </div>
       </div>

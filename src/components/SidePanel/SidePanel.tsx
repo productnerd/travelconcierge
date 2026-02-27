@@ -27,7 +27,7 @@ export default function SidePanel({ regions }: Props) {
         {sidePanelOpen ? '▶' : '◀'}
       </button>
 
-      {/* Mobile overlay backdrop */}
+      {/* Mobile overlay backdrop — tap map area to close */}
       {sidePanelOpen && (
         <div
           className="md:hidden fixed inset-0 bg-black/30 z-20"
@@ -35,16 +35,38 @@ export default function SidePanel({ regions }: Props) {
         />
       )}
 
-      {/* Panel */}
+      {/* Desktop panel — right side */}
       <div
         className={`
-          bg-cream overflow-y-auto scrollbar-thin shrink-0 transition-all duration-300
+          hidden md:block bg-cream overflow-y-auto scrollbar-thin shrink-0 transition-all duration-300
           ${sidePanelOpen
-            ? 'fixed md:relative inset-y-0 right-0 w-[85vw] md:w-[400px] z-30 md:z-auto border-l-2 border-off-black'
+            ? 'w-[400px] border-l-2 border-off-black'
             : 'w-0 border-l-0'
           }
         `}
       >
+        {sidePanelOpen && (
+          selectedRegion ? (
+            <RegionDetail region={selectedRegion} />
+          ) : (
+            <RegionCards regions={regions} />
+          )
+        )}
+      </div>
+
+      {/* Mobile bottom sheet */}
+      <div
+        className={`
+          md:hidden fixed left-0 right-0 z-30 bg-cream border-t-2 border-off-black rounded-t-xl
+          overflow-y-auto transition-transform duration-300 ease-out
+          ${sidePanelOpen ? 'translate-y-0' : 'translate-y-full'}
+        `}
+        style={{ bottom: 0, maxHeight: '60vh' }}
+      >
+        {/* Drag handle */}
+        <div className="flex justify-center py-2 sticky top-0 bg-cream z-10">
+          <div className="w-10 h-1 rounded-full bg-off-black/30" />
+        </div>
         {sidePanelOpen && (
           selectedRegion ? (
             <RegionDetail region={selectedRegion} />
