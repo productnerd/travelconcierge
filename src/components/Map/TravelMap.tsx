@@ -355,9 +355,11 @@ export default function TravelMap({ regions, geojson }: Props) {
                 className={`flex items-center gap-2 mb-0.5 cursor-pointer ${hidden ? 'opacity-40 line-through' : ''}`}
               >
                 <span
-                  className="inline-block w-3 h-3 rounded-sm border border-off-black"
+                  className="relative inline-flex items-center justify-center w-3 h-3 rounded-sm border border-off-black"
                   style={{ backgroundColor: hidden ? '#D4D0C8' : busynessColor(score), opacity: 0.65 }}
-                />
+                >
+                  {!hidden && <span className="text-white text-[8px] font-bold leading-none">✓</span>}
+                </span>
                 <span>{label}</span>
               </button>
             )
@@ -378,9 +380,11 @@ export default function TravelMap({ regions, geojson }: Props) {
                 className={`flex items-center gap-2 mb-0.5 cursor-pointer ${hidden ? 'opacity-40 line-through' : ''}`}
               >
                 <span
-                  className="inline-block w-3 h-3 rounded-sm border border-off-black"
+                  className="relative inline-flex items-center justify-center w-3 h-3 rounded-sm border border-off-black"
                   style={{ backgroundColor: hidden ? '#D4D0C8' : scoreColor(score), opacity: 0.65 }}
-                />
+                >
+                  {!hidden && <span className="text-white text-[8px] font-bold leading-none">✓</span>}
+                </span>
                 <span>{label}</span>
               </button>
             )

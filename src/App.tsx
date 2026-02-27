@@ -113,8 +113,8 @@ function App() {
         onAnswer={answerDecisionQuestion}
       />
 
-      {/* Agent Bar (bottom) */}
-      <AgentBar onSend={sendMessage} loading={agentLoading} />
+      {/* Agent Bar (bottom) — hidden for now, will re-enable later */}
+      {/* <AgentBar onSend={sendMessage} loading={agentLoading} /> */}
 
       {/* Activity-aware scoring toasts */}
       {toasts.map((toast) => (

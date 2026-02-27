@@ -83,7 +83,7 @@ function monsoonSeverity(months: FilteredRegion['months'], selectedMonths: numbe
 
   if (avgRain > 300) return { level: 'heavy', label: 'HEAVY MONSOON RISK', icon: '⛈️' }
   if (avgRain > 150) return { level: 'moderate', label: 'MODERATE MONSOON RISK', icon: '🌧️' }
-  return { level: 'low', label: 'LOW MONSOON RISK — END OF SEASON', icon: '🌦️' }
+  return { level: 'low', label: 'LOW MONSOON RISK', icon: '🌦️' }
 }
 
 interface Props {
@@ -450,6 +450,9 @@ export default function RegionDetail({ region }: Props) {
                         opacity: 0.7,
                       }}
                     />
+                    {m.has_monsoon && (
+                      <span className="absolute inset-0 flex items-center justify-center text-base leading-none" title="Monsoon season">⛈️</span>
+                    )}
                   </div>
                   <span className={`text-[9px] font-mono ${selectedMonths.includes(m.month) ? 'font-bold text-red' : 'text-off-black/50'}`}>
                     {score}
