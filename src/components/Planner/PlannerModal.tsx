@@ -6,7 +6,15 @@ import { countryFlag } from '@/types/index'
 import { COUNTRY_CONTINENT, type Continent } from '@/data/costIndex'
 import type { FilteredRegion } from '@/hooks/useRegions'
 
-const MONTH_NAMES = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December']
+const MONTH_NAMES = ['', 'January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December']
+
+// Seasonal order: Winter (Dec-Feb), Spring (Mar-May), Summer (Jun-Aug), Autumn (Sep-Nov)
+const SEASONAL_ORDER = [
+  { label: 'Winter', months: [12, 1, 2] },
+  { label: 'Spring', months: [3, 4, 5] },
+  { label: 'Summer', months: [6, 7, 8] },
+  { label: 'Autumn', months: [9, 10, 11] },
+]
 
 const CONTINENT_COLORS: Record<Continent, string> = {
   'Europe': '#4A90D9',
@@ -91,34 +99,42 @@ export default function PlannerModal({ regions }: Props) {
             Heart some regions to see your trip calendar
           </div>
         ) : (
-          <div className="grid grid-cols-2 md:grid-cols-4">
-            {MONTH_NAMES.map((name, i) => {
-              const month = i + 1
-              const entries = monthMap[month]
-              return (
-                <div key={month} className="border-b border-r border-off-black/20 p-2 min-h-[100px]">
-                  <div className="font-display font-bold text-[10px] uppercase text-off-black/50 mb-1.5">
-                    {name}
-                  </div>
-                  <div className="flex flex-col gap-1">
-                    {entries.map((entry) => {
-                      const continent = COUNTRY_CONTINENT[entry.countryCode] as Continent | undefined
-                      const color = continent ? CONTINENT_COLORS[continent] : '#888'
-                      return (
-                        <div
-                          key={entry.slug}
-                          className="flex items-center gap-1.5 px-1.5 py-1 rounded border text-[10px] font-display font-bold"
-                          style={{ borderColor: color, backgroundColor: color + '18' }}
-                        >
-                          <span>{countryFlag(entry.countryCode)}</span>
-                          <span className="truncate uppercase" style={{ color }}>{entry.name}</span>
-                        </div>
-                      )
-                    })}
-                  </div>
+          <div>
+            {SEASONAL_ORDER.map((season) => (
+              <div key={season.label}>
+                <div className="px-3 py-1.5 bg-off-black/5 border-b border-off-black/20 font-display font-bold text-[10px] uppercase text-off-black/40 tracking-widest">
+                  {season.label}
                 </div>
-              )
-            })}
+                <div className="grid grid-cols-3">
+                  {season.months.map((month) => {
+                    const entries = monthMap[month]
+                    return (
+                      <div key={month} className="border-b border-r border-off-black/20 p-2 min-h-[90px]">
+                        <div className="font-display font-bold text-[10px] uppercase text-off-black/50 mb-1.5">
+                          {MONTH_NAMES[month]}
+                        </div>
+                        <div className="flex flex-col gap-1">
+                          {entries.map((entry) => {
+                            const continent = COUNTRY_CONTINENT[entry.countryCode] as Continent | undefined
+                            const color = continent ? CONTINENT_COLORS[continent] : '#888'
+                            return (
+                              <div
+                                key={entry.slug}
+                                className="flex items-center gap-1.5 px-1.5 py-1 rounded border text-[10px] font-display font-bold"
+                                style={{ borderColor: color, backgroundColor: color + '18' }}
+                              >
+                                <span>{countryFlag(entry.countryCode)}</span>
+                                <span className="truncate uppercase" style={{ color }}>{entry.name}</span>
+                              </div>
+                            )
+                          })}
+                        </div>
+                      </div>
+                    )
+                  })}
+                </div>
+              </div>
+            ))}
           </div>
         )}
 

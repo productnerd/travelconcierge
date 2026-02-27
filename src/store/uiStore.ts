@@ -37,10 +37,11 @@ export const useUIStore = create<UIState & UIActions>((set) => ({
   setSidePanelOpen: (open) => set({ sidePanelOpen: open }),
 
   selectRegion: (slug) =>
-    set({
+    set((s) => ({
       selectedRegionSlug: slug,
-      sidePanelOpen: true,
-    }),
+      // Only force open when selecting a region, not when deselecting
+      sidePanelOpen: slug ? true : s.sidePanelOpen,
+    })),
 
   setHighlights: (slugs, eliminated, reason) =>
     set({

@@ -315,81 +315,88 @@ export default function TravelMap({ regions, geojson }: Props) {
       )}
 
       {/* Legend + Color mode toggle */}
-      <div className="absolute bottom-2 md:bottom-4 left-2 md:left-4 bg-cream border-2 border-off-black rounded-xl p-3 md:p-4 text-[10px] font-display uppercase max-h-[calc(100%-1rem)] overflow-y-auto">
-        {/* Color mode toggle */}
-        <div className="flex items-center gap-1.5 mb-3 flex-wrap">
-          {([
-            { mode: 'overall' as ColorMode, label: 'Overall', tip: 'Combines weather, crowds, cost, and safety' },
-            { mode: 'bestTime' as ColorMode, label: 'Best Time to Visit', tip: 'Best combination of good weather and low crowds' },
-            { mode: 'busyness' as ColorMode, label: 'Crowds', tip: 'Tourist crowd levels 1 (very quiet) to 5 (peak season)' },
-            { mode: 'weather' as ColorMode, label: 'Weather', tip: 'Temperature, rainfall, sunshine, humidity, wind, cloud cover' },
-          ]).map(({ mode, label, tip }) => (
-            <button
-              key={mode}
-              onClick={() => setColorMode(mode)}
-              title={tip}
-              className={`
-                px-1.5 py-0.5 text-[10px] font-display font-bold rounded border-2 border-off-black transition-colors uppercase
-                ${colorMode === mode ? 'bg-off-black text-cream' : 'bg-cream text-off-black hover:bg-off-black/10'}
-              `}
-            >
-              {label}
-            </button>
-          ))}
-        </div>
+      <div className="absolute bottom-2 md:bottom-4 left-2 md:left-4 bg-cream border-2 border-off-black rounded-xl p-2 md:p-4 text-[10px] font-display uppercase">
+        <div className="flex items-start gap-3">
+          {/* Color mode toggle — vertical stack */}
+          <div className="flex flex-col gap-1">
+            {([
+              { mode: 'overall' as ColorMode, label: 'Overall', tip: 'Combines weather, crowds, cost, and safety' },
+              { mode: 'bestTime' as ColorMode, label: 'Best Time', tip: 'Best combination of good weather and low crowds' },
+              { mode: 'busyness' as ColorMode, label: 'Crowds', tip: 'Tourist crowd levels 1 (very quiet) to 5 (peak season)' },
+              { mode: 'weather' as ColorMode, label: 'Weather', tip: 'Temperature, rainfall, sunshine, humidity, wind, cloud cover' },
+            ]).map(({ mode, label, tip }) => (
+              <button
+                key={mode}
+                onClick={() => setColorMode(mode)}
+                title={tip}
+                className={`
+                  px-1.5 py-0.5 text-[10px] font-display font-bold rounded border-2 border-off-black transition-colors uppercase text-left
+                  ${colorMode === mode ? 'bg-off-black text-cream' : 'bg-cream text-off-black hover:bg-off-black/10'}
+                `}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
 
-        {/* Legend items */}
-        {colorMode === 'busyness' ? (
-          [
-            { score: 1, label: 'Very Quiet' },
-            { score: 2, label: 'Quiet' },
-            { score: 3, label: 'Moderate' },
-            { score: 4, label: 'Busy' },
-            { score: 5, label: 'Peak Season' },
-          ].map(({ score, label }) => {
-            const hidden = hiddenScoreTiers.includes(score)
-            return (
-              <button
-                key={score}
-                onClick={() => toggleScoreTier(score)}
-                className={`flex items-center gap-2 mb-0.5 cursor-pointer ${hidden ? 'opacity-40 line-through' : ''}`}
-              >
-                <span
-                  className="relative inline-flex items-center justify-center w-3 h-3 rounded-sm border border-off-black"
-                  style={{ backgroundColor: hidden ? '#D4D0C8' : busynessColor(score), opacity: 0.65 }}
-                >
-                  {!hidden && <span className="text-white text-[8px] font-bold leading-none">✓</span>}
-                </span>
-                <span>{label}</span>
-              </button>
-            )
-          })
-        ) : (
-          [
-            { score: 80, label: 'Excellent (80+)' },
-            { score: 60, label: 'Good (60–79)' },
-            { score: 40, label: 'Fair (40–59)' },
-            { score: 20, label: 'Poor (20–39)' },
-            { score: 10, label: 'Bad (0–19)' },
-          ].map(({ score, label }) => {
-            const hidden = hiddenScoreTiers.includes(score)
-            return (
-              <button
-                key={score}
-                onClick={() => toggleScoreTier(score)}
-                className={`flex items-center gap-2 mb-0.5 cursor-pointer ${hidden ? 'opacity-40 line-through' : ''}`}
-              >
-                <span
-                  className="relative inline-flex items-center justify-center w-3 h-3 rounded-sm border border-off-black"
-                  style={{ backgroundColor: hidden ? '#D4D0C8' : scoreColor(score), opacity: 0.65 }}
-                >
-                  {!hidden && <span className="text-white text-[8px] font-bold leading-none">✓</span>}
-                </span>
-                <span>{label}</span>
-              </button>
-            )
-          })
-        )}
+          {/* Divider */}
+          <div className="w-px self-stretch bg-off-black/20" />
+
+          {/* Legend items — vertical stack */}
+          <div className="flex flex-col gap-0.5">
+            {colorMode === 'busyness' ? (
+              [
+                { score: 1, label: 'Very Quiet' },
+                { score: 2, label: 'Quiet' },
+                { score: 3, label: 'Moderate' },
+                { score: 4, label: 'Busy' },
+                { score: 5, label: 'Peak Season' },
+              ].map(({ score, label }) => {
+                const hidden = hiddenScoreTiers.includes(score)
+                return (
+                  <button
+                    key={score}
+                    onClick={() => toggleScoreTier(score)}
+                    className={`flex items-center gap-1.5 cursor-pointer ${hidden ? 'opacity-40 line-through' : ''}`}
+                  >
+                    <span
+                      className="relative inline-flex items-center justify-center w-3 h-3 rounded-sm border border-off-black"
+                      style={{ backgroundColor: hidden ? '#D4D0C8' : busynessColor(score), opacity: 0.65 }}
+                    >
+                      {!hidden && <span className="text-white text-[8px] font-bold leading-none">✓</span>}
+                    </span>
+                    <span>{label}</span>
+                  </button>
+                )
+              })
+            ) : (
+              [
+                { score: 80, label: 'Excellent (80+)' },
+                { score: 60, label: 'Good (60–79)' },
+                { score: 40, label: 'Fair (40–59)' },
+                { score: 20, label: 'Poor (20–39)' },
+                { score: 10, label: 'Bad (0–19)' },
+              ].map(({ score, label }) => {
+                const hidden = hiddenScoreTiers.includes(score)
+                return (
+                  <button
+                    key={score}
+                    onClick={() => toggleScoreTier(score)}
+                    className={`flex items-center gap-1.5 cursor-pointer ${hidden ? 'opacity-40 line-through' : ''}`}
+                  >
+                    <span
+                      className="relative inline-flex items-center justify-center w-3 h-3 rounded-sm border border-off-black"
+                      style={{ backgroundColor: hidden ? '#D4D0C8' : scoreColor(score), opacity: 0.65 }}
+                    >
+                      {!hidden && <span className="text-white text-[8px] font-bold leading-none">✓</span>}
+                    </span>
+                    <span>{label}</span>
+                  </button>
+                )
+              })
+            )}
+          </div>
+        </div>
       </div>
     </MapGL>
   )
