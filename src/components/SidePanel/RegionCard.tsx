@@ -90,6 +90,9 @@ export default function RegionCard({ region }: Props) {
           {costLabel(COST_INDEX[region.country_code] ?? 3)}
         </span>
 
+        {/* Spacer — push warnings to the right */}
+        <span className="ml-auto" />
+
         {/* Safety advisory */}
         {safetyLabel(region.country_code) && (
           <span className={`text-[10px] font-display font-bold px-1 py-0.5 rounded uppercase ${

@@ -5,6 +5,7 @@ import TravelMap from '@/components/Map/TravelMap'
 import SidePanel from '@/components/SidePanel/SidePanel'
 // import AgentBar from '@/components/Agent/AgentBar'
 import AgentPanel from '@/components/Agent/AgentPanel'
+import PlannerModal from '@/components/Planner/PlannerModal'
 import { useRegions } from '@/hooks/useRegions'
 import { useGeoJSON } from '@/hooks/useGeoJSON'
 import { useAgent } from '@/hooks/useAgent'
@@ -105,6 +106,9 @@ function App() {
         {/* Side Panel */}
         <SidePanel regions={regions} />
       </div>
+
+      {/* Trip Planner Modal */}
+      <PlannerModal regions={regions} />
 
       {/* Agent Panel (expanded chat) */}
       <AgentPanel

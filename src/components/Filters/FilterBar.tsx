@@ -6,6 +6,7 @@ import SunshineFilter from './SunshineFilter'
 import ActivePills from './ActivePills'
 import { useFilterStore } from '@/store/filterStore'
 import { useShortlistStore } from '@/store/shortlistStore'
+import { useUIStore } from '@/store/uiStore'
 
 const ACTIVITIES = ['surfing', 'hiking', 'diving', 'freediving', 'beach', 'skiing', 'food']
 const LANDSCAPE_CONFIG: Record<string, { emoji: string }> = {
@@ -31,6 +32,7 @@ export default function FilterBar() {
   const rainfallMax = useFilterStore((s) => s.rainfallMax)
   const setFilter = useFilterStore((s) => s.setFilter)
   const shortlistedCount = useShortlistStore((s) => s.shortlistedSlugs.length)
+  const togglePlanner = useUIStore((s) => s.togglePlanner)
 
   return (
     <div className="border-b-2 border-off-black bg-cream px-3 md:px-4 py-2 md:py-3 shrink-0">
@@ -82,8 +84,16 @@ export default function FilterBar() {
           </div>
         </div>
 
-        {/* Pinned right: Hide Risky + Shortlist */}
+        {/* Pinned right: Planner + Hide Risky + Shortlist */}
         <div className="flex items-center gap-2 shrink-0">
+          <button
+            onClick={togglePlanner}
+            title="Trip Planner"
+            className="px-2 py-1 text-[10px] font-display font-bold rounded-lg border-2 border-off-black transition-colors uppercase bg-cream text-off-black hover:bg-off-black/10"
+          >
+            &#128197;
+          </button>
+
           <button
             onClick={() => setHideRisky(!hideRisky)}
             title="Hide regions with Risky or Avoid travel advisories"

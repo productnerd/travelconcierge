@@ -8,6 +8,7 @@ interface UIState {
   highlightReason: string | null
   inDecisionMode: boolean
   agentPanelOpen: boolean
+  plannerOpen: boolean
 }
 
 interface UIActions {
@@ -19,6 +20,7 @@ interface UIActions {
   setDecisionMode: (active: boolean) => void
   setAgentPanelOpen: (open: boolean) => void
   toggleAgentPanel: () => void
+  togglePlanner: () => void
 }
 
 export const useUIStore = create<UIState & UIActions>((set) => ({
@@ -29,6 +31,7 @@ export const useUIStore = create<UIState & UIActions>((set) => ({
   highlightReason: null,
   inDecisionMode: false,
   agentPanelOpen: false,
+  plannerOpen: false,
 
   toggleSidePanel: () => set((s) => ({ sidePanelOpen: !s.sidePanelOpen })),
   setSidePanelOpen: (open) => set({ sidePanelOpen: open }),
@@ -57,4 +60,5 @@ export const useUIStore = create<UIState & UIActions>((set) => ({
   setDecisionMode: (active) => set({ inDecisionMode: active }),
   setAgentPanelOpen: (open) => set({ agentPanelOpen: open }),
   toggleAgentPanel: () => set((s) => ({ agentPanelOpen: !s.agentPanelOpen })),
+  togglePlanner: () => set((s) => ({ plannerOpen: !s.plannerOpen })),
 }))
