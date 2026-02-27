@@ -49,7 +49,7 @@ export default function TravelMap({ regions, geojson }: Props) {
           wind_speed_kmh: m.wind_speed_kmh, has_monsoon: m.has_monsoon,
           sea_temp_c: m.sea_temp_c, busyness: m.busyness,
         }
-        return { month: m.month, score: computeBestTime(input, algorithmPreset, selectedActivities) }
+        return { month: m.month, score: computeBestTime(input, algorithmPreset, selectedActivities, r.country_code) }
       })
       const top3 = monthScores.sort((a, b) => b.score - a.score).slice(0, 3).map((m) => m.month)
       if (selectedMonths.some((m) => top3.includes(m))) slugs.add(r.slug)

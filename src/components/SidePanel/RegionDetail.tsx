@@ -116,7 +116,7 @@ export default function RegionDetail({ region }: Props) {
       }
       return {
         weather: Math.round(goodWeatherScore(input, selectedActivities)),
-        bestTime: Math.round(bestTimeScore(input, algorithmPreset, selectedActivities)),
+        bestTime: Math.round(bestTimeScore(input, algorithmPreset, selectedActivities, region.country_code)),
       }
     })
   }, [sortedMonths, algorithmPreset, selectedActivities])

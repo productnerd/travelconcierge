@@ -5,8 +5,9 @@
  * Extreme conditions (monsoon, 40°C+ heat, heavy rain, humid heat, high wind) apply
  * hard penalty multipliers so they can't be compensated by other factors.
  *
- * Best Time to Visit (0–100): geometric mean of weather quality and quietness.
+ * Best Time to Visit (0–100): geometric mean of weather quality and quietness × safety.
  */
+import { safetyMultiplier } from '@/data/costIndex'
 
 // ── Sub-score functions (0–1) ───────────────────────────────────────
 
@@ -345,16 +346,18 @@ const PRESET_ALPHA: Record<AlgorithmPreset, number> = {
 
 /**
  * Best Time to Visit (0–100).
- * Geometric mean: 100 × W^α × Q^(1−α)
+ * Geometric mean: 100 × W^α × Q^(1−α) × safety
  * where W = goodWeather / 100, Q = quietness on a 0.2–1.0 scale.
  * Q floor of 0.2 ensures peak season doesn't obliterate the score.
+ * Safety multiplier penalises risky destinations (same weights as overallScore).
  */
-export function bestTimeScore(d: ClimateInput, preset: AlgorithmPreset = 'balanced', activities: string[] = []): number {
+export function bestTimeScore(d: ClimateInput, preset: AlgorithmPreset = 'balanced', activities: string[] = [], countryCode?: string): number {
   const alpha = PRESET_ALPHA[preset]
   const W = goodWeatherScore(d, activities) / 100
   // busyness 1→Q=1.0, busyness 5→Q=0.2 (linear, gentler floor than before)
   const Q = Math.max(1 - (d.busyness - 1) * 0.2, 0.2)
-  return 100 * Math.pow(W, alpha) * Math.pow(Q, 1 - alpha)
+  const raw = 100 * Math.pow(W, alpha) * Math.pow(Q, 1 - alpha)
+  return countryCode ? raw * safetyMultiplier(countryCode) : raw
 }
 
 // ── Color helpers ────────────────────────────────────────────────────

@@ -1463,4 +1463,21 @@ export const REGIONS: RegionDef[] = [
     centroid_lon: 18.96,
     is_coastal: true,
   },
+
+  // ─── Hong Kong (1) ───────────────────────────────────────────────
+  {
+    slug: 'hk-hong-kong',
+    name: 'Hong Kong',
+    country_code: 'HK',
+    country_name: 'Hong Kong',
+    geojson_id: 'hk-hong-kong',
+    description:
+      'A dazzling vertical city where bamboo-scaffolded skyscrapers meet ancient temples, legendary street-food stalls line every alley, and lush hiking trails offer skyline views minutes from the MTR.',
+    landscape_type: ['city', 'island', 'seaside'],
+    activities: ['food', 'cultural', 'hiking', 'photography', 'nightlife', 'beach'],
+    cuisine_tags: ['cantonese'],
+    centroid_lat: 22.32,
+    centroid_lon: 114.17,
+    is_coastal: true,
+  },
 ];

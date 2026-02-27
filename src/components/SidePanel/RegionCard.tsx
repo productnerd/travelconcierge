@@ -1,9 +1,10 @@
+import { useMemo } from 'react'
 import type { FilteredRegion } from '@/hooks/useRegions'
 import { useUIStore } from '@/store/uiStore'
 import { useShortlistStore } from '@/store/shortlistStore'
 import { useFilterStore } from '@/store/filterStore'
 import { countryFlag } from '@/types'
-import { scoreColor } from '@/utils/scoring'
+import { scoreColor, bestTimeScore as computeBestTime, type ClimateInput } from '@/utils/scoring'
 import { COST_INDEX, costLabel, safetyLabel, overallScore as computeOverall } from '@/data/costIndex'
 import { cuisineScore } from '@/data/cuisineScore'
 
@@ -17,8 +18,26 @@ export default function RegionCard({ region }: Props) {
   const toggle = useShortlistStore((s) => s.toggle)
   const isShortlisted = useShortlistStore((s) => s.shortlistedSlugs.includes(region.slug))
   const selectedActivities = useFilterStore((s) => s.selectedActivities)
+  const selectedMonths = useFilterStore((s) => s.selectedMonths)
+  const algorithmPreset = useFilterStore((s) => s.algorithmPreset)
 
   const overall = Math.round(computeOverall(region.bestTimeScore, region.country_code, selectedActivities))
+
+  // Check if any selected month is in this region's top 3 best months
+  const isBestMonth = useMemo(() => {
+    const monthScores = region.months.map((m) => {
+      const input: ClimateInput = {
+        temp_avg_c: m.temp_avg_c, temp_min_c: m.temp_min_c, temp_max_c: m.temp_max_c,
+        rainfall_mm: m.rainfall_mm, sunshine_hours_day: m.sunshine_hours_day,
+        cloud_cover_pct: m.cloud_cover_pct, humidity_pct: m.humidity_pct,
+        wind_speed_kmh: m.wind_speed_kmh, has_monsoon: m.has_monsoon,
+        sea_temp_c: m.sea_temp_c, busyness: m.busyness,
+      }
+      return { month: m.month, score: computeBestTime(input, algorithmPreset, selectedActivities, region.country_code) }
+    })
+    const top3 = monthScores.sort((a, b) => b.score - a.score).slice(0, 3).map((m) => m.month)
+    return selectedMonths.some((m) => top3.includes(m))
+  }, [region.months, region.country_code, selectedMonths, algorithmPreset, selectedActivities])
 
   return (
     <div
@@ -52,18 +71,15 @@ export default function RegionCard({ region }: Props) {
       </p>
 
       {/* Stats row */}
-      <div className="flex items-center gap-2.5 mt-3">
-        {/* Seasonal score pill — always shows overall score */}
+      <div className="flex items-center gap-2 mt-3 flex-wrap">
+        {/* Weather score pill */}
         <span
           className="inline-flex items-center gap-1 px-1.5 py-0.5 text-[10px] font-display font-bold rounded border border-off-black text-white uppercase"
           style={{ backgroundColor: scoreColor(overall) }}
           title="Combines weather, crowds, cost, and safety"
         >
-          Seasonal {overall}
+          Weather {overall}
         </span>
-
-        {/* Busyness */}
-        <span className="text-[10px] font-mono text-off-black/70">{region.avg_busyness}/5</span>
 
         {/* Temp — show high/low if available, fallback to avg */}
         {region.avg_temp_max_c !== null ? (
@@ -72,11 +88,6 @@ export default function RegionCard({ region }: Props) {
           <span className="text-[10px] font-mono">{Math.round(region.avg_temp_c)}°C</span>
         ) : null}
 
-        {/* Sunshine */}
-        {region.avg_sunshine_hours !== null && (
-          <span className="text-[10px] font-mono">{region.avg_sunshine_hours}h sun</span>
-        )}
-
         {/* Cuisine score — when food selected */}
         {selectedActivities.includes('food') && (
           <span className="text-[10px] font-mono" title="TasteAtlas 2025 cuisine rating">
@@ -84,8 +95,8 @@ export default function RegionCard({ region }: Props) {
           </span>
         )}
 
-        {/* Cost */}
-        <span className="text-[10px] font-mono text-off-black/50">
+        {/* Cost — bigger Euro signs */}
+        <span className="text-sm font-mono text-off-black/60">
           {costLabel(COST_INDEX[region.country_code] ?? 3)}
         </span>
 
@@ -97,6 +108,13 @@ export default function RegionCard({ region }: Props) {
             'bg-yellow-100 text-yellow-700'
           }`}>
             {safetyLabel(region.country_code)}
+          </span>
+        )}
+
+        {/* Best Month to Visit pill */}
+        {isBestMonth && (
+          <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 text-[10px] font-display font-bold rounded bg-green/15 text-green border border-green/30 uppercase">
+            ✨ Best Month
           </span>
         )}
       </div>

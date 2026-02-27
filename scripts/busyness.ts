@@ -164,4 +164,8 @@ export const busynessData: Record<string, number[]> = {
   'no-bergen-fjords':     [1, 1, 2, 3, 4, 5, 5, 5, 4, 3, 1, 1],
   'no-lofoten':           [2, 3, 3, 3, 3, 4, 5, 5, 3, 2, 2, 2],
   'no-tromso-arctic':     [3, 3, 2, 2, 2, 3, 4, 4, 2, 2, 3, 3],
+
+  // ─── Hong Kong ──────────────────────────────────────────────────
+  // CNY Jan/Feb, Golden Week Oct, Christmas Dec. Summers hot/humid but still busy.
+  'hk-hong-kong':         [3, 4, 3, 3, 3, 3, 3, 3, 2, 4, 3, 4],
 };

@@ -18,7 +18,7 @@ export const COUNTRY_CONTINENT: Record<string, Continent> = {
   JO: 'Asia', KZ: 'Asia', KW: 'Asia', KG: 'Asia', LA: 'Asia', LB: 'Asia', MY: 'Asia', MV: 'Asia',
   MM: 'Asia', MN: 'Asia', NP: 'Asia', KP: 'Asia', OM: 'Asia', PK: 'Asia', PS: 'Asia', PH: 'Asia',
   QA: 'Asia', SA: 'Asia', SG: 'Asia', KR: 'Asia', LK: 'Asia', SY: 'Asia', TW: 'Asia', TJ: 'Asia',
-  TH: 'Asia', TL: 'Asia', TR: 'Asia', TM: 'Asia', AE: 'Asia', UZ: 'Asia', VN: 'Asia', YE: 'Asia',
+  TH: 'Asia', TL: 'Asia', TR: 'Asia', TM: 'Asia', AE: 'Asia', UZ: 'Asia', VN: 'Asia', YE: 'Asia', HK: 'Asia',
   // North America & Caribbean
   US: 'North America', CA: 'North America', AG: 'North America', BS: 'North America', BB: 'North America',
   BZ: 'North America', CR: 'North America', CU: 'North America', DM: 'North America', DO: 'North America',
@@ -61,7 +61,7 @@ export const COST_INDEX: Record<string, number> = {
   IN: 1, ID: 1, IR: 1, IQ: 2, IL: 4, JP: 4, JO: 3, KZ: 2, KW: 4, KG: 1,
   LA: 1, LB: 3, MY: 2, MV: 3, MM: 1, MN: 1, NP: 1, KP: 3, OM: 3, PK: 1,
   PS: 2, PH: 1, QA: 4, SA: 3, SG: 5, KR: 3, LK: 1, SY: 2, TW: 3, TJ: 1,
-  TH: 1, TL: 2, TR: 2, TM: 2, AE: 4, UZ: 1, VN: 1, YE: 1,
+  TH: 1, TL: 2, TR: 2, TM: 2, AE: 4, UZ: 1, VN: 1, YE: 1, HK: 4,
   // North America & Caribbean
   US: 4, CA: 4, AG: 4, BS: 4, BB: 4, BZ: 2, CR: 3, CU: 2, DM: 3, DO: 2,
   SV: 2, GD: 3, GT: 1, HT: 2, HN: 2, JM: 3, KN: 4, LC: 3, VC: 3, TT: 3,

@@ -17,6 +17,13 @@ export const REGIONAL_DISHES: Record<string, Array<{ emoji: string; name: string
     { emoji: '🥮', name: 'Mooncake' },
     { emoji: '🍵', name: 'Jasmine Tea' },
   ],
+  cantonese: [
+    { emoji: '🥟', name: 'Har Gow' },
+    { emoji: '🍜', name: 'Wonton Noodles' },
+    { emoji: '🍚', name: 'Char Siu Rice' },
+    { emoji: '🥧', name: 'Egg Tart' },
+    { emoji: '🍵', name: 'Milk Tea' },
+  ],
   japanese: [
     { emoji: '🍜', name: 'Ramen' },
     { emoji: '🍣', name: 'Sushi' },

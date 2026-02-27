@@ -15,6 +15,7 @@ const CUISINE_SCORE: Record<string, number> = {
   JP: 88,  // 6. Japanese (4.49)
   TR: 88,  // 7. Turkish  (4.49)
   CN: 87,  // 8. Chinese  (4.48)
+  HK: 85,  // Hong Kong (Cantonese cuisine hub)
   FR: 87,  // 9. French   (4.48)
   ID: 87,  // 10. Indonesian (4.48)
   MX: 85,  // 11. Mexican (4.46)
