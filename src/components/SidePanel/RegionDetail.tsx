@@ -7,9 +7,55 @@ import { useFilterStore } from '@/store/filterStore'
 import { scoreColor, goodWeatherScore, bestTimeScore, estimateSnowCm, type ClimateInput } from '@/utils/scoring'
 import { COST_INDEX, costLabel, skiCostLabel } from '@/data/costIndex'
 import { cuisineScore } from '@/data/cuisineScore'
+import { getRegionDishes } from '@/data/regionalDishes'
 
 const MONTH_LABELS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
-const BUDGET_LABELS: Record<number, string> = { 1: '$15–25/day', 2: '$25–50/day', 3: '$50–100/day', 4: '$100–200/day', 5: '$200+/day' }
+const BUDGET_LABELS: Record<number, string> = { 1: '€15–25/day', 2: '€25–50/day', 3: '€50–100/day', 4: '€100–200/day', 5: '€200+/day' }
+
+function Sparkline({ label, unit, values, selectedMonths }: {
+  label: string; unit: string; values: (number | null)[]; selectedMonths: number[]
+}) {
+  const nums = values.map((v) => v ?? 0)
+  const min = Math.min(...nums)
+  const max = Math.max(...nums)
+  const range = max - min || 1
+  const pad = range * 0.15
+  const yMin = min - pad
+  const yMax = max + pad
+  const W = 240
+  const H = 28
+  const toX = (i: number) => (i / 11) * W
+  const toY = (v: number) => H - ((v - yMin) / (yMax - yMin)) * H
+
+  const points = nums.map((v, i) => `${toX(i)},${toY(v)}`).join(' ')
+  const areaPoints = `0,${H} ${points} ${W},${H}`
+
+  return (
+    <div>
+      <div className="text-[9px] text-off-black/40 mb-0.5 cursor-help" title={`Monthly ${label} (${unit})`}>{label}</div>
+      <svg viewBox={`0 0 ${W} ${H}`} className="w-full" style={{ height: 28 }} preserveAspectRatio="none">
+        <polygon points={areaPoints} fill="currentColor" className="text-off-black/5" />
+        <polyline points={points} fill="none" stroke="currentColor" strokeWidth="1.5" className="text-off-black/40" />
+        {nums.map((v, i) => (
+          <circle
+            key={i}
+            cx={toX(i)}
+            cy={toY(v)}
+            r={selectedMonths.includes(i + 1) ? 3.5 : 2}
+            className={selectedMonths.includes(i + 1) ? 'fill-red' : 'fill-off-black/30'}
+          >
+            <title>{MONTH_LABELS[i]}: {values[i] !== null ? `${Math.round(values[i]!)}${unit}` : '—'}</title>
+          </circle>
+        ))}
+      </svg>
+      <div className="grid grid-cols-12 gap-0.5 text-center">
+        {MONTH_LABELS.map((m, i) => (
+          <span key={m} className={`text-[9px] font-display ${selectedMonths.includes(i + 1) ? 'font-bold text-red' : 'text-off-black/40'}`}>{m}</span>
+        ))}
+      </div>
+    </div>
+  )
+}
 
 interface Props {
   region: FilteredRegion
@@ -116,31 +162,32 @@ export default function RegionDetail({ region }: Props) {
         <p className="text-sm text-off-black/80 mt-3 leading-relaxed">{region.description}</p>
       )}
 
-      {/* Cuisine tags + score — when food activity selected */}
-      {selectedActivities.includes('food') && (
-        <div className="mt-3">
-          <div className="flex items-center gap-2 mb-1">
-            <span className="text-[10px] font-display text-off-black/60">🍽️ Cuisine</span>
-            <span
-              className="text-[10px] font-mono font-bold px-1.5 py-0.5 rounded text-white"
-              style={{ backgroundColor: scoreColor(cuisineScore(region.country_code)) }}
-              title={`TasteAtlas 2025 cuisine rating: ${(cuisineScore(region.country_code) / 10).toFixed(1)}/10`}
-            >
-              {(cuisineScore(region.country_code) / 10).toFixed(1)}/10
-            </span>
-            <span className="text-[9px] text-off-black/30 italic">TasteAtlas 2025</span>
-          </div>
-          {region.cuisine_tags && region.cuisine_tags.length > 0 && (
+      {/* Local Cuisine */}
+      <div className="bg-cream border border-off-black/30 rounded-lg px-2 py-1.5 mt-3">
+        <div className="flex items-center gap-2 mb-1">
+          <span className="text-[10px] font-display text-off-black/60">🍽️ Local Cuisine</span>
+          <span
+            className="text-xs font-mono font-bold px-2 py-1 rounded text-white"
+            style={{ backgroundColor: scoreColor(cuisineScore(region.country_code)) }}
+            title={`TasteAtlas 2025 cuisine rating: ${(cuisineScore(region.country_code) / 10).toFixed(1)}/10`}
+          >
+            {(cuisineScore(region.country_code) / 10).toFixed(1)}/10
+          </span>
+          <span className="text-[9px] text-off-black/30 italic">TasteAtlas 2025</span>
+        </div>
+        {region.cuisine_tags && region.cuisine_tags.length > 0 && (() => {
+          const dishes = getRegionDishes(region.cuisine_tags)
+          return dishes.length > 0 ? (
             <div className="flex flex-wrap gap-1">
-              {region.cuisine_tags.map((tag) => (
-                <span key={tag} className="px-2 py-0.5 text-[10px] font-display bg-cream border border-off-black/20 rounded-full">
-                  {tag}
+              {dishes.map((d) => (
+                <span key={d.name} className="px-2 py-0.5 text-[10px] font-display bg-white border border-off-black/20 rounded-full">
+                  {d.emoji} {d.name}
                 </span>
               ))}
             </div>
-          )}
-        </div>
-      )}
+          ) : null
+        })()}
+      </div>
 
       {/* Climate stats */}
       <div className="grid grid-cols-2 gap-2 mt-4">
@@ -176,14 +223,14 @@ export default function RegionDetail({ region }: Props) {
       <div className="grid grid-cols-2 gap-2 mt-3">
         <div className="bg-cream border border-off-black/30 rounded-lg px-2 py-1">
           <div className="text-[10px] font-display text-off-black/60">Cost</div>
-          <div className="text-lg font-mono font-bold">{costLabel(costTier)}</div>
+          <div className="text-xl font-mono font-bold">{costLabel(costTier)}</div>
           <div className="text-[10px] font-display text-off-black/50">{BUDGET_LABELS[costTier]}</div>
           {selectedActivities.includes('skiing') && skiCostLabel(region.country_code) && (
             <div className="text-[10px] font-display text-sky-600 mt-0.5">❄️ {skiCostLabel(region.country_code)}</div>
           )}
         </div>
         <div className="bg-cream border border-off-black/30 rounded-lg px-2 py-1">
-          <div className="text-[10px] font-display text-off-black/60">Best Months</div>
+          <div className="text-[10px] font-display text-off-black/60">Recommended Months</div>
           <div className="flex flex-col gap-0.5 mt-0.5">
             {top3Months.map((m, i) => (
               <div key={m.month} className="flex items-center justify-between">
@@ -202,76 +249,39 @@ export default function RegionDetail({ region }: Props) {
         </div>
       </div>
 
-      {/* Monthly table */}
+      {/* Monthly Climate — sparkline graphs */}
       <div className="mt-4">
         <h3 className="font-display font-bold text-xs mb-2 uppercase">Monthly Climate</h3>
-        <div className="grid grid-cols-12 gap-0.5 text-center overflow-x-auto min-w-[300px]">
-          {/* Headers */}
-          {MONTH_LABELS.map((label, i) => (
-            <div
-              key={label}
-              className={`text-[9px] font-display font-bold py-0.5 ${
-                selectedMonths.includes(i + 1) ? 'text-red' : 'text-off-black/40'
-              }`}
-            >
-              {label}
-            </div>
-          ))}
-
-          {/* Temp row */}
-          <div className="col-span-12 text-[9px] text-off-black/40 mt-1 cursor-help" title="Daytime-weighted temperature (75% high + 25% low)">🌡️ Temp</div>
-          {sortedMonths.map((m) => {
-            const wt = m.temp_max_c !== null && m.temp_min_c !== null
-              ? 0.75 * m.temp_max_c + 0.25 * m.temp_min_c
-              : m.temp_avg_c
-            return (
-              <div
-                key={`temp-${m.month}`}
-                className={`text-[9px] font-mono py-0.5 rounded ${
-                  selectedMonths.includes(m.month)
-                    ? 'bg-red/10 font-bold'
-                    : ''
-                }`}
-                title={wt !== null ? `${Math.round(wt)}°C` : undefined}
-              >
-                {wt !== null ? `${Math.round(wt)}°` : '—'}
-              </div>
+        <div className="space-y-2">
+          {/* Temperature sparkline */}
+          {(() => {
+            const values = sortedMonths.map((m) =>
+              m.temp_max_c !== null && m.temp_min_c !== null
+                ? 0.75 * m.temp_max_c + 0.25 * m.temp_min_c
+                : m.temp_avg_c
             )
-          })}
+            return <Sparkline label="🌡️ Temp" unit="°C" values={values} selectedMonths={selectedMonths} />
+          })()}
 
-          {/* Rainfall row */}
-          <div className="col-span-12 text-[9px] text-off-black/40 mt-1 cursor-help" title="Monthly rainfall in millimeters. Red = heavy rain (>150mm)">🌧️ Rain</div>
-          {sortedMonths.map((m) => (
-            <div
-              key={`rain-${m.month}`}
-              className={`text-[9px] font-mono py-0.5 ${
-                m.rainfall_mm !== null && m.rainfall_mm > 150
-                  ? 'text-red font-bold'
-                  : 'text-off-black/50'
-              }`}
-              title={m.rainfall_mm !== null ? `${Math.round(m.rainfall_mm)}mm rainfall` : undefined}
-            >
-              {m.rainfall_mm !== null ? `${Math.round(m.rainfall_mm)}` : '—'}
-            </div>
-          ))}
+          {/* Rainfall sparkline */}
+          <Sparkline
+            label="🌧️ Rain"
+            unit="mm"
+            values={sortedMonths.map((m) => m.rainfall_mm)}
+            selectedMonths={selectedMonths}
+          />
 
-          {/* Humidity row */}
-          <div className="col-span-12 text-[9px] text-off-black/40 mt-1 cursor-help" title="Average humidity percentage. Red = oppressive (>75%)">💧 Humidity</div>
-          {sortedMonths.map((m) => (
-            <div
-              key={`hum-${m.month}`}
-              className={`text-[9px] font-mono py-0.5 ${
-                m.humidity_pct !== null && m.humidity_pct > 75
-                  ? 'text-red font-bold'
-                  : 'text-off-black/50'
-              }`}
-              title={m.humidity_pct !== null ? `${Math.round(m.humidity_pct)}% humidity` : undefined}
-            >
-              {m.humidity_pct !== null ? `${Math.round(m.humidity_pct)}%` : '—'}
-            </div>
-          ))}
+          {/* Humidity sparkline */}
+          <Sparkline
+            label="💧 Humidity"
+            unit="%"
+            values={sortedMonths.map((m) => m.humidity_pct)}
+            selectedMonths={selectedMonths}
+          />
+        </div>
 
-          {/* Monsoon row — only if any month has monsoon */}
+        {/* Conditional rows: monsoon, snow, sea temp */}
+        <div className="grid grid-cols-12 gap-0.5 text-center mt-2">
           {sortedMonths.some((m) => m.has_monsoon) && <>
             <div className="col-span-12 text-[9px] text-off-black/40 mt-1 cursor-help" title="Monsoon season: heavy sustained rainfall with flooding risk">⛈️ Monsoon</div>
             {sortedMonths.map((m) => (
@@ -281,7 +291,6 @@ export default function RegionDetail({ region }: Props) {
             ))}
           </>}
 
-          {/* Snow estimate row — only when skiing selected */}
           {selectedActivities.includes('skiing') && <>
             <div className="col-span-12 text-[9px] text-off-black/40 mt-1 cursor-help" title="Estimated snow depth based on temperature and precipitation">❄️ Snow</div>
             {sortedMonths.map((m) => {
@@ -300,7 +309,6 @@ export default function RegionDetail({ region }: Props) {
             })}
           </>}
 
-          {/* Sea temp row — when beach/diving activities selected + coastal */}
           {(selectedActivities.includes('beach') || selectedActivities.includes('diving') || selectedActivities.includes('freediving')) && region.is_coastal && <>
             <div className="col-span-12 text-[9px] text-off-black/40 mt-1 cursor-help" title="Sea surface temperature">🌊 Sea</div>
             {sortedMonths.map((m) => (

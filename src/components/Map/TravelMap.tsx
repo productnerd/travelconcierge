@@ -5,7 +5,7 @@ import { useUIStore } from '@/store/uiStore'
 import { useShortlistStore } from '@/store/shortlistStore'
 import { useFilterStore } from '@/store/filterStore'
 import type { FilteredRegion } from '@/hooks/useRegions'
-import { busynessColor, busynessLabel } from '@/types'
+import { busynessColor, busynessLabel, countryFlag } from '@/types'
 import { scoreColor, scoreLabel } from '@/utils/scoring'
 import { overallScore } from '@/data/costIndex'
 import type { ColorMode } from '@/store/filterStore'
@@ -23,7 +23,7 @@ export default function TravelMap({ regions, geojson }: Props) {
   const mapRef = useRef<MapRef>(null)
   const [hovered, setHovered] = useState<{
     slug: string; lat: number; lon: number; name: string;
-    busyness: number; temp: number | null;
+    busyness: number; temp: number | null; country_code: string;
     weatherScore: number; bestTimeScore: number; overallScore: number;
   } | null>(null)
   const selectRegion = useUIStore((s) => s.selectRegion)
@@ -109,6 +109,7 @@ export default function TravelMap({ regions, geojson }: Props) {
           name: region.name,
           busyness: region.avg_busyness,
           temp: region.avg_temp_c,
+          country_code: region.country_code,
           weatherScore: region.weatherScore,
           bestTimeScore: region.bestTimeScore,
           overallScore: overallScore(region.bestTimeScore, region.country_code, selectedActivities),
@@ -223,7 +224,7 @@ export default function TravelMap({ regions, geojson }: Props) {
             className="flex items-center gap-0.5 bg-cream/90 border border-off-black rounded px-1 py-0.5 text-[10px] font-mono cursor-pointer select-none"
             onClick={() => selectRegion(r.slug)}
           >
-            <span>{r.avg_temp_c !== null ? `${Math.round(r.avg_temp_c)}°` : '—'}</span>
+            <span>{countryFlag(r.country_code)} {r.avg_temp_c !== null ? `${Math.round(r.avg_temp_c)}°` : '—'}</span>
           </div>
         </Marker>
       ))}
@@ -253,7 +254,7 @@ export default function TravelMap({ regions, geojson }: Props) {
           anchor="bottom"
           offset={12}
         >
-          <div className="font-display text-xs font-bold uppercase">{hovered.name}</div>
+          <div className="font-display text-xs font-bold uppercase">{countryFlag(hovered.country_code)} {hovered.name}</div>
           <div className="flex items-center gap-2 mt-1 text-xs font-mono">
             {colorMode === 'busyness' ? (
               <>

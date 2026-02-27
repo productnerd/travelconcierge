@@ -1,6 +1,6 @@
 // Daily travel budget tier per country (1=very cheap, 5=very expensive)
 // Based on Numbeo Cost of Living Index + backpacker budget estimates
-// 1: $15-25/day  2: $25-50/day  3: $50-100/day  4: $100-200/day  5: $200+/day
+// 1: €15–25/day  2: €25–50/day  3: €50–100/day  4: €100–200/day  5: €200+/day
 
 export const COST_INDEX: Record<string, number> = {
   // Europe
@@ -37,7 +37,7 @@ export const COST_INDEX: Record<string, number> = {
 }
 
 export function costLabel(tier: number): string {
-  return '$'.repeat(tier)
+  return '€'.repeat(tier)
 }
 
 // Travel advisory tier per country (1-4)
