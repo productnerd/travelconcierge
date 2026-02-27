@@ -85,38 +85,42 @@ export default function RegionCards({ regions }: Props) {
   return (
     <div className="p-4">
       {/* Sort controls */}
-      <div className="flex items-center gap-1 mb-3">
-        <span className="text-[10px] font-display font-bold text-off-black/50 mr-1 uppercase">Sort:</span>
-        {SORT_OPTIONS.map(({ key, label, tip }) => (
-          <button
-            key={key}
-            onClick={() => handleSortClick(key)}
-            title={tip}
-            className={`
-              px-2 py-0.5 text-[10px] font-display font-bold rounded border-2 border-off-black transition-colors uppercase
-              ${sortBy === key ? 'bg-off-black text-cream' : 'bg-cream text-off-black hover:bg-off-black/10'}
-            `}
-          >
-            {label}
-          </button>
-        ))}
+      <div className="mb-2">
+        <span className="text-[10px] font-display font-bold text-off-black/50 uppercase block mb-1">Sort:</span>
+        <div className="flex items-center gap-1">
+          {SORT_OPTIONS.map(({ key, label, tip }) => (
+            <button
+              key={key}
+              onClick={() => handleSortClick(key)}
+              title={tip}
+              className={`
+                px-2 py-0.5 text-[10px] font-display font-bold rounded border-2 border-off-black transition-colors uppercase
+                ${sortBy === key ? 'bg-off-black text-cream' : 'bg-cream text-off-black hover:bg-off-black/10'}
+              `}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
       </div>
 
       {/* Continent filter */}
-      <div className="flex items-center gap-1 mb-3 flex-wrap">
-        <span className="text-[10px] font-display font-bold text-off-black/50 mr-1 uppercase">Region:</span>
-        {CONTINENTS.map((c) => (
-          <button
-            key={c}
-            onClick={() => toggleContinent(c)}
-            className={`
-              px-2 py-0.5 text-[10px] font-display font-bold rounded border-2 border-off-black transition-colors uppercase
-              ${selectedContinents.includes(c) ? 'bg-off-black text-cream' : 'bg-cream text-off-black hover:bg-off-black/10'}
-            `}
-          >
-            {c}
-          </button>
-        ))}
+      <div className="mb-3">
+        <span className="text-[10px] font-display font-bold text-off-black/50 uppercase block mb-1">Region:</span>
+        <div className="flex items-center gap-1 flex-wrap">
+          {CONTINENTS.map((c) => (
+            <button
+              key={c}
+              onClick={() => toggleContinent(c)}
+              className={`
+                px-2 py-0.5 text-[10px] font-display font-bold rounded border-2 border-off-black transition-colors uppercase
+                ${selectedContinents.includes(c) ? 'bg-off-black text-cream' : 'bg-cream text-off-black hover:bg-off-black/10'}
+              `}
+            >
+              {c}
+            </button>
+          ))}
+        </div>
       </div>
 
       <p className="text-[10px] font-display text-off-black/60 mb-3 uppercase">
