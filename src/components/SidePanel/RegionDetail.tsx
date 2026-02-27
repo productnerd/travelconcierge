@@ -6,6 +6,7 @@ import { busynessColor, busynessLabel, countryFlag } from '@/types'
 import { useFilterStore } from '@/store/filterStore'
 import { scoreColor, goodWeatherScore, bestTimeScore, estimateSnowCm, type ClimateInput } from '@/utils/scoring'
 import { COST_INDEX, costLabel, skiCostLabel } from '@/data/costIndex'
+import { activeAdvisories, seasonalPenalty } from '@/data/seasonalAdvisories'
 import { cuisineScore } from '@/data/cuisineScore'
 import { getRegionDishes } from '@/data/regionalDishes'
 import { biodiversityScore, biodiversityMetrics } from '@/data/biodiversity'
@@ -118,10 +119,10 @@ export default function RegionDetail({ region }: Props) {
       }
       return {
         weather: Math.round(goodWeatherScore(input, selectedActivities)),
-        bestTime: Math.round(bestTimeScore(input, algorithmPreset, selectedActivities, region.country_code)),
+        bestTime: Math.round(bestTimeScore(input, algorithmPreset, selectedActivities, region.country_code) * seasonalPenalty(region.slug, [m.month], selectedActivities)),
       }
     })
-  }, [sortedMonths, algorithmPreset, selectedActivities])
+  }, [sortedMonths, algorithmPreset, selectedActivities, region.slug, region.country_code])
 
   // Top 3 months by bestTime score
   const top3Months = useMemo(() => {
@@ -157,6 +158,23 @@ export default function RegionDetail({ region }: Props) {
           </div>
         )
       })()}
+
+      {/* Seasonal advisory banners */}
+      {activeAdvisories(region.slug, selectedMonths, selectedActivities).map((adv) => (
+        <div
+          key={adv.label}
+          className={`${adv.penalty < 0.5 ? 'bg-red/15 border-red/50' : 'bg-amber/20 border-amber/50'} border-2 rounded-lg p-2 text-xs font-display font-bold mb-3 uppercase`}
+        >
+          {adv.emoji} {adv.label}
+        </div>
+      ))}
+
+      {/* Best month banner */}
+      {selectedMonths.some((m) => top3Set.has(m)) && (
+        <div className="bg-green/15 border-2 border-green/30 rounded-lg p-2 text-xs font-display font-bold mb-3 uppercase">
+          ✨ One of the best months to visit
+        </div>
+      )}
 
       {/* Header */}
       <div className="flex items-start justify-between">

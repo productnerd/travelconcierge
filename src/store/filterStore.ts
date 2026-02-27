@@ -22,6 +22,7 @@ export interface FilterState {
   algorithmPreset: AlgorithmPreset
   sortBy: SortBy
   userLocation: [number, number] | null
+  hiddenScoreTiers: number[]
 }
 
 interface FilterActions {
@@ -43,6 +44,7 @@ interface FilterActions {
   setAlgorithmPreset: (preset: AlgorithmPreset) => void
   setSortBy: (sort: SortBy) => void
   setUserLocation: (loc: [number, number] | null) => void
+  toggleScoreTier: (tier: number) => void
   resetAll: () => void
 }
 
@@ -63,6 +65,7 @@ const initialState: FilterState = {
   algorithmPreset: 'balanced' as AlgorithmPreset,
   sortBy: 'overall' as SortBy,
   userLocation: null,
+  hiddenScoreTiers: [],
 }
 
 export const useFilterStore = create<FilterState & FilterActions>()(
@@ -146,10 +149,17 @@ export const useFilterStore = create<FilterState & FilterActions>()(
             : s.agentAppliedKeys,
         })),
 
-      setColorMode: (mode) => set({ colorMode: mode }),
+      setColorMode: (mode) => set({ colorMode: mode, hiddenScoreTiers: [] }),
       setAlgorithmPreset: (preset) => set({ algorithmPreset: preset }),
       setSortBy: (sort) => set({ sortBy: sort }),
       setUserLocation: (loc) => set({ userLocation: loc }),
+
+      toggleScoreTier: (tier) =>
+        set((s) => ({
+          hiddenScoreTiers: s.hiddenScoreTiers.includes(tier)
+            ? s.hiddenScoreTiers.filter((t) => t !== tier)
+            : [...s.hiddenScoreTiers, tier],
+        })),
 
       resetAll: () => set(initialState),
     }),

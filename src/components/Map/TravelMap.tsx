@@ -36,6 +36,8 @@ export default function TravelMap({ regions, geojson }: Props) {
   const selectedActivities = useFilterStore((s) => s.selectedActivities)
   const selectedMonths = useFilterStore((s) => s.selectedMonths)
   const algorithmPreset = useFilterStore((s) => s.algorithmPreset)
+  const hiddenScoreTiers = useFilterStore((s) => s.hiddenScoreTiers)
+  const toggleScoreTier = useFilterStore((s) => s.toggleScoreTier)
 
   // Regions where selected month is in top 3 best months
   const bestMonthSlugs = useMemo(() => {
@@ -89,7 +91,7 @@ export default function TravelMap({ regions, geojson }: Props) {
             weatherScore: region?.weatherScore ?? 0,
             bestTimeScore: region?.bestTimeScore ?? 0,
             overallScore: region
-              ? overallScore(region.bestTimeScore, region.country_code, selectedActivities)
+              ? Math.round(overallScore(region.bestTimeScore, region.country_code, selectedActivities))
               : 0,
             isFiltered: isFiltered ? 1 : 0,
             isEliminated: isEliminated ? 1 : 0,
@@ -134,7 +136,7 @@ export default function TravelMap({ regions, geojson }: Props) {
           country_code: region.country_code,
           weatherScore: region.weatherScore,
           bestTimeScore: region.bestTimeScore,
-          overallScore: overallScore(region.bestTimeScore, region.country_code, selectedActivities),
+          overallScore: Math.round(overallScore(region.bestTimeScore, region.country_code, selectedActivities)),
         })
       }
     },
@@ -249,10 +251,10 @@ export default function TravelMap({ regions, geojson }: Props) {
           anchor="center"
         >
           <div
-            className="flex items-center gap-0.5 bg-cream/90 border border-off-black rounded px-1 py-0.5 text-[10px] font-mono cursor-pointer select-none"
+            className={`flex items-center gap-0.5 border border-off-black rounded px-1 py-0.5 text-[10px] font-mono cursor-pointer select-none ${bestMonthSlugs.has(r.slug) ? 'best-month-marker' : 'bg-cream/90'}`}
             onClick={() => selectRegion(r.slug)}
           >
-            <span>{countryFlag(r.country_code)} {r.has_monsoon ? '⛈️' : r.avg_temp_c !== null ? `${Math.round(r.avg_temp_c)}°` : '—'}{bestMonthSlugs.has(r.slug) ? ' ✨' : ''}</span>
+            <span>{countryFlag(r.country_code)} {r.has_monsoon ? '⛈️' : r.avg_temp_c !== null ? `${Math.round(r.avg_temp_c)}°` : '—'}</span>
           </div>
         </Marker>
       ))}
@@ -344,31 +346,45 @@ export default function TravelMap({ regions, geojson }: Props) {
             { score: 3, label: 'Moderate' },
             { score: 4, label: 'Busy' },
             { score: 5, label: 'Peak Season' },
-          ].map(({ score, label }) => (
-            <div key={score} className="flex items-center gap-2 mb-0.5">
-              <span
-                className="inline-block w-3 h-3 rounded-sm border border-off-black"
-                style={{ backgroundColor: busynessColor(score), opacity: 0.65 }}
-              />
-              <span>{label}</span>
-            </div>
-          ))
+          ].map(({ score, label }) => {
+            const hidden = hiddenScoreTiers.includes(score)
+            return (
+              <button
+                key={score}
+                onClick={() => toggleScoreTier(score)}
+                className={`flex items-center gap-2 mb-0.5 cursor-pointer ${hidden ? 'opacity-40 line-through' : ''}`}
+              >
+                <span
+                  className="inline-block w-3 h-3 rounded-sm border border-off-black"
+                  style={{ backgroundColor: hidden ? '#D4D0C8' : busynessColor(score), opacity: 0.65 }}
+                />
+                <span>{label}</span>
+              </button>
+            )
+          })
         ) : (
           [
             { score: 80, label: 'Excellent (80+)' },
-            { score: 60, label: 'Good (60–80)' },
-            { score: 40, label: 'Fair (40–60)' },
-            { score: 20, label: 'Poor (20–40)' },
-            { score: 10, label: 'Bad (0–20)' },
-          ].map(({ score, label }) => (
-            <div key={score} className="flex items-center gap-2 mb-0.5">
-              <span
-                className="inline-block w-3 h-3 rounded-sm border border-off-black"
-                style={{ backgroundColor: scoreColor(score), opacity: 0.65 }}
-              />
-              <span>{label}</span>
-            </div>
-          ))
+            { score: 60, label: 'Good (60–79)' },
+            { score: 40, label: 'Fair (40–59)' },
+            { score: 20, label: 'Poor (20–39)' },
+            { score: 10, label: 'Bad (0–19)' },
+          ].map(({ score, label }) => {
+            const hidden = hiddenScoreTiers.includes(score)
+            return (
+              <button
+                key={score}
+                onClick={() => toggleScoreTier(score)}
+                className={`flex items-center gap-2 mb-0.5 cursor-pointer ${hidden ? 'opacity-40 line-through' : ''}`}
+              >
+                <span
+                  className="inline-block w-3 h-3 rounded-sm border border-off-black"
+                  style={{ backgroundColor: hidden ? '#D4D0C8' : scoreColor(score), opacity: 0.65 }}
+                />
+                <span>{label}</span>
+              </button>
+            )
+          })
         )}
       </div>
     </MapGL>

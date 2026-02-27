@@ -2,10 +2,10 @@
 
 @theme {
   --color-cream: #F5F0E8;
-  --color-off-black: #1A1A1A;
+  --color-off-black: #2A2420;
   --color-red: #D93B2B;
   --color-red-light: #F5A89A;
-  --color-black: #000000;
+  --color-black: #1E1A16;
   --color-white: #FFFFFF;
   --color-amber: #F5C842;
   --color-green: #3B7A4A;
@@ -102,4 +102,15 @@
 @keyframes highlight-pulse {
   0%, 100% { opacity: 0.65; }
   50% { opacity: 0.85; }
+}
+
+@keyframes best-month-pulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.15); }
+}
+
+.best-month-marker {
+  animation: best-month-pulse 2s ease-in-out infinite;
+  background-color: #FDF3D0 !important;
+  box-shadow: inset 0 0 0 1.5px var(--color-off-black);
 }

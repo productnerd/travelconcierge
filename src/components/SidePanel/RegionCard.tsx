@@ -1,7 +1,6 @@
 import { useMemo } from 'react'
 import type { FilteredRegion } from '@/hooks/useRegions'
 import { useUIStore } from '@/store/uiStore'
-import { useShortlistStore } from '@/store/shortlistStore'
 import { useFilterStore } from '@/store/filterStore'
 import { countryFlag } from '@/types'
 import { scoreColor, bestTimeScore as computeBestTime, type ClimateInput } from '@/utils/scoring'
@@ -15,8 +14,6 @@ interface Props {
 export default function RegionCard({ region }: Props) {
   const selectRegion = useUIStore((s) => s.selectRegion)
   const selectedSlug = useUIStore((s) => s.selectedRegionSlug)
-  const toggle = useShortlistStore((s) => s.toggle)
-  const isShortlisted = useShortlistStore((s) => s.shortlistedSlugs.includes(region.slug))
   const selectedActivities = useFilterStore((s) => s.selectedActivities)
   const selectedMonths = useFilterStore((s) => s.selectedMonths)
   const algorithmPreset = useFilterStore((s) => s.algorithmPreset)
@@ -47,23 +44,15 @@ export default function RegionCard({ region }: Props) {
         ${selectedSlug === region.slug ? 'border-red' : 'border-off-black/30 hover:border-red'}
       `}
     >
-      {/* Heart button */}
-      <button
-        onClick={(e) => {
-          e.stopPropagation()
-          toggle(region.slug)
-        }}
-        className="absolute top-4 right-4 text-sm"
-      >
-        {isShortlisted ? (
-          <span className="text-red">&#10084;</span>
-        ) : (
-          <span className="text-off-black/30 hover:text-red">&#9825;</span>
-        )}
-      </button>
+      {/* Best Month badge — top right */}
+      {isBestMonth && (
+        <span className="absolute top-3 right-3 inline-flex items-center px-1.5 py-0.5 text-[10px] font-display font-bold rounded bg-green/15 text-green border border-green/30 uppercase">
+          Best Month
+        </span>
+      )}
 
       {/* Region name */}
-      <h3 className="font-display font-bold text-xs pr-6 leading-tight uppercase">{region.name}</h3>
+      <h3 className="font-display font-bold text-xs pr-20 leading-tight uppercase">{region.name}</h3>
 
       {/* Country */}
       <p className="text-xs text-off-black/60 mt-0.5">
@@ -111,12 +100,6 @@ export default function RegionCard({ region }: Props) {
           </span>
         )}
 
-        {/* Best Month to Visit pill */}
-        {isBestMonth && (
-          <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 text-[10px] font-display font-bold rounded bg-green/15 text-green border border-green/30 uppercase">
-            ✨ Best Month
-          </span>
-        )}
       </div>
     </div>
   )

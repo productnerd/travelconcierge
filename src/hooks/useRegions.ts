@@ -4,7 +4,8 @@ import { useFilterStore } from '@/store/filterStore'
 import { useShortlistStore } from '@/store/shortlistStore'
 import type { RegionWithMonths } from '@/types'
 import { goodWeatherScore, bestTimeScore, type ClimateInput } from '@/utils/scoring'
-import { SAFETY_TIER, COUNTRY_CONTINENT } from '@/data/costIndex'
+import { SAFETY_TIER, COUNTRY_CONTINENT, overallScore } from '@/data/costIndex'
+import { seasonalPenalty } from '@/data/seasonalAdvisories'
 
 export interface FilteredRegion {
   id: string
@@ -125,7 +126,7 @@ export function useRegions() {
         avg_sea_temp_c: avgSeaTemp !== null ? Math.round(avgSeaTemp * 10) / 10 : null,
         has_monsoon: hasMonsoon,
         weatherScore: Math.round(goodWeatherScore(climateInput, filters.selectedActivities)),
-        bestTimeScore: Math.round(bestTimeScore(climateInput, algorithmPreset, filters.selectedActivities, region.country_code)),
+        bestTimeScore: Math.round(bestTimeScore(climateInput, algorithmPreset, filters.selectedActivities, region.country_code) * seasonalPenalty(region.slug, filters.selectedMonths, filters.selectedActivities)),
         months: region.travel_region_months,
       } as FilteredRegion
     })
@@ -168,6 +169,21 @@ export function useRegions() {
 
       // Shortlist-only filter
       if (filters.showShortlistOnly && !shortlistedSlugs.includes(r.slug)) return false
+
+      // Score-tier filter (from clickable legend)
+      if (filters.hiddenScoreTiers.length > 0) {
+        if (filters.colorMode === 'busyness') {
+          if (filters.hiddenScoreTiers.includes(r.avg_busyness)) return false
+        } else {
+          const score = filters.colorMode === 'weather'
+            ? r.weatherScore
+            : filters.colorMode === 'bestTime'
+            ? r.bestTimeScore
+            : Math.round(overallScore(r.bestTimeScore, r.country_code, filters.selectedActivities))
+          const tier = score >= 80 ? 80 : score >= 60 ? 60 : score >= 40 ? 40 : score >= 20 ? 20 : 10
+          if (filters.hiddenScoreTiers.includes(tier)) return false
+        }
+      }
 
       return true
     })
