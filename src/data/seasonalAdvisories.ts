@@ -16,6 +16,7 @@ export const SEASONAL_ADVISORIES: Record<string, SeasonalAdvisory[]> = {
   'id-bali': [
     { months: [8, 9, 10], penalty: 0.7, label: 'Brown rice paddies', emoji: '🌾' },
     { months: [11, 12, 1, 2, 3, 4, 5], penalty: 0.6, label: 'Jellyfish season', emoji: '🪼', activities: ['diving', 'freediving', 'beach'] },
+    { months: [11, 12, 1, 2, 3, 4], penalty: 0.8, label: 'Dengue mosquito season', emoji: '🦟' },
   ],
   'vn-sapa-highlands': [
     { months: [11, 12, 1, 2], penalty: 0.7, label: 'Brown rice terraces', emoji: '🌾' },
@@ -25,14 +26,23 @@ export const SEASONAL_ADVISORIES: Record<string, SeasonalAdvisory[]> = {
   ],
   'ph-palawan': [
     { months: [10, 11], penalty: 0.8, label: 'Harvested rice paddies', emoji: '🌾' },
+    { months: [6, 7, 8, 9, 10, 11], penalty: 0.8, label: 'Dengue mosquito season', emoji: '🦟' },
+  ],
+  'ph-cebu-bohol': [
+    { months: [6, 7, 8, 9, 10, 11], penalty: 0.8, label: 'Dengue mosquito season', emoji: '🦟' },
+  ],
+  'ph-siargao': [
+    { months: [6, 7, 8, 9, 10, 11], penalty: 0.8, label: 'Dengue mosquito season', emoji: '🦟' },
   ],
 
   // === JELLYFISH / STINGER SEASONS ===
   'th-gulf-coast': [
     { months: [6, 7, 8, 9], penalty: 0.5, label: 'Jellyfish season', emoji: '🪼', activities: ['diving', 'beach', 'freediving', 'snorkelling'] },
+    { months: [6, 7, 8, 9, 10], penalty: 0.85, label: 'Dengue mosquito season', emoji: '🦟' },
   ],
   'th-andaman-coast': [
     { months: [5, 6, 7, 8, 9, 10], penalty: 0.5, label: 'Jellyfish season', emoji: '🪼', activities: ['diving', 'beach', 'freediving', 'snorkelling'] },
+    { months: [6, 7, 8, 9, 10], penalty: 0.85, label: 'Dengue mosquito season', emoji: '🦟' },
   ],
   'au-queensland': [
     { months: [11, 12, 1, 2, 3, 4, 5], penalty: 0.5, label: 'Stinger season', emoji: '🪼', activities: ['diving', 'beach', 'freediving', 'snorkelling'] },
@@ -48,6 +58,7 @@ export const SEASONAL_ADVISORIES: Record<string, SeasonalAdvisory[]> = {
   // === BURNING / HAZE SEASON (air quality) ===
   'th-chiang-mai-north': [
     { months: [2, 3, 4], penalty: 0.4, label: 'Burning season smoke', emoji: '🔥' },
+    { months: [6, 7, 8, 9, 10], penalty: 0.8, label: 'Dengue mosquito season', emoji: '🦟' },
   ],
   'my-borneo-sabah': [
     { months: [8, 9, 10], penalty: 0.6, label: 'Haze season', emoji: '🌫️' },
@@ -65,6 +76,7 @@ export const SEASONAL_ADVISORIES: Record<string, SeasonalAdvisory[]> = {
   // === SARGASSUM SEAWEED ===
   'mx-riviera-maya': [
     { months: [5, 6, 7, 8], penalty: 0.6, label: 'Sargassum seaweed season', emoji: '🟤', activities: ['beach', 'diving', 'snorkelling'] },
+    { months: [6, 7, 8, 9, 10, 11], penalty: 0.85, label: 'Dengue mosquito season', emoji: '🦟' },
   ],
 
   // === OVERCROWDING ===
@@ -159,6 +171,55 @@ export const SEASONAL_ADVISORIES: Record<string, SeasonalAdvisory[]> = {
     { months: [6, 7, 8], penalty: 0.7, label: 'Mosquito season', emoji: '🦟', activities: ['hiking', 'camping'] },
   ],
 
+  // === DENGUE / TROPICAL MOSQUITO SEASON ===
+  'th-bangkok-central': [
+    { months: [6, 7, 8, 9, 10], penalty: 0.8, label: 'Dengue mosquito season', emoji: '🦟' },
+  ],
+  'id-lombok-gili': [
+    { months: [11, 12, 1, 2, 3, 4], penalty: 0.8, label: 'Dengue mosquito season', emoji: '🦟' },
+  ],
+  'id-east-java': [
+    { months: [11, 12, 1, 2, 3, 4], penalty: 0.8, label: 'Dengue mosquito season', emoji: '🦟' },
+  ],
+  'id-raja-ampat': [
+    { months: [11, 12, 1, 2, 3, 4], penalty: 0.85, label: 'Dengue mosquito season', emoji: '🦟' },
+  ],
+  'vn-ho-chi-minh': [
+    { months: [6, 7, 8, 9, 10, 11], penalty: 0.8, label: 'Dengue mosquito season', emoji: '🦟' },
+  ],
+  'vn-da-nang': [
+    { months: [7, 8, 9, 10, 11], penalty: 0.85, label: 'Dengue mosquito season', emoji: '🦟' },
+  ],
+  'vn-phu-quoc': [
+    { months: [6, 7, 8, 9, 10, 11], penalty: 0.8, label: 'Dengue mosquito season', emoji: '🦟' },
+  ],
+  'co-cartagena-caribbean': [
+    { months: [5, 6, 7, 8, 9, 10, 11], penalty: 0.8, label: 'Dengue mosquito season', emoji: '🦟' },
+  ],
+  'co-medellin-antioquia': [
+    { months: [5, 6, 7, 8, 9, 10], penalty: 0.85, label: 'Dengue mosquito season', emoji: '🦟' },
+  ],
+  'lk-colombo-west': [
+    { months: [5, 6, 7], penalty: 0.85, label: 'Dengue mosquito season', emoji: '🦟' },
+  ],
+  'lk-galle-south': [
+    { months: [5, 6, 7], penalty: 0.85, label: 'Dengue mosquito season', emoji: '🦟' },
+  ],
+  'lk-trincomalee-east': [
+    { months: [10, 11, 12], penalty: 0.85, label: 'Dengue mosquito season', emoji: '🦟' },
+  ],
+  'mx-puerto-vallarta': [
+    { months: [6, 7, 8, 9, 10, 11], penalty: 0.85, label: 'Dengue mosquito season', emoji: '🦟' },
+  ],
+
+  // === MALARIA MOSQUITO SEASON ===
+  'tz-zanzibar': [
+    { months: [3, 4, 5, 6, 10, 11, 12], penalty: 0.75, label: 'Malaria mosquito season', emoji: '🦟' },
+  ],
+  'za-kruger': [
+    { months: [10, 11, 12, 1, 2, 3, 4], penalty: 0.85, label: 'Malaria mosquito season', emoji: '🦟' },
+  ],
+
   // === FOG SEASON ===
   'us-california': [
     { months: [6, 7, 8], penalty: 0.85, label: 'Coastal fog season', emoji: '🌫️', activities: ['beach'] },
@@ -205,6 +266,7 @@ export const SEASONAL_ADVISORIES: Record<string, SeasonalAdvisory[]> = {
   // === WILDEBEEST MIGRATION ===
   'tz-serengeti': [
     { months: [1, 2, 3], penalty: 1.2, label: 'Calving season', emoji: '🦓' },
+    { months: [3, 4, 5, 11, 12], penalty: 0.85, label: 'Malaria mosquito season', emoji: '🦟' },
   ],
   'ke-masaimara': [
     { months: [7, 8, 9, 10], penalty: 1.25, label: 'Great Migration river crossings', emoji: '🦓' },
