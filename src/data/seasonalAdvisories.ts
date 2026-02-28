@@ -15,6 +15,7 @@ export const SEASONAL_ADVISORIES: Record<string, SeasonalAdvisory[]> = {
   // === RICE PADDY SEASONS (brown/harvested — landscape not photogenic) ===
   'id-bali': [
     { months: [8, 9, 10], penalty: 0.7, label: 'Brown rice paddies', emoji: '🌾' },
+    { months: [10, 11, 12, 1, 2, 3, 4], penalty: 0.6, label: 'Jellyfish season', emoji: '🪼', activities: ['diving', 'freediving', 'beach'] },
   ],
   'vn-sapa-highlands': [
     { months: [11, 12, 1, 2], penalty: 0.7, label: 'Brown rice terraces', emoji: '🌾' },
