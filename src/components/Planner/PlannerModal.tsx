@@ -65,6 +65,7 @@ export default function PlannerModal({ regions }: Props) {
           cloud_cover_pct: m.cloud_cover_pct, humidity_pct: m.humidity_pct,
           wind_speed_kmh: m.wind_speed_kmh, has_monsoon: m.has_monsoon,
           sea_temp_c: m.sea_temp_c, busyness: m.busyness,
+          month: m.month, latitude: region.centroid_lat,
         }
         return { month: m.month, score: bestTimeScore(input, algorithmPreset, selectedActivities, region.country_code) }
       })
