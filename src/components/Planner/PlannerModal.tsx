@@ -8,12 +8,21 @@ import type { FilteredRegion } from '@/hooks/useRegions'
 
 const MONTH_NAMES = ['', 'January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December']
 
-// Seasonal order: Winter (Dec-Feb), Spring (Mar-May), Summer (Jun-Aug), Autumn (Sep-Nov)
+function isSouthernHemisphere(): boolean {
+  const tz = Intl.DateTimeFormat().resolvedOptions().timeZone
+  if (/^(Australia|Antarctica)\//.test(tz)) return true
+  if (/^Africa\/(Johannesburg|Maputo|Harare|Lusaka)/.test(tz)) return true
+  if (/^Pacific\/(Auckland|Fiji|Chatham|Tongatapu)/.test(tz)) return true
+  // DST fallback: Southern Hemisphere has smaller offset in January (summer/DST)
+  return new Date(2024, 0, 1).getTimezoneOffset() < new Date(2024, 6, 1).getTimezoneOffset()
+}
+
+const south = isSouthernHemisphere()
 const SEASONAL_ORDER = [
-  { label: 'Winter', months: [12, 1, 2] },
-  { label: 'Spring', months: [3, 4, 5] },
-  { label: 'Summer', months: [6, 7, 8] },
-  { label: 'Autumn', months: [9, 10, 11] },
+  { label: south ? 'Summer' : 'Winter', months: [12, 1, 2] },
+  { label: south ? 'Autumn' : 'Spring', months: [3, 4, 5] },
+  { label: south ? 'Winter' : 'Summer', months: [6, 7, 8] },
+  { label: south ? 'Spring' : 'Autumn', months: [9, 10, 11] },
 ]
 
 const CONTINENT_COLORS: Record<Continent, string> = {
