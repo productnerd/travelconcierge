@@ -89,19 +89,6 @@ export default function PlannerModal({ regions }: Props) {
         className="relative bg-cream border-2 border-off-black rounded-xl max-w-[900px] w-full max-h-[90vh] overflow-auto"
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Header */}
-        <div className="flex items-center justify-between px-4 py-3 border-b-2 border-off-black">
-          <h2 className="font-display font-bold text-sm uppercase tracking-wide">
-            &#128197; Trip Planner
-          </h2>
-          <button
-            onClick={togglePlanner}
-            className="text-off-black/60 hover:text-off-black text-lg leading-none"
-          >
-            &#10005;
-          </button>
-        </div>
-
         {/* Calendar grid */}
         {shortlistedSlugs.length === 0 ? (
           <div className="px-4 py-12 text-center text-off-black/40 font-display text-xs uppercase">
