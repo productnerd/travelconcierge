@@ -1,4 +1,4 @@
-import { useMemo, useCallback } from 'react'
+import { useMemo, useCallback, useState } from 'react'
 import type { FilteredRegion } from '@/hooks/useRegions'
 import RegionCard from './RegionCard'
 import { useFilterStore, type SortBy } from '@/store/filterStore'
@@ -36,6 +36,7 @@ export default function RegionCards({ regions }: Props) {
   const selectedActivities = useFilterStore((s) => s.selectedActivities)
   const selectedContinents = useFilterStore((s) => s.selectedContinents)
   const toggleContinent = useFilterStore((s) => s.toggleContinent)
+  const [search, setSearch] = useState('')
 
   const handleSortClick = useCallback((key: SortBy) => {
     if (key === 'distance' && !userLocation) {
@@ -52,7 +53,8 @@ export default function RegionCards({ regions }: Props) {
   }, [userLocation, setSortBy, setUserLocation])
 
   const sorted = useMemo(() => {
-    const arr = [...regions]
+    const q = search.toLowerCase().trim()
+    const arr = q ? regions.filter((r) => r.name.toLowerCase().includes(q) || r.country_name.toLowerCase().includes(q)) : [...regions]
     switch (sortBy) {
       case 'overall':
         return arr.sort((a, b) => regionOverall(b, selectedActivities) - regionOverall(a, selectedActivities))
@@ -71,7 +73,7 @@ export default function RegionCards({ regions }: Props) {
       default:
         return arr
     }
-  }, [regions, sortBy, userLocation, selectedActivities])
+  }, [regions, sortBy, userLocation, selectedActivities, search])
 
   if (regions.length === 0) {
     return (
@@ -123,8 +125,17 @@ export default function RegionCards({ regions }: Props) {
         </div>
       </div>
 
+      {/* Search */}
+      <input
+        type="text"
+        value={search}
+        onChange={(e) => setSearch(e.target.value)}
+        placeholder="Search regions or countries..."
+        className="w-full px-2 py-1.5 mb-2 text-xs font-display border-2 border-off-black/20 rounded bg-cream placeholder:text-off-black/30 focus:outline-none focus:border-off-black/50"
+      />
+
       <p className="text-[10px] font-display text-off-black/60 mb-3 uppercase">
-        {regions.length} region{regions.length !== 1 ? 's' : ''}
+        {sorted.length} region{sorted.length !== 1 ? 's' : ''}
       </p>
 
       <div className="flex flex-col gap-3">

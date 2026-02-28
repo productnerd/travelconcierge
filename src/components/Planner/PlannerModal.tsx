@@ -133,7 +133,7 @@ export default function PlannerModal({ regions }: Props) {
                                 style={{ borderColor: color, backgroundColor: color + '18' }}
                               >
                                 <span>{countryFlag(entry.countryCode)}</span>
-                                <span className="truncate uppercase" style={{ color }}>{entry.name}</span>
+                                <span className="truncate uppercase text-off-black">{entry.name}</span>
                               </div>
                             )
                           })}
