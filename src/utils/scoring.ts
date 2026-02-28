@@ -7,7 +7,6 @@
  *
  * Best Time to Visit (0–100): geometric mean of weather quality and quietness × safety.
  */
-import { safetyMultiplier } from '@/data/costIndex'
 import { BIODIVERSITY } from '@/data/biodiversity'
 
 // ── Sub-score functions (0–1) ───────────────────────────────────────
@@ -362,10 +361,10 @@ export function bloomFactor(month: number, lat: number, tempC: number | null, ra
 
 /**
  * Best Time to Visit (0–100).
- * Geometric mean: 100 × W^α × Q^(1−α) × safety
+ * Geometric mean: 100 × W^α × Q^(1−α) × floraFauna
  * where W = goodWeather / 100, Q = quietness on a 0.2–1.0 scale.
  * Q floor of 0.2 ensures peak season doesn't obliterate the score.
- * Safety multiplier penalises risky destinations (same weights as overallScore).
+ * Safety is NOT applied here — it's applied once in overallScore only.
  */
 export function bestTimeScore(d: ClimateInput, preset: AlgorithmPreset = 'balanced', activities: string[] = [], countryCode?: string): number {
   const alpha = PRESET_ALPHA[preset]
@@ -374,28 +373,42 @@ export function bestTimeScore(d: ClimateInput, preset: AlgorithmPreset = 'balanc
   const Q = Math.max(1 - (d.busyness - 1) * 0.2, 0.2)
   let raw = 100 * Math.pow(W, alpha) * Math.pow(Q, 1 - alpha)
 
-  // Biodiversity factor: ±15% for relevant activities (does NOT affect overallScore)
+  // Flora & Fauna factor: ±15% combining biodiversity + vegetation bloom
+  // Biodiversity: country-level species richness (fauna-focused)
+  // Bloom: seasonal vegetation lushness from latitude + climate (flora-focused)
   if (countryCode) {
     const bio = BIODIVERSITY[countryCode]
+    const hasWater = activities.some(a => ['diving', 'freediving', 'beach'].includes(a))
+    const hasHiking = activities.includes('hiking')
+
+    // Biodiversity component (0–1 normalized)
+    let bioScore = 0.5 // neutral default
     if (bio) {
-      const hasWater = activities.some(a => ['diving', 'freediving', 'beach'].includes(a))
-      const hasHiking = activities.includes('hiking')
       if (hasWater && bio.marine !== undefined) {
-        raw *= 0.85 + 0.15 * (bio.marine / 100)
+        bioScore = bio.marine / 100
+      } else if (hasHiking) {
+        bioScore = bio.protected !== undefined ? (bio.index * 0.6 + bio.protected * 0.4) / 100 : bio.index / 100
+      } else {
+        bioScore = bio.index / 100
       }
-      if (hasHiking) {
-        const t = bio.protected !== undefined ? bio.index * 0.6 + bio.protected * 0.4 : bio.index
-        raw *= 0.85 + 0.15 * (t / 100)
-      }
+    }
+
+    // Bloom component (0–1 normalized from the 0.96–1.04 range)
+    let bloomScore = 0.5 // neutral default
+    if (d.month !== undefined && d.latitude !== undefined) {
+      const bf = bloomFactor(d.month, d.latitude, d.temp_avg_c, d.rainfall_mm)
+      bloomScore = (bf - 0.96) / 0.08 // maps 0.96→0, 1.0→0.5, 1.04→1.0
+    }
+
+    // Combined: 60% biodiversity (fauna) + 40% bloom (flora)
+    const combined = bioScore * 0.6 + bloomScore * 0.4
+    // Apply as ±15% multiplier (combined=0 → ×0.85, combined=0.5 → ×1.0, combined=1 → ×1.15)
+    if (hasWater || hasHiking) {
+      raw *= 0.85 + 0.30 * combined
     }
   }
 
-  // Bloom factor: ±4% for vegetation lushness
-  if (d.month !== undefined && d.latitude !== undefined) {
-    raw *= bloomFactor(d.month, d.latitude, d.temp_avg_c, d.rainfall_mm)
-  }
-
-  return countryCode ? raw * safetyMultiplier(countryCode) : raw
+  return raw
 }
 
 // ── Color helpers ────────────────────────────────────────────────────

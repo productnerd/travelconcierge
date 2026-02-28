@@ -112,7 +112,22 @@ export function useRegions() {
         has_monsoon: hasMonsoon,
         sea_temp_c: avgSeaTemp,
         busyness: Math.round(avgBusyness),
+        latitude: region.centroid_lat,
       }
+
+      // Compute bestTimeScore per-month (for bloom accuracy) then average
+      const perMonthScores = selectedMonthData.map((m) => {
+        const mInput: ClimateInput = {
+          temp_avg_c: m.temp_avg_c, temp_min_c: m.temp_min_c, temp_max_c: m.temp_max_c,
+          rainfall_mm: m.rainfall_mm, sunshine_hours_day: m.sunshine_hours_day,
+          cloud_cover_pct: m.cloud_cover_pct, humidity_pct: m.humidity_pct,
+          wind_speed_kmh: m.wind_speed_kmh, has_monsoon: m.has_monsoon,
+          sea_temp_c: m.sea_temp_c, busyness: m.busyness,
+          month: m.month, latitude: region.centroid_lat,
+        }
+        return bestTimeScore(mInput, algorithmPreset, filters.selectedActivities, region.country_code)
+      })
+      const avgBestTime = perMonthScores.reduce((a, b) => a + b, 0) / perMonthScores.length
 
       return {
         ...region,
@@ -126,7 +141,7 @@ export function useRegions() {
         avg_sea_temp_c: avgSeaTemp !== null ? Math.round(avgSeaTemp * 10) / 10 : null,
         has_monsoon: hasMonsoon,
         weatherScore: Math.round(goodWeatherScore(climateInput, filters.selectedActivities)),
-        bestTimeScore: Math.round(bestTimeScore(climateInput, algorithmPreset, filters.selectedActivities, region.country_code) * seasonalPenalty(region.slug, filters.selectedMonths, filters.selectedActivities)),
+        bestTimeScore: Math.round(avgBestTime * seasonalPenalty(region.slug, filters.selectedMonths, filters.selectedActivities)),
         months: region.travel_region_months,
       } as FilteredRegion
     })

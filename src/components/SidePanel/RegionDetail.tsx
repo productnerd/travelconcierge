@@ -234,7 +234,7 @@ export default function RegionDetail({ region }: Props) {
       {/* Climate stats */}
       <div className="grid grid-cols-2 gap-2 mt-4">
         <div className="bg-cream border border-off-black/30 rounded-lg px-2 py-1">
-          <div className="text-[10px] font-display text-off-black/60">Temp High / Low</div>
+          <div className="text-[10px] font-display text-off-black/60 uppercase">Temp High / Low</div>
           <div className="text-lg font-mono font-bold">
             {region.avg_temp_max_c !== null
               ? `${Math.round(region.avg_temp_max_c)}° / ${Math.round(region.avg_temp_min_c!)}°`
@@ -242,19 +242,19 @@ export default function RegionDetail({ region }: Props) {
           </div>
         </div>
         <div className="bg-cream border border-off-black/30 rounded-lg px-2 py-1">
-          <div className="text-[10px] font-display text-off-black/60">Sunshine</div>
+          <div className="text-[10px] font-display text-off-black/60 uppercase">Sunshine</div>
           <div className="text-lg font-mono font-bold">
             {region.avg_sunshine_hours !== null ? `${region.avg_sunshine_hours}h` : '—'}
           </div>
         </div>
         <div className="bg-cream border border-off-black/30 rounded-lg px-2 py-1">
-          <div className="text-[10px] font-display text-off-black/60">Rainfall</div>
+          <div className="text-[10px] font-display text-off-black/60 uppercase">Rainfall</div>
           <div className="text-lg font-mono font-bold">
             {region.avg_rainfall_mm !== null ? `${region.avg_rainfall_mm}mm` : '—'}
           </div>
         </div>
         <div className="bg-cream border border-off-black/30 rounded-lg px-2 py-1">
-          <div className="text-[10px] font-display text-off-black/60">Sea Temp</div>
+          <div className="text-[10px] font-display text-off-black/60 uppercase">Sea Temp</div>
           <div className="text-lg font-mono font-bold">
             {region.avg_sea_temp_c !== null ? `${region.avg_sea_temp_c}°C` : '—'}
           </div>
@@ -264,7 +264,7 @@ export default function RegionDetail({ region }: Props) {
       {/* Cost & Best Months */}
       <div className="grid grid-cols-2 gap-2 mt-3">
         <div className="bg-cream border border-off-black/30 rounded-lg px-2 py-1">
-          <div className="text-[10px] font-display text-off-black/60">Cost</div>
+          <div className="text-[10px] font-display text-off-black/60 uppercase">Cost</div>
           <div className="text-xl font-mono font-bold">{costLabel(costTier)}</div>
           <div className="text-[10px] font-display text-off-black/50">{BUDGET_LABELS[costTier]}</div>
           {selectedActivities.includes('skiing') && skiCostLabel(region.country_code) && (
@@ -272,7 +272,7 @@ export default function RegionDetail({ region }: Props) {
           )}
         </div>
         <div className="bg-cream border border-off-black/30 rounded-lg px-2 py-1">
-          <div className="text-[10px] font-display text-off-black/60">Recommended Months</div>
+          <div className="text-[10px] font-display text-off-black/60 uppercase">Recommended Months</div>
           <div className="flex flex-col gap-0.5 mt-0.5">
             {top3Months.map((m, i) => (
               <div key={m.month} className="flex items-center justify-between">
