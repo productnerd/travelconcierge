@@ -2,17 +2,19 @@ import { useMemo } from 'react'
 import { useUIStore } from '@/store/uiStore'
 import { useShortlistStore } from '@/store/shortlistStore'
 import type { FilteredRegion } from '@/hooks/useRegions'
-import { busynessColor, busynessLabel, countryFlag } from '@/types'
+import { busynessColor, countryFlag } from '@/types'
 import { useFilterStore } from '@/store/filterStore'
-import { scoreColor, goodWeatherScore, bestTimeScore, estimateSnowCm, type ClimateInput } from '@/utils/scoring'
+import { scoreColor, goodWeatherScore, bestTimeScore, estimateSnowCm, weatherScoreBreakdown, type ClimateInput } from '@/utils/scoring'
 import { COST_INDEX, costLabel, skiCostLabel } from '@/data/costIndex'
 import { activeAdvisories, seasonalPenalty } from '@/data/seasonalAdvisories'
 import { cuisineScore } from '@/data/cuisineScore'
 import { getRegionDishes } from '@/data/regionalDishes'
 import { biodiversityScore, biodiversityMetrics } from '@/data/biodiversity'
 import { NATIVE_WILDLIFE, NATIVE_FLORA } from '@/data/wildlife'
+import { MONTHLY_BRIEFS } from '@/data/monthlyBriefs'
 
 const MONTH_LABELS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+const MONTH_NAMES = ['', 'January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December']
 const BUDGET_LABELS: Record<number, string> = { 1: '€15–25/day', 2: '€25–45/day', 3: '€45–95/day', 4: '€95–190/day', 5: '€190+/day' }
 
 function Sparkline({ label, unit, values, selectedMonths, showLabels }: {
@@ -133,6 +135,42 @@ export default function RegionDetail({ region }: Props) {
 
   const costTier = COST_INDEX[region.country_code] ?? 3
 
+  // Score breakdown averaged over selected months
+  const breakdown = useMemo(() => {
+    const selectedMonthData = sortedMonths.filter((m) => selectedMonths.includes(m.month))
+    if (selectedMonthData.length === 0) return null
+    const breakdowns = selectedMonthData.map((m) => {
+      const input: ClimateInput = {
+        temp_avg_c: m.temp_avg_c, temp_min_c: m.temp_min_c, temp_max_c: m.temp_max_c,
+        rainfall_mm: m.rainfall_mm, sunshine_hours_day: m.sunshine_hours_day,
+        cloud_cover_pct: m.cloud_cover_pct, humidity_pct: m.humidity_pct,
+        wind_speed_kmh: m.wind_speed_kmh, has_monsoon: m.has_monsoon,
+        sea_temp_c: m.sea_temp_c, busyness: m.busyness,
+      }
+      return weatherScoreBreakdown(input, selectedActivities)
+    })
+    // Average factor scores across selected months
+    const avgFactors = breakdowns[0].factors.map((f, i) => ({
+      ...f,
+      score: Math.round(breakdowns.reduce((sum, b) => sum + b.factors[i].score, 0) / breakdowns.length),
+    }))
+    // Collect unique active penalties
+    const penaltyMap = new Map<string, number>()
+    for (const b of breakdowns) {
+      for (const p of b.penalties) {
+        const existing = penaltyMap.get(p.label)
+        if (existing === undefined || p.value < existing) penaltyMap.set(p.label, p.value)
+      }
+    }
+    const avgPenalties = Array.from(penaltyMap.entries()).map(([label, value]) => ({ label, value }))
+    return {
+      factors: avgFactors,
+      penalties: avgPenalties,
+      baseScore: Math.round(breakdowns.reduce((s, b) => s + b.baseScore, 0) / breakdowns.length),
+      finalScore: Math.round(breakdowns.reduce((s, b) => s + b.finalScore, 0) / breakdowns.length),
+    }
+  }, [sortedMonths, selectedMonths, selectedActivities])
+
   return (
     <div className="p-4">
       {/* Back button */}
@@ -204,31 +242,64 @@ export default function RegionDetail({ region }: Props) {
         </button>
       </div>
 
-      {/* Badges row */}
-      <div className="flex flex-wrap items-center gap-2 mt-3">
-        <span
-          className="inline-flex items-center gap-1 px-2 py-1 text-[10px] font-display font-bold rounded-lg border-2 border-off-black text-white uppercase"
-          style={{ backgroundColor: busynessColor(region.avg_busyness) }}
-        >
-          {busynessLabel(region.avg_busyness)}
-        </span>
-        <span
-          className="inline-flex items-center gap-1 px-2 py-1 text-[10px] font-display font-bold rounded-lg border-2 border-off-black text-white uppercase"
-          style={{ backgroundColor: scoreColor(region.weatherScore) }}
-        >
-          Weather {region.weatherScore}
-        </span>
+      {/* Score badge */}
+      <div className="mt-3">
         <span
           className="inline-flex items-center gap-1 px-2 py-1 text-[10px] font-display font-bold rounded-lg border-2 border-off-black text-white uppercase"
           style={{ backgroundColor: scoreColor(region.bestTimeScore) }}
         >
-          Best Time to Visit {region.bestTimeScore}
+          Best Time to Visit {region.bestTimeScore}/100
         </span>
       </div>
 
       {/* Description */}
       {region.description && (
-        <p className="text-sm text-off-black/80 mt-3 leading-relaxed">{region.description}</p>
+        <p className="text-xs text-off-black/80 mt-3 leading-relaxed">{region.description}</p>
+      )}
+
+      {/* Monthly briefs */}
+      {selectedMonths.map((monthNum) => {
+        const brief = MONTHLY_BRIEFS[region.slug]?.[monthNum]
+        if (!brief) return null
+        return (
+          <div key={monthNum} className="mt-3">
+            <h4 className="font-display font-bold text-xs uppercase text-off-black">
+              {region.name} in {MONTH_NAMES[monthNum]}
+            </h4>
+            <p className="text-xs text-off-black/70 leading-relaxed mt-0.5">{brief}</p>
+          </div>
+        )
+      })}
+
+      {/* Score breakdown */}
+      {breakdown && (
+        <div className="mt-4">
+          <h3 className="font-display font-bold text-[10px] uppercase text-off-black/50 mb-2">Weather Score Breakdown</h3>
+          <div className="flex flex-col gap-1.5">
+            {breakdown.factors.map((f) => (
+              <div key={f.key} className="flex items-center gap-2">
+                <span className="text-[9px] font-display font-bold uppercase text-off-black/60 w-16 shrink-0">{f.label}</span>
+                <div className="flex-1 h-2 bg-off-black/10 rounded-full overflow-hidden">
+                  <div
+                    className="h-full rounded-full"
+                    style={{ width: `${f.score}%`, backgroundColor: scoreColor(f.score) }}
+                  />
+                </div>
+                <span className="text-[9px] font-mono font-bold text-off-black/60 w-6 text-right">{f.score}</span>
+                <span className="text-[8px] font-display text-off-black/30 w-8">{Math.round(f.weight * 100)}%</span>
+              </div>
+            ))}
+          </div>
+          {breakdown.penalties.length > 0 && (
+            <div className="mt-1.5 flex flex-wrap gap-1.5">
+              {breakdown.penalties.map((p) => (
+                <span key={p.label} className="text-[9px] font-display font-bold text-red uppercase">
+                  ⚠️ {p.label} −{Math.round((1 - p.value) * 100)}%
+                </span>
+              ))}
+            </div>
+          )}
+        </div>
       )}
 
       {/* Climate stats */}

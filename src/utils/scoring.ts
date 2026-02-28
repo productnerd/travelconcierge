@@ -322,6 +322,136 @@ export function goodWeatherScore(d: ClimateInput, activities: string[] = []): nu
   return 100 * base * penalty
 }
 
+// ── Score breakdown (for visualization) ──────────────────────────────
+
+export interface WeatherBreakdown {
+  factors: { key: string; label: string; score: number; weight: number }[]
+  penalties: { label: string; value: number }[]
+  totalPenalty: number
+  baseScore: number
+  finalScore: number
+}
+
+/** Returns the breakdown of individual sub-scores, weights, and penalties for display. */
+export function weatherScoreBreakdown(d: ClimateInput, activities: string[] = []): WeatherBreakdown {
+  const hasSkiing = activities.includes('skiing')
+  const hasBeach = activities.includes('beach')
+  const hasSurfing = activities.includes('surfing')
+  const hasFreediving = activities.includes('freediving')
+  const hasDiving = activities.includes('diving') || hasFreediving
+  const hasHiking = activities.includes('hiking')
+
+  const rawTemp = daytimeTemp(d)
+  const feltTemp = rawTemp !== null ? perceivedTemp(rawTemp, d.humidity_pct) : null
+
+  const t = feltTemp !== null ? tempScore(feltTemp) : 0.5
+  const r = d.rainfall_mm !== null ? rainScore(d.rainfall_mm) : 0.5
+  const s = d.sunshine_hours_day !== null ? sunScore(d.sunshine_hours_day) : 0.5
+  const h = d.humidity_pct !== null ? humidityScore(d.humidity_pct) : 0.5
+  const w = d.wind_speed_kmh !== null ? windScore(d.wind_speed_kmh) : 0.5
+  const isCoastal = d.sea_temp_c !== null
+  const sea = isCoastal ? seaTempScore(d.sea_temp_c!) : 0
+  const surfWind = d.wind_speed_kmh !== null ? surfWindScore(d.wind_speed_kmh) : 0.5
+  const skiT = d.temp_min_c !== null ? skiTempScore(d.temp_min_c) : (feltTemp !== null ? skiTempScore(feltTemp) : 0.5)
+  const hikeT = feltTemp !== null ? hikingTempScore(feltTemp) : 0.5
+  const snow = snowLikelihoodScore(d.temp_min_c, d.rainfall_mm)
+
+  // Build factors array based on active weight profile
+  const factors: WeatherBreakdown['factors'] = []
+  if (hasSkiing) {
+    factors.push({ key: 'temp', label: 'Ski Temp', score: Math.round(skiT * 100), weight: 0.25 })
+    factors.push({ key: 'snow', label: 'Snow', score: Math.round(snow * 100), weight: 0.25 })
+    factors.push({ key: 'rain', label: 'Rainfall', score: Math.round(r * 100), weight: 0.15 })
+    factors.push({ key: 'sun', label: 'Sunshine', score: Math.round(s * 100), weight: 0.15 })
+    factors.push({ key: 'humidity', label: 'Humidity', score: Math.round(h * 100), weight: 0.10 })
+    factors.push({ key: 'wind', label: 'Wind', score: Math.round(w * 100), weight: 0.10 })
+  } else if (hasSurfing && isCoastal) {
+    factors.push({ key: 'temp', label: 'Air Temp', score: Math.round(t * 100), weight: 0.10 })
+    factors.push({ key: 'rain', label: 'Rainfall', score: Math.round(r * 100), weight: 0.15 })
+    factors.push({ key: 'sun', label: 'Sunshine', score: Math.round(s * 100), weight: 0.05 })
+    factors.push({ key: 'humidity', label: 'Humidity', score: Math.round(h * 100), weight: 0.05 })
+    factors.push({ key: 'wind', label: 'Surf Wind', score: Math.round(surfWind * 100), weight: 0.25 })
+    factors.push({ key: 'sea', label: 'Sea Temp', score: Math.round(sea * 100), weight: 0.40 })
+  } else if (hasBeach && isCoastal) {
+    factors.push({ key: 'temp', label: 'Air Temp', score: Math.round(t * 100), weight: 0.15 })
+    factors.push({ key: 'rain', label: 'Rainfall', score: Math.round(r * 100), weight: 0.10 })
+    factors.push({ key: 'sun', label: 'Sunshine', score: Math.round(s * 100), weight: 0.30 })
+    factors.push({ key: 'humidity', label: 'Humidity', score: Math.round(h * 100), weight: 0.05 })
+    factors.push({ key: 'wind', label: 'Wind', score: Math.round(w * 100), weight: 0.05 })
+    factors.push({ key: 'sea', label: 'Sea Temp', score: Math.round(sea * 100), weight: 0.35 })
+  } else if (hasFreediving && isCoastal) {
+    factors.push({ key: 'temp', label: 'Air Temp', score: Math.round(t * 100), weight: 0.05 })
+    factors.push({ key: 'rain', label: 'Rainfall', score: Math.round(r * 100), weight: 0.10 })
+    factors.push({ key: 'sun', label: 'Sunshine', score: Math.round(s * 100), weight: 0.10 })
+    factors.push({ key: 'humidity', label: 'Humidity', score: Math.round(h * 100), weight: 0.05 })
+    factors.push({ key: 'wind', label: 'Wind', score: Math.round(w * 100), weight: 0.30 })
+    factors.push({ key: 'sea', label: 'Sea Temp', score: Math.round(sea * 100), weight: 0.40 })
+  } else if (hasDiving && isCoastal) {
+    factors.push({ key: 'temp', label: 'Air Temp', score: Math.round(t * 100), weight: 0.05 })
+    factors.push({ key: 'rain', label: 'Rainfall', score: Math.round(r * 100), weight: 0.10 })
+    factors.push({ key: 'sun', label: 'Sunshine', score: Math.round(s * 100), weight: 0.10 })
+    factors.push({ key: 'humidity', label: 'Humidity', score: Math.round(h * 100), weight: 0.05 })
+    factors.push({ key: 'wind', label: 'Wind', score: Math.round(w * 100), weight: 0.25 })
+    factors.push({ key: 'sea', label: 'Sea Temp', score: Math.round(sea * 100), weight: 0.45 })
+  } else if (hasHiking) {
+    factors.push({ key: 'temp', label: 'Hike Temp', score: Math.round(hikeT * 100), weight: 0.25 })
+    factors.push({ key: 'rain', label: 'Rainfall', score: Math.round(r * 100), weight: 0.30 })
+    factors.push({ key: 'sun', label: 'Sunshine', score: Math.round(s * 100), weight: 0.25 })
+    factors.push({ key: 'humidity', label: 'Humidity', score: Math.round(h * 100), weight: 0.10 })
+    factors.push({ key: 'wind', label: 'Wind', score: Math.round(w * 100), weight: 0.10 })
+  } else if (isCoastal) {
+    const sc = 1 - W_SEA
+    factors.push({ key: 'temp', label: 'Temperature', score: Math.round(t * 100), weight: W_TEMP * sc })
+    factors.push({ key: 'rain', label: 'Rainfall', score: Math.round(r * 100), weight: W_RAIN * sc })
+    factors.push({ key: 'sun', label: 'Sunshine', score: Math.round(s * 100), weight: W_SUN * sc })
+    factors.push({ key: 'humidity', label: 'Humidity', score: Math.round(h * 100), weight: W_HUMIDITY * sc })
+    factors.push({ key: 'wind', label: 'Wind', score: Math.round(w * 100), weight: W_WIND * sc })
+    factors.push({ key: 'sea', label: 'Sea Temp', score: Math.round(sea * 100), weight: W_SEA })
+  } else {
+    factors.push({ key: 'temp', label: 'Temperature', score: Math.round(t * 100), weight: W_TEMP })
+    factors.push({ key: 'rain', label: 'Rainfall', score: Math.round(r * 100), weight: W_RAIN })
+    factors.push({ key: 'sun', label: 'Sunshine', score: Math.round(s * 100), weight: W_SUN })
+    factors.push({ key: 'humidity', label: 'Humidity', score: Math.round(h * 100), weight: W_HUMIDITY })
+    factors.push({ key: 'wind', label: 'Wind', score: Math.round(w * 100), weight: W_WIND })
+  }
+
+  // Compute penalties
+  const isWaterActivity = hasSurfing || hasDiving || hasFreediving
+  const windForPenalty = hasSurfing
+    ? Math.max(0, (d.wind_speed_kmh ?? 0) - 15)
+    : hasFreediving
+      ? Math.max(0, (d.wind_speed_kmh ?? 0) + 5)
+      : d.wind_speed_kmh
+  const skipComfort = hasSkiing || isWaterActivity
+
+  const penaltyValues = {
+    monsoon: d.has_monsoon ? (hasDiving ? 0.15 : 0.30) : 1,
+    heat: skipComfort ? 1 : heatComfortPenalty(feltTemp),
+    cold: skipComfort ? 1 : coldComfortPenalty(feltTemp),
+    heavyRain: heavyRainPenalty(d.rainfall_mm),
+    humidHeat: skipComfort ? 1 : humidHeatPenalty(feltTemp, d.humidity_pct),
+    highWind: highWindPenalty(windForPenalty),
+    noSnow: hasSkiing ? noSnowPenalty(d.temp_min_c, d.rainfall_mm) : 1,
+  }
+
+  const penaltyLabels: Record<string, string> = {
+    monsoon: 'Monsoon', heat: 'Extreme Heat', cold: 'Extreme Cold',
+    heavyRain: 'Heavy Rain', humidHeat: 'Humid Heat', highWind: 'High Wind', noSnow: 'No Snow',
+  }
+
+  const activePenalties: WeatherBreakdown['penalties'] = []
+  let totalPenalty = 1
+  for (const [key, val] of Object.entries(penaltyValues)) {
+    totalPenalty *= val
+    if (val < 1) activePenalties.push({ label: penaltyLabels[key], value: val })
+  }
+
+  const baseScore = factors.reduce((sum, f) => sum + f.score / 100 * f.weight, 0) * 100
+  const finalScore = baseScore * totalPenalty
+
+  return { factors, penalties: activePenalties, totalPenalty, baseScore: Math.round(baseScore), finalScore: Math.round(finalScore) }
+}
+
 // ── Presets ──────────────────────────────────────────────────────────
 
 export type AlgorithmPreset = 'weather-chaser' | 'balanced' | 'crowd-avoider'
