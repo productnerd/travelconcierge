@@ -30,10 +30,6 @@ function sunScore(hours: number): number {
   return Math.min(Math.max(hours / 10, 0), 1)
 }
 
-/** Cloud cover: linear inverse (0 % → 1, 100 % → 0). */
-function cloudScore(pct: number): number {
-  return 1 - pct / 100
-}
 
 /** Humidity comfort: perfect ≤ 55 %, power decay above. */
 function humidityScore(pct: number): number {
@@ -151,13 +147,12 @@ function noSnowPenalty(tempMaxC: number | null, rainfallMm: number | null): numb
 
 // ── Weights ──────────────────────────────────────────────────────────
 
-const W_TEMP = 0.30
+const W_TEMP = 0.35
 const W_RAIN = 0.25
-const W_SUN = 0.15
-const W_CLOUD = 0.05
+const W_SUN = 0.20
 const W_HUMIDITY = 0.15
-const W_WIND = 0.10
-const W_SEA = 0.08 // borrows proportionally from others for coastal
+const W_WIND = 0.05
+const W_SEA = 0.05 // borrows proportionally from others for coastal
 
 // ── Exported scoring ─────────────────────────────────────────────────
 
@@ -173,6 +168,8 @@ export interface ClimateInput {
   has_monsoon: boolean
   sea_temp_c: number | null
   busyness: number // 1–5
+  month?: number     // 1–12, for bloom factor
+  latitude?: number  // region centroid, for bloom factor
 }
 
 /** Daytime-weighted temp: 75% max + 25% min (travelers explore during the day). */
@@ -212,7 +209,6 @@ export function goodWeatherScore(d: ClimateInput, activities: string[] = []): nu
   const t = feltTemp !== null ? tempScore(feltTemp) : 0.5
   const r = d.rainfall_mm !== null ? rainScore(d.rainfall_mm) : 0.5
   const s = d.sunshine_hours_day !== null ? sunScore(d.sunshine_hours_day) : 0.5
-  const c = d.cloud_cover_pct !== null ? cloudScore(d.cloud_cover_pct) : 0.5
   const h = d.humidity_pct !== null ? humidityScore(d.humidity_pct) : 0.5
   const w = d.wind_speed_kmh !== null ? windScore(d.wind_speed_kmh) : 0.5
 
@@ -232,8 +228,7 @@ export function goodWeatherScore(d: ClimateInput, activities: string[] = []): nu
       0.25 * skiTemp +     // ski temp curve (Gaussian at -2.5°C)
       0.25 * snow +        // snow likelihood from min temp + precip
       0.15 * r +           // rain (avalanche risk, visibility)
-      0.10 * s +           // sunshine (nice but not critical)
-      0.05 * c +
+      0.15 * s +           // sunshine
       0.10 * h +           // humidity (comfort on slopes)
       0.10 * w             // wind (dangerous on exposed slopes)
   } else if (hasSurfing && isCoastal) {
@@ -242,17 +237,15 @@ export function goodWeatherScore(d: ClimateInput, activities: string[] = []): nu
       0.10 * t +           // air temp (minimal — in the water)
       0.15 * r +           // rain (reduces visibility, comfort)
       0.05 * s +
-      0.05 * c +
       0.05 * h +
       0.25 * surfWind +    // ideal wind 15-30 km/h
-      0.35 * sea            // sea temp (wetsuit thickness)
+      0.40 * sea            // sea temp (wetsuit thickness)
   } else if (hasBeach && isCoastal) {
     // Beach: sun + sea temp + warm air, rain/wind are mood killers
     base =
       0.15 * t +           // warm air for sunbathing
       0.10 * r +           // rain ruins beach day
-      0.25 * s +           // sunshine is the point
-      0.05 * c +
+      0.30 * s +           // sunshine is the point
       0.05 * h +
       0.05 * w +           // too much wind is annoying
       0.35 * sea            // sea temp for swimming
@@ -262,9 +255,8 @@ export function goodWeatherScore(d: ClimateInput, activities: string[] = []): nu
       0.05 * t +
       0.10 * r +
       0.10 * s +
-      0.05 * c +
       0.05 * h +
-      0.25 * w +           // calm seas critical (no tank, surface rest)
+      0.30 * w +           // calm seas critical (no tank, surface rest)
       0.40 * sea
   } else if (hasDiving && isCoastal) {
     // Diving: sea temp dominant, wind for boat trips, air temp irrelevant
@@ -272,17 +264,15 @@ export function goodWeatherScore(d: ClimateInput, activities: string[] = []): nu
       0.05 * t +
       0.10 * r +
       0.10 * s +
-      0.05 * c +
       0.05 * h +
-      0.20 * w +           // wind (boat trips need manageable seas)
+      0.25 * w +           // wind (boat trips need manageable seas)
       0.45 * sea            // sea temp (comfort, marine life activity)
   } else if (hasHiking) {
     // Hiking: cooler temps preferred, rain matters more, sunshine matters more
     base =
       0.25 * hikeTemp +    // hiking temp curve centered at 17°C
       0.30 * r +           // rain (trails become miserable)
-      0.20 * s +           // sunshine (daylight for trails)
-      0.05 * c +
+      0.25 * s +           // sunshine (daylight for trails)
       0.10 * h +
       0.10 * w
   } else if (isCoastal) {
@@ -292,7 +282,6 @@ export function goodWeatherScore(d: ClimateInput, activities: string[] = []): nu
       W_TEMP * scale * t +
       W_RAIN * scale * r +
       W_SUN * scale * s +
-      W_CLOUD * scale * c +
       W_HUMIDITY * scale * h +
       W_WIND * scale * w +
       W_SEA * sea
@@ -302,7 +291,6 @@ export function goodWeatherScore(d: ClimateInput, activities: string[] = []): nu
       W_TEMP * t +
       W_RAIN * r +
       W_SUN * s +
-      W_CLOUD * c +
       W_HUMIDITY * h +
       W_WIND * w
   }
@@ -345,6 +333,33 @@ const PRESET_ALPHA: Record<AlgorithmPreset, number> = {
   'crowd-avoider': 0.0,   // weather 0%, crowds 100%
 }
 
+/** Vegetation lushness factor (0.96–1.04). Rewards green/blooming months, penalises bare/dormant. */
+export function bloomFactor(month: number, lat: number, tempC: number | null, rainfallMm: number | null): number {
+  const rain = rainfallMm ?? 30
+  const temp = tempC ?? 15
+
+  // Arid desert — no meaningful vegetation
+  if (rain < 10 && temp > 25) return 1.0
+
+  // Tropical — always green, slight rain modulation
+  if (Math.abs(lat) < 23.5) {
+    if (rain > 50) return 1.02
+    if (rain < 15) return 0.98
+    return 1.0
+  }
+
+  // Temperate / polar — seasonal sinusoidal curve
+  const peakMonth = lat >= 0 ? 7 : 1
+  const angle = 2 * Math.PI * (month - peakMonth) / 12
+  const seasonal = Math.cos(angle) // -1 (dead winter) to 1 (peak summer)
+  let factor = 1.0 + seasonal * 0.04
+
+  // Dry growing season penalty (e.g. Mediterranean summer drought)
+  if (seasonal > 0 && rain < 20) factor = Math.max(factor - 0.02, 0.96)
+
+  return factor
+}
+
 /**
  * Best Time to Visit (0–100).
  * Geometric mean: 100 × W^α × Q^(1−α) × safety
@@ -373,6 +388,11 @@ export function bestTimeScore(d: ClimateInput, preset: AlgorithmPreset = 'balanc
         raw *= 0.85 + 0.15 * (t / 100)
       }
     }
+  }
+
+  // Bloom factor: ±4% for vegetation lushness
+  if (d.month !== undefined && d.latitude !== undefined) {
+    raw *= bloomFactor(d.month, d.latitude, d.temp_avg_c, d.rainfall_mm)
   }
 
   return countryCode ? raw * safetyMultiplier(countryCode) : raw
