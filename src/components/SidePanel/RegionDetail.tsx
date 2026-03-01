@@ -263,7 +263,7 @@ export default function RegionDetail({ region }: Props) {
 
         <div className="flex items-center gap-1 shrink-0">
           <button
-            onClick={() => { if (!isVisited) toggleVisited(region.slug) }}
+            onClick={() => toggleVisited(region.slug)}
             title={isVisited ? 'Visited' : 'Mark as visited'}
             className="w-8 h-8 flex items-center justify-center text-xl"
           >
