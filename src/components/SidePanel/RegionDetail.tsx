@@ -169,28 +169,23 @@ export default function RegionDetail({ region }: Props) {
         if (existing === undefined || p.value < existing) penaltyMap.set(p.label, p.value)
       }
     }
-    // Flora & Fauna — activity-aware biodiversity score (mirrors bestTimeScoreBreakdown logic)
+    // Flora & Fauna — biodiversity score (always computed for display)
     const hasWater = selectedActivities.some(a => ['diving', 'freediving', 'beach'].includes(a))
     const hasHiking = selectedActivities.includes('hiking')
     const floraFaunaActive = hasWater || hasHiking
     let floraFaunaScore = 50
-    if (floraFaunaActive) {
-      const bio = BIODIVERSITY[region.country_code]
-      if (bio) {
-        if (hasWater && bio.marine !== undefined) floraFaunaScore = bio.marine
-        else if (hasHiking) floraFaunaScore = bio.protected !== undefined ? Math.round(bio.index * 0.6 + bio.protected * 0.4) : bio.index
-        else floraFaunaScore = bio.index
-      }
+    const bio = BIODIVERSITY[region.country_code]
+    if (bio) {
+      if (hasWater && bio.marine !== undefined) floraFaunaScore = bio.marine
+      else if (hasHiking) floraFaunaScore = bio.protected !== undefined ? Math.round(bio.index * 0.6 + bio.protected * 0.4) : bio.index
+      else floraFaunaScore = bio.index
     }
-    // Bloom/Lush — seasonal vegetation score (mirrors bloomFactor in scoring.ts)
-    let bloomScore = 50
-    if (floraFaunaActive) {
-      const scores = selectedMonthData.map(m => {
-        const bf = bloomFactor(m.month, region.centroid_lat, m.temp_avg_c, m.rainfall_mm)
-        return Math.round(((bf - 0.96) / 0.08) * 100)
-      })
-      bloomScore = Math.round(scores.reduce((a, b) => a + b, 0) / scores.length)
-    }
+    // Bloom/Lush — seasonal vegetation score (always computed for display)
+    const bloomScores = selectedMonthData.map(m => {
+      const bf = bloomFactor(m.month, region.centroid_lat, m.temp_avg_c, m.rainfall_mm)
+      return Math.round(((bf - 0.96) / 0.08) * 100)
+    })
+    const bloomScore = Math.round(bloomScores.reduce((a, b) => a + b, 0) / bloomScores.length)
     return {
       factors: avgFactors,
       crowdScore,
@@ -423,25 +418,22 @@ export default function RegionDetail({ region }: Props) {
                 </div>
                 <span className="text-[8px] font-mono font-bold text-off-black/60 w-5 text-right">{bestTimeBd.crowdScore}</span>
               </div>
-              {/* Flora & Fauna bar — teal-green, only when hiking/water active */}
-              {bestTimeBd.floraFaunaActive && (
-                <div className="flex items-center gap-1.5">
-                  <span className="text-[8px] font-display font-bold uppercase text-off-black/60 w-14 shrink-0">Flora</span>
-                  <div className="flex-1 h-1.5 bg-off-black/10 rounded-full overflow-hidden">
-                    <div className="h-full rounded-full" style={{ width: `${bestTimeBd.floraFaunaScore}%`, backgroundColor: bestTimeBd.floraFaunaScore >= 70 ? '#2d6a4f' : bestTimeBd.floraFaunaScore >= 40 ? '#52b788' : '#95d5b2' }} />
-                  </div>
-                  <span className="text-[8px] font-mono font-bold text-off-black/60 w-5 text-right">{bestTimeBd.floraFaunaScore}</span>
+              {/* Bloom bar — pink with tooltip */}
+              <div className="flex items-center gap-1.5">
+                <span className="text-[8px] font-display font-bold uppercase text-off-black/60 w-14 shrink-0 flex items-center gap-0.5">
+                  Bloom
+                  <span className="relative group cursor-help">
+                    <span className="inline-flex items-center justify-center w-2.5 h-2.5 rounded-full bg-off-black/15 text-off-black/50 text-[6px] font-bold leading-none">?</span>
+                    <span className="absolute bottom-full left-1/2 -translate-x-1/2 mb-1 w-36 p-1.5 bg-off-black text-cream text-[7px] leading-tight rounded shadow-lg opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity z-10">
+                      Seasonal vegetation lushness — how green and in-bloom the landscape is based on temperature, rainfall, and latitude.
+                    </span>
+                  </span>
+                </span>
+                <div className="flex-1 h-1.5 bg-off-black/10 rounded-full overflow-hidden">
+                  <div className="h-full rounded-full" style={{ width: `${bestTimeBd.bloomScore}%`, backgroundColor: bestTimeBd.bloomScore >= 70 ? '#d63384' : bestTimeBd.bloomScore >= 40 ? '#e685b5' : '#f0b8d4' }} />
                 </div>
-              )}
-              {bestTimeBd.floraFaunaActive && (
-                <div className="flex items-center gap-1.5">
-                  <span className="text-[8px] font-display font-bold uppercase text-off-black/60 w-14 shrink-0">Bloom</span>
-                  <div className="flex-1 h-1.5 bg-off-black/10 rounded-full overflow-hidden">
-                    <div className="h-full rounded-full" style={{ width: `${bestTimeBd.bloomScore}%`, backgroundColor: bestTimeBd.bloomScore >= 70 ? '#40916c' : bestTimeBd.bloomScore >= 40 ? '#74c69d' : '#b7e4c7' }} />
-                  </div>
-                  <span className="text-[8px] font-mono font-bold text-off-black/60 w-5 text-right">{bestTimeBd.bloomScore}</span>
-                </div>
-              )}
+                <span className="text-[8px] font-mono font-bold text-off-black/60 w-5 text-right">{bestTimeBd.bloomScore}</span>
+              </div>
             </div>
             {bestTimeBd.penalties.length > 0 && (
               <div className="mt-1 flex flex-wrap gap-1">
