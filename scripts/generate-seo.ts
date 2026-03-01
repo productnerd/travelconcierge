@@ -14,7 +14,7 @@ import { join } from 'node:path'
 
 import { COST_INDEX, SAFETY_TIER, COUNTRY_CONTINENT, costLabel, safetyLabel } from '@/data/costIndex'
 import { cuisineScore } from '@/data/cuisineScore'
-import { NATIVE_WILDLIFE } from '@/data/wildlife'
+import { NATIVE_WILDLIFE, NATIVE_FLORA, NATIONAL_PARKS } from '@/data/wildlife'
 import { SEASONAL_ADVISORIES } from '@/data/seasonalAdvisories'
 import { MONTHLY_BRIEFS } from '@/data/monthlyBriefs'
 import { REGIONAL_DISHES } from '@/data/regionalDishes'
@@ -27,6 +27,7 @@ const supabase = createClient(SUPABASE_URL, SUPABASE_ANON)
 
 const BASE_URL = 'https://productnerd.github.io/travelconcierge'
 const DIST = join(import.meta.dirname, '..', 'dist')
+const MAPBOX_TOKEN = process.env.VITE_MAPBOX_TOKEN ?? ''
 
 const MONTH_NAMES = ['January', 'February', 'March', 'April', 'May', 'June',
   'July', 'August', 'September', 'October', 'November', 'December']
@@ -94,6 +95,8 @@ function generateRegionPage(region: Region): string {
   const continent = COUNTRY_CONTINENT[region.country_code] ?? 'Unknown'
   const cuisine = cuisineScore(region.country_code)
   const wildlife = NATIVE_WILDLIFE[region.country_code] ?? []
+  const flora = NATIVE_FLORA[region.country_code] ?? []
+  const parks = NATIONAL_PARKS[region.country_code] ?? []
   const advisories = SEASONAL_ADVISORIES[region.slug] ?? []
   const briefs = MONTHLY_BRIEFS[region.slug]
   const dishes = region.cuisine_tags.length > 0
@@ -102,6 +105,9 @@ function generateRegionPage(region: Region): string {
 
   const title = `${region.name}, ${region.country_name} — Best Time to Visit | FarFarAway`
   const description = `When to visit ${region.name}, ${region.country_name}: month-by-month climate data, best time scores, costs, safety, and travel tips. Best months: ${top3.map((t) => MONTH_NAMES[t.month - 1]).join(', ')}.`
+  const mapImgUrl = MAPBOX_TOKEN
+    ? `https://api.mapbox.com/styles/v1/mapbox/outdoors-v12/static/${region.centroid_lon},${region.centroid_lat},6,0/1200x400@2x?access_token=${MAPBOX_TOKEN}`
+    : ''
 
   // FAQ data
   const faqs: { q: string; a: string }[] = [
@@ -171,15 +177,19 @@ function generateRegionPage(region: Region): string {
   <meta property="og:description" content="${escapeHtml(description)}">
   <meta property="og:url" content="${BASE_URL}/destinations/${region.slug}/">
   <meta property="og:type" content="website">
-  <meta name="twitter:card" content="summary">
+  ${mapImgUrl ? `<meta property="og:image" content="${mapImgUrl}">` : ''}
+  <meta name="twitter:card" content="${mapImgUrl ? 'summary_large_image' : 'summary'}">
   <meta name="twitter:title" content="${escapeHtml(title)}">
   <meta name="twitter:description" content="${escapeHtml(description)}">
+  ${mapImgUrl ? `<meta name="twitter:image" content="${mapImgUrl}">` : ''}
   <link rel="icon" type="image/png" href="${BASE_URL}/favicon.png">
   <script type="application/ld+json">${JSON.stringify(jsonLd)}</script>
   <style>
     :root{--cream:#FAF3E0;--ink:#1a1a1a;--red:#D93B2B;--green:#3B7A4A}
     *{margin:0;padding:0;box-sizing:border-box}
-    body{font-family:system-ui,-apple-system,sans-serif;background:var(--cream);color:var(--ink);max-width:900px;margin:0 auto;padding:24px 16px;line-height:1.6}
+    body{font-family:system-ui,-apple-system,sans-serif;background:var(--cream);color:var(--ink);max-width:900px;margin:0 auto;padding:0 0 24px;line-height:1.6}
+    .map-banner{width:100%;height:280px;object-fit:cover;display:block;border-bottom:3px solid var(--ink)}
+    .content{padding:24px 16px 0}
     h1{font-size:1.8rem;margin-bottom:4px}
     h2{font-size:1.2rem;margin:32px 0 12px;border-bottom:2px solid var(--ink);padding-bottom:4px}
     h3{font-size:1rem;margin:20px 0 8px}
@@ -189,6 +199,7 @@ function generateRegionPage(region: Region): string {
     .pills{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0}
     .pill{display:inline-block;padding:3px 10px;font-size:0.75rem;font-weight:700;border:2px solid var(--ink);border-radius:6px;text-transform:uppercase}
     .pill-green{border-color:var(--green);color:var(--green)}
+    .pill-park{border-color:#8B6914;color:#8B6914}
     .meta{display:flex;flex-wrap:wrap;gap:16px;margin:16px 0;font-size:0.9rem}
     .meta dt{font-weight:700;font-size:0.75rem;text-transform:uppercase;opacity:0.5}
     .meta dd{margin:0}
@@ -201,7 +212,7 @@ function generateRegionPage(region: Region): string {
     .faq-a{margin:4px 0 0 16px;opacity:0.85}
     .cta{display:inline-block;margin:32px 0;padding:12px 24px;background:var(--red);color:#fff;font-weight:700;border-radius:8px;text-transform:uppercase;font-size:0.85rem}
     .cta:hover{text-decoration:none;opacity:0.9}
-    footer{margin-top:48px;padding-top:16px;border-top:1px solid rgba(26,26,26,0.15);font-size:0.75rem;opacity:0.5}
+    footer{margin-top:48px;padding:16px;border-top:1px solid rgba(26,26,26,0.15);font-size:0.75rem;opacity:0.5}
     .advisory{font-size:0.8rem;margin:4px 0;padding:4px 8px;border-radius:4px}
     .advisory-warn{background:rgba(217,59,43,0.1);color:var(--red)}
     .advisory-boost{background:rgba(59,122,74,0.1);color:var(--green)}
@@ -209,6 +220,8 @@ function generateRegionPage(region: Region): string {
   </style>
 </head>
 <body>
+  ${mapImgUrl ? `<img class="map-banner" src="${mapImgUrl}" alt="Map of ${escapeHtml(region.name)}, ${escapeHtml(region.country_name)}" loading="lazy" width="1200" height="400">` : ''}
+  <div class="content">
   <header>
     <h1>${escapeHtml(region.name)}</h1>
     <p class="subtitle">${escapeHtml(region.country_name)} · ${escapeHtml(continent)}</p>
@@ -303,6 +316,20 @@ function generateRegionPage(region: Region): string {
     ${dishes.map((d) => `<span class="pill">${d.emoji} ${escapeHtml(d.name)}</span>`).join('')}
   </div>` : ''}
 
+  <!-- Flora -->
+  ${flora.length > 0 ? `
+  <h2>Native Plants &amp; Flora</h2>
+  <div class="pills">
+    ${flora.map((f) => `<span class="pill pill-green">${f.emoji} ${escapeHtml(f.name)}</span>`).join('')}
+  </div>` : ''}
+
+  <!-- National Parks -->
+  ${parks.length > 0 ? `
+  <h2>National Parks &amp; Reserves</h2>
+  <div class="pills">
+    ${parks.map((p) => `<span class="pill pill-park">${p.emoji} ${escapeHtml(p.name)}</span>`).join('')}
+  </div>` : ''}
+
   <!-- FAQ -->
   <h2>Frequently Asked Questions</h2>
   ${faqs.map((f) => `
@@ -310,6 +337,7 @@ function generateRegionPage(region: Region): string {
   <p class="faq-a">${escapeHtml(f.a)}</p>`).join('')}
 
   <a class="cta" href="${BASE_URL}/">Explore ${escapeHtml(region.name)} on FarFarAway →</a>
+  </div>
 
   <footer>
     <p>Data from FarFarAway Travel Concierge. Climate data averaged from multiple sources. Scores are algorithmic estimates.</p>
