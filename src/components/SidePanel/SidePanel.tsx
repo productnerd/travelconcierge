@@ -5,9 +5,10 @@ import RegionDetail from './RegionDetail'
 
 interface Props {
   regions: FilteredRegion[]
+  loading?: boolean
 }
 
-export default function SidePanel({ regions }: Props) {
+export default function SidePanel({ regions, loading }: Props) {
   const sidePanelOpen = useUIStore((s) => s.sidePanelOpen)
   const toggleSidePanel = useUIStore((s) => s.toggleSidePanel)
   const selectedSlug = useUIStore((s) => s.selectedRegionSlug)
@@ -49,7 +50,7 @@ export default function SidePanel({ regions }: Props) {
           selectedRegion ? (
             <RegionDetail region={selectedRegion} />
           ) : (
-            <RegionCards regions={regions} />
+            <RegionCards regions={regions} loading={loading} />
           )
         )}
       </div>
@@ -71,7 +72,7 @@ export default function SidePanel({ regions }: Props) {
           selectedRegion ? (
             <RegionDetail region={selectedRegion} />
           ) : (
-            <RegionCards regions={regions} />
+            <RegionCards regions={regions} loading={loading} />
           )
         )}
       </div>

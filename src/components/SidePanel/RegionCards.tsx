@@ -24,11 +24,30 @@ const SORT_OPTIONS: { key: SortBy; label: string; tip: string }[] = [
   { key: 'name', label: 'A–Z', tip: 'Alphabetical by region name' },
 ]
 
-interface Props {
-  regions: FilteredRegion[]
+function SkeletonCard() {
+  return (
+    <div className="bg-cream border border-off-black/15 rounded-xl p-4 animate-pulse">
+      <div className="flex items-start gap-2">
+        <div className="flex-1">
+          <div className="h-3 w-32 bg-off-black/10 rounded" />
+          <div className="h-2.5 w-20 bg-off-black/8 rounded mt-2" />
+        </div>
+      </div>
+      <div className="flex items-center gap-2 mt-4">
+        <div className="h-4 w-20 bg-off-black/10 rounded" />
+        <div className="h-3 w-12 bg-off-black/8 rounded" />
+        <div className="h-3 w-8 bg-off-black/8 rounded" />
+      </div>
+    </div>
+  )
 }
 
-export default function RegionCards({ regions }: Props) {
+interface Props {
+  regions: FilteredRegion[]
+  loading?: boolean
+}
+
+export default function RegionCards({ regions, loading }: Props) {
   const sortBy = useFilterStore((s) => s.sortBy)
   const setSortBy = useFilterStore((s) => s.setSortBy)
   const userLocation = useFilterStore((s) => s.userLocation)
@@ -74,6 +93,18 @@ export default function RegionCards({ regions }: Props) {
         return arr
     }
   }, [regions, sortBy, userLocation, selectedActivities, search])
+
+  if (loading) {
+    return (
+      <div className="p-4">
+        <div className="flex flex-col gap-3">
+          {Array.from({ length: 6 }).map((_, i) => (
+            <SkeletonCard key={i} />
+          ))}
+        </div>
+      </div>
+    )
+  }
 
   if (regions.length === 0) {
     return (

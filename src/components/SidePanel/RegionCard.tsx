@@ -55,20 +55,56 @@ export default function RegionCard({ region }: Props) {
         ${selectedSlug === region.slug ? 'border-red' : 'border-off-black/30 hover:border-red'}
       `}
     >
-      {/* Best Month badge — top right */}
-      {isBestMonth && (
-        <span className="absolute top-3 right-3 inline-flex items-center px-1.5 py-0.5 text-[10px] font-display font-bold rounded bg-green/15 text-green border border-green/30 uppercase">
-          Best Month
-        </span>
-      )}
+      {/* Header row: name + avatars + best month */}
+      <div className="flex items-start gap-2">
+        <div className="flex-1 min-w-0">
+          <h3 className="font-display font-bold text-xs leading-tight uppercase">{region.name}</h3>
+          <p className="text-xs text-off-black/60 mt-0.5">
+            {countryFlag(region.country_code)} {region.country_name}
+          </p>
+        </div>
 
-      {/* Region name */}
-      <h3 className="font-display font-bold text-xs pr-20 leading-tight uppercase">{region.name}</h3>
+        <div className="flex items-center gap-1.5 shrink-0">
+          {/* User + Friend avatars (only when friends toggled on) */}
+          {enabledFriendIds.length > 0 && (() => {
+            const myHearted = myShortlisted.includes(region.slug)
+            const myVisitedHere = myVisited.includes(region.slug)
+            const avatars: { emoji: string; color: string; name: string; hearted: boolean; visited: boolean; key: string }[] = []
+            if (profile && (myHearted || myVisitedHere)) {
+              avatars.push({ emoji: profile.avatar_emoji, color: profile.avatar_color, name: 'You', hearted: myHearted, visited: myVisitedHere, key: 'me' })
+            }
+            for (const fId of enabledFriendIds) {
+              const friend = friends.find((f) => f.userId === fId)
+              const data = friendData[fId]
+              if (!friend || !data) continue
+              const hearted = data.shortlistedSlugs.includes(region.slug)
+              const visited = data.visitedSlugs.includes(region.slug)
+              if (hearted || visited) avatars.push({ emoji: friend.avatarEmoji, color: friend.avatarColor, name: friend.displayName, hearted, visited, key: fId })
+            }
+            if (avatars.length === 0) return null
+            return avatars.map((a) => (
+              <div key={a.key} className="flex items-center gap-0.5" title={`${a.name}: ${a.hearted ? '❤️' : ''} ${a.visited ? '✓' : ''}`}>
+                <span
+                  className="w-4 h-4 rounded-full flex items-center justify-center text-[8px] border border-off-black/20"
+                  style={{ backgroundColor: a.color }}
+                >
+                  {a.emoji}
+                </span>
+                <span className="text-[8px]">
+                  {a.hearted && <span className="text-red">❤</span>}
+                  {a.visited && <span className="text-green">✓</span>}
+                </span>
+              </div>
+            ))
+          })()}
 
-      {/* Country */}
-      <p className="text-xs text-off-black/60 mt-0.5">
-        {countryFlag(region.country_code)} {region.country_name}
-      </p>
+          {isBestMonth && (
+            <span className="inline-flex items-center px-1.5 py-0.5 text-[10px] font-display font-bold rounded bg-green/15 text-green border border-green/30 uppercase">
+              Best Month
+            </span>
+          )}
+        </div>
+      </div>
 
       {/* Stats row */}
       <div className="flex items-center gap-2 mt-3 flex-wrap">
@@ -133,42 +169,6 @@ export default function RegionCard({ region }: Props) {
 
       </div>
 
-      {/* User + Friend avatars (only when friends toggled on) */}
-      {enabledFriendIds.length > 0 && (() => {
-        const myHearted = myShortlisted.includes(region.slug)
-        const myVisitedHere = myVisited.includes(region.slug)
-        const avatars: { emoji: string; color: string; name: string; hearted: boolean; visited: boolean; key: string }[] = []
-        if (profile && (myHearted || myVisitedHere)) {
-          avatars.push({ emoji: profile.avatar_emoji, color: profile.avatar_color, name: 'You', hearted: myHearted, visited: myVisitedHere, key: 'me' })
-        }
-        for (const fId of enabledFriendIds) {
-          const friend = friends.find((f) => f.userId === fId)
-          const data = friendData[fId]
-          if (!friend || !data) continue
-          const hearted = data.shortlistedSlugs.includes(region.slug)
-          const visited = data.visitedSlugs.includes(region.slug)
-          if (hearted || visited) avatars.push({ emoji: friend.avatarEmoji, color: friend.avatarColor, name: friend.displayName, hearted, visited, key: fId })
-        }
-        if (avatars.length === 0) return null
-        return (
-          <div className="flex items-center gap-1 mt-2">
-            {avatars.map((a) => (
-              <div key={a.key} className="flex items-center gap-0.5" title={`${a.name}: ${a.hearted ? '❤️' : ''} ${a.visited ? '✓' : ''}`}>
-                <span
-                  className="w-4 h-4 rounded-full flex items-center justify-center text-[8px] border border-off-black/20"
-                  style={{ backgroundColor: a.color }}
-                >
-                  {a.emoji}
-                </span>
-                <span className="text-[8px]">
-                  {a.hearted && <span className="text-red">❤</span>}
-                  {a.visited && <span className="text-green">✓</span>}
-                </span>
-              </div>
-            ))}
-          </div>
-        )
-      })()}
     </div>
   )
 }

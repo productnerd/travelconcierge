@@ -158,7 +158,7 @@ function App() {
         </div>
 
         {/* Side Panel */}
-        <SidePanel regions={regions} />
+        <SidePanel regions={regions} loading={regionsLoading} />
       </div>
 
       {/* Trip Planner Modal */}
