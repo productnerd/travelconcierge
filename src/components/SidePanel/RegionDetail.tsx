@@ -5,7 +5,7 @@ import { useVisitedStore } from '@/store/visitedStore'
 import type { FilteredRegion } from '@/hooks/useRegions'
 import { busynessColor, countryFlag } from '@/types'
 import { useFilterStore } from '@/store/filterStore'
-import { scoreColor, goodWeatherScore, bestTimeScore, estimateSnowCm, weatherScoreBreakdown, bestTimeScoreBreakdown, bloomFactor, type ClimateInput } from '@/utils/scoring'
+import { scoreColor, goodWeatherScore, bestTimeScore, estimateSnowCm, weatherScoreBreakdown, bloomFactor, type ClimateInput } from '@/utils/scoring'
 import { COST_INDEX, costLabel, skiCostLabel, overallScoreBreakdown } from '@/data/costIndex'
 import { activeAdvisories, seasonalPenalty } from '@/data/seasonalAdvisories'
 import { cuisineScore } from '@/data/cuisineScore'
@@ -268,9 +268,9 @@ export default function RegionDetail({ region }: Props) {
 
         <div className="flex items-center gap-1 shrink-0">
           <button
-            onClick={() => toggleVisited(region.slug)}
-            title={isVisited ? 'Mark as not visited' : 'Mark as visited'}
-            className="text-2xl"
+            onClick={() => { if (!isVisited) toggleVisited(region.slug) }}
+            title={isVisited ? 'Visited' : 'Mark as visited'}
+            className="w-8 h-8 flex items-center justify-center text-xl"
           >
             {isVisited ? (
               <span className="text-green">&#10003;</span>
@@ -280,7 +280,7 @@ export default function RegionDetail({ region }: Props) {
           </button>
           <button
             onClick={() => toggle(region.slug)}
-            className="text-2xl"
+            className="w-8 h-8 flex items-center justify-center text-xl"
           >
             {isShortlisted ? (
               <span className="text-red">&#10084;</span>
