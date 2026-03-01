@@ -315,7 +315,7 @@ export default function TravelMap({ regions, geojson }: Props) {
       )}
 
       {/* Legend + Color mode toggle */}
-      <div className="absolute bottom-2 md:bottom-4 left-2 md:left-4 bg-cream border-2 border-off-black rounded-xl p-2 md:p-4 text-[10px] font-display uppercase">
+      <div className="absolute bottom-2 md:bottom-4 left-2 md:left-4 bg-cream/80 backdrop-blur-sm border-2 border-off-black/70 rounded-xl p-2 md:p-4 text-[10px] font-display uppercase">
         <div className="flex items-start gap-3">
           {/* Color mode toggle — vertical stack */}
           <div className="flex flex-col gap-1">

@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabase'
 import { useFilterStore } from '@/store/filterStore'
 import { useShortlistStore } from '@/store/shortlistStore'
+import { useVisitedStore } from '@/store/visitedStore'
 import type { RegionWithMonths } from '@/types'
 import { goodWeatherScore, bestTimeScore, type ClimateInput } from '@/utils/scoring'
 import { SAFETY_TIER, COUNTRY_CONTINENT, overallScore } from '@/data/costIndex'
@@ -51,6 +52,7 @@ export function useRegions() {
   const filters = useFilterStore()
   const algorithmPreset = useFilterStore((s) => s.algorithmPreset)
   const shortlistedSlugs = useShortlistStore((s) => s.shortlistedSlugs)
+  const visitedSlugs = useVisitedStore((s) => s.visitedSlugs)
 
   // Fetch all regions + all months once
   useEffect(() => {
@@ -184,6 +186,10 @@ export function useRegions() {
 
       // Shortlist-only filter
       if (filters.showShortlistOnly && !shortlistedSlugs.includes(r.slug)) return false
+
+      // Visited filters
+      if (filters.hideVisited && visitedSlugs.includes(r.slug)) return false
+      if (filters.showVisitedOnly && !visitedSlugs.includes(r.slug)) return false
 
       // Score-tier filter (from clickable legend)
       if (filters.hiddenScoreTiers.length > 0) {

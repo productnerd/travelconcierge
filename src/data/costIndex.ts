@@ -93,83 +93,85 @@ export function costLabel(tier: number): string {
 // 3: Reconsider travel — significant instability, terrorism risk, or civil unrest
 // 4: Do not travel — active conflict, war zones, extreme danger
 // Only countries at tier 2+ are listed; unlisted countries default to tier 1.
-// Based on combined UK FCDO, US State Dept, and AU Smartraveller advisories (Feb 2026).
+// Sources: UNDSS Security Phases, Global Peace Index 2025 (IEP), INFORM Risk Index (OCHA/JRC).
+// Cross-referenced for consensus; no single government advisory used.
 
 export const SAFETY_TIER: Record<string, number> = {
   // Tier 4: Do not travel — active conflict / extreme danger
-  AF: 4, // Afghanistan
-  IQ: 4, // Iraq
-  LY: 4, // Libya
-  SO: 4, // Somalia
-  SS: 4, // South Sudan
-  SD: 4, // Sudan
-  SY: 4, // Syria
-  YE: 4, // Yemen
-  KP: 4, // North Korea
-  CF: 4, // Central African Republic
+  AF: 4, // Afghanistan — GPI 158, INFORM Very High
+  BF: 4, // Burkina Faso — GPI 152, INFORM Very High
+  CD: 4, // DR Congo — GPI 160, INFORM Very High
+  CF: 4, // Central African Republic — GPI 150, INFORM Very High
+  HT: 4, // Haiti — GPI 141, state collapse
+  IR: 4, // Iran — GPI 142, INFORM High
+  IQ: 4, // Iraq — GPI 147, INFORM High
+  KP: 4, // North Korea — GPI 149
+  LY: 4, // Libya — GPI 131
+  ML: 4, // Mali — GPI 154, INFORM Very High
+  MM: 4, // Myanmar — GPI 153, civil war
+  NE: 4, // Niger — GPI 143, military coup
+  RU: 4, // Russia — GPI 163 (least peaceful)
+  SD: 4, // Sudan — GPI 161, INFORM Very High
+  SO: 4, // Somalia — GPI 151, INFORM Very High
+  SS: 4, // South Sudan — GPI 156, INFORM Very High
+  SY: 4, // Syria — GPI 157, INFORM Very High
+  UA: 4, // Ukraine — GPI 162, active war
+  VE: 4, // Venezuela — GPI 139
+  YE: 4, // Yemen — GPI 159, INFORM Very High
 
   // Tier 3: Reconsider travel — significant risk
-  BI: 3, // Burundi
-  TD: 3, // Chad
-  CD: 3, // DRC
-  ER: 3, // Eritrea
-  HT: 3, // Haiti
-  IR: 3, // Iran
-  LB: 3, // Lebanon
-  ML: 3, // Mali
-  MM: 3, // Myanmar
-  NE: 3, // Niger
-  NG: 3, // Nigeria
-  PK: 3, // Pakistan
-  PS: 3, // Palestine
-  VE: 3, // Venezuela
-  BF: 3, // Burkina Faso
-  GN: 3, // Guinea
-  GW: 3, // Guinea-Bissau
-  LR: 3, // Liberia
-  MR: 3, // Mauritania
-  SL: 3, // Sierra Leone
-  TM: 3, // Turkmenistan
-  UA: 3, // Ukraine (active conflict)
+  BI: 3, // Burundi — GPI 133, INFORM High
+  BY: 3, // Belarus — GPI 120, authoritarian regime
+  CM: 3, // Cameroon — GPI 137, INFORM High
+  ER: 3, // Eritrea — GPI 132, INFORM High
+  ET: 3, // Ethiopia — GPI 138, INFORM Very High
+  GN: 3, // Guinea — GPI 119, INFORM High
+  IL: 3, // Israel — GPI 155
+  LB: 3, // Lebanon — GPI 136
+  NG: 3, // Nigeria — GPI 148, INFORM High
+  PK: 3, // Pakistan — GPI 144, INFORM High
+  PS: 3, // Palestine — GPI 145
+  TD: 3, // Chad — GPI 134, INFORM Very High
 
   // Tier 2: Exercise caution — localized crime but generally tourist-safe
-  ZA: 2, // South Africa
-  BR: 2, // Brazil
-  MX: 2, // Mexico
-  CO: 2, // Colombia
-  PE: 2, // Peru
-  EC: 2, // Ecuador
-  KE: 2, // Kenya
-  UG: 2, // Uganda
-  TZ: 2, // Tanzania
-  ET: 2, // Ethiopia
-  EG: 2, // Egypt
-  DZ: 2, // Algeria
-  JM: 2, // Jamaica
-  TT: 2, // Trinidad & Tobago
-  HN: 2, // Honduras
-  SV: 2, // El Salvador
-  GT: 2, // Guatemala
-  BD: 2, // Bangladesh
-  IN: 2, // India
-  PH: 2, // Philippines
-  TJ: 2, // Tajikistan
-  KG: 2, // Kyrgyzstan
-  CM: 2, // Cameroon
-  MZ: 2, // Mozambique
-  PG: 2, // Papua New Guinea
-  CG: 2, // Congo Republic
-  TG: 2, // Togo
-  BJ: 2, // Benin
-  GH: 2, // Ghana
-  SN: 2, // Senegal
-  CI: 2, // Côte d'Ivoire
-  MG: 2, // Madagascar
-  AO: 2, // Angola
-  ZW: 2, // Zimbabwe
-  BY: 2, // Belarus
-  RU: 2, // Russia
-  TR: 2, // Turkey
+  AO: 2, // Angola — GPI 83
+  BD: 2, // Bangladesh — GPI 123
+  BJ: 2, // Benin — GPI 114
+  BR: 2, // Brazil — GPI 130
+  CG: 2, // Congo Republic — GPI 103
+  CI: 2, // Côte d'Ivoire — GPI 70
+  CO: 2, // Colombia — GPI 140
+  DZ: 2, // Algeria — GPI 91
+  EC: 2, // Ecuador — GPI 129
+  EG: 2, // Egypt — GPI 107
+  GH: 2, // Ghana — GPI 62
+  GT: 2, // Guatemala — GPI 108
+  GW: 2, // Guinea-Bissau — GPI 101
+  HN: 2, // Honduras — GPI 124
+  IN: 2, // India — GPI 117
+  JM: 2, // Jamaica — GPI 92
+  KE: 2, // Kenya — GPI 127
+  KG: 2, // Kyrgyzstan — GPI 84
+  LR: 2, // Liberia — GPI 94
+  MG: 2, // Madagascar — GPI 61
+  MR: 2, // Mauritania — GPI 112
+  MX: 2, // Mexico — GPI 135
+  MZ: 2, // Mozambique — GPI 121
+  PE: 2, // Peru — GPI 68
+  PG: 2, // Papua New Guinea — GPI 118
+  PH: 2, // Philippines — GPI 105
+  SL: 2, // Sierra Leone — GPI 58
+  SN: 2, // Senegal — GPI 52
+  SV: 2, // El Salvador — GPI 104
+  TG: 2, // Togo — GPI 126
+  TJ: 2, // Tajikistan — GPI 85
+  TM: 2, // Turkmenistan — GPI 87
+  TR: 2, // Turkey — GPI 146
+  TT: 2, // Trinidad & Tobago — GPI 88
+  TZ: 2, // Tanzania — GPI 55
+  UG: 2, // Uganda — GPI 115
+  ZA: 2, // South Africa — GPI 125
+  ZW: 2, // Zimbabwe — GPI 116
 }
 
 // Multiplier applied to overall score per safety tier
@@ -237,4 +239,49 @@ export function overallScore(bestTimeScore: number, countryCode: string, activit
 export function skiCostLabel(countryCode: string): string | null {
   const lift = SKI_LIFT_PRICE[countryCode]
   return lift ? `+€${Math.round(lift * 0.95)}/day lift pass` : null
+}
+
+// ── Overall score breakdown (for visualization) ──────────────────────
+
+export interface OverallBreakdown {
+  factors: { key: string; label: string; score: number; weight: number }[]
+  safety: { multiplier: number; tier: number }
+  finalScore: number
+}
+
+/** Decompose overallScore into its components for visualization. */
+export function overallScoreBreakdown(
+  bestTime: number, countryCode: string, activities: string[] = [],
+): OverallBreakdown {
+  const costTier = COST_INDEX[countryCode] ?? 3
+  const baseCostValue = 120 - costTier * 20
+
+  const hasSkiing = activities.includes('skiing')
+  let costValue = baseCostValue
+  if (hasSkiing) {
+    const liftPrice = SKI_LIFT_PRICE[countryCode] ?? 60
+    const liftScore = Math.max(0, Math.min(100, 100 * (1 - (liftPrice - 10) / 170)))
+    costValue = baseCostValue * 0.5 + liftScore * 0.5
+  }
+
+  const hasFood = activities.includes('food')
+  const factors: OverallBreakdown['factors'] = hasFood
+    ? [
+        { key: 'bestTime', label: 'Best Time', score: Math.round(bestTime), weight: 0.55 },
+        { key: 'cost', label: 'Cost', score: Math.round(costValue), weight: 0.20 },
+        { key: 'cuisine', label: 'Cuisine', score: Math.round(cuisineScore(countryCode)), weight: 0.25 },
+      ]
+    : [
+        { key: 'bestTime', label: 'Best Time', score: Math.round(bestTime), weight: 0.75 },
+        { key: 'cost', label: 'Cost', score: Math.round(costValue), weight: 0.25 },
+      ]
+
+  const tier = SAFETY_TIER[countryCode] ?? 1
+  const mult = SAFETY_MULTIPLIER[tier]
+
+  return {
+    factors,
+    safety: { multiplier: mult, tier },
+    finalScore: Math.round(overallScore(bestTime, countryCode, activities)),
+  }
 }

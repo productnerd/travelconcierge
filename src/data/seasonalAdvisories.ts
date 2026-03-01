@@ -121,9 +121,14 @@ export const SEASONAL_ADVISORIES: Record<string, SeasonalAdvisory[]> = {
   // === KHAMSIN / SHARAV DUST STORMS ===
   'il-jerusalem': [
     { months: [3, 4, 5], penalty: 0.6, label: 'Khamsin dust storms', emoji: '🏜️' },
+    { months: [1,2,3,4,5,6,7,8,9,10,11,12], penalty: 0.5, label: 'Iranian Rockets', emoji: '🚀' },
   ],
   'il-telaviv': [
     { months: [3, 4, 5], penalty: 0.7, label: 'Khamsin dust storms', emoji: '🏜️' },
+    { months: [1,2,3,4,5,6,7,8,9,10,11,12], penalty: 0.5, label: 'Iranian Rockets', emoji: '🚀' },
+  ],
+  'ps-palestine': [
+    { months: [1,2,3,4,5,6,7,8,9,10,11,12], penalty: 0.5, label: 'American-Israeli Rockets', emoji: '🚀' },
   ],
   'jo-petra': [
     { months: [3, 4, 5], penalty: 0.6, label: 'Khamsin dust storms', emoji: '🏜️' },

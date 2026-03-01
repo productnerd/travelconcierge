@@ -6,9 +6,11 @@ import SunshineFilter from './SunshineFilter'
 import ActivePills from './ActivePills'
 import { useFilterStore } from '@/store/filterStore'
 import { useShortlistStore } from '@/store/shortlistStore'
+import { useVisitedStore } from '@/store/visitedStore'
 import { useUIStore } from '@/store/uiStore'
 
 const ACTIVITIES = ['surfing', 'hiking', 'diving', 'freediving', 'beach', 'skiing', 'food']
+const ACTIVITY_LABEL: Record<string, string> = { food: 'good food' }
 const LANDSCAPE_CONFIG: Record<string, { emoji: string }> = {
   seaside: { emoji: '🏖️' },
   mountain: { emoji: '⛰️' },
@@ -32,6 +34,11 @@ export default function FilterBar() {
   const rainfallMax = useFilterStore((s) => s.rainfallMax)
   const setFilter = useFilterStore((s) => s.setFilter)
   const shortlistedCount = useShortlistStore((s) => s.shortlistedSlugs.length)
+  const hideVisited = useFilterStore((s) => s.hideVisited)
+  const setHideVisited = useFilterStore((s) => s.setHideVisited)
+  const showVisitedOnly = useFilterStore((s) => s.showVisitedOnly)
+  const setShowVisitedOnly = useFilterStore((s) => s.setShowVisitedOnly)
+  const visitedCount = useVisitedStore((s) => s.visitedSlugs.length)
   const togglePlanner = useUIStore((s) => s.togglePlanner)
 
   return (
@@ -97,6 +104,17 @@ export default function FilterBar() {
             Hide Risky
           </button>
 
+          <button
+            onClick={() => setHideVisited(!hideVisited)}
+            title="Hide regions you've already visited"
+            className={`
+              px-2 py-1 text-[10px] font-display font-bold rounded-lg border-2 border-off-black transition-colors uppercase
+              ${hideVisited ? 'bg-off-black text-cream' : 'bg-cream text-off-black hover:bg-off-black/10'}
+            `}
+          >
+            Hide Visited
+          </button>
+
           {shortlistedCount > 0 && (
             <>
               <button
@@ -117,6 +135,18 @@ export default function FilterBar() {
                 &#10084; {shortlistedCount}
               </button>
             </>
+          )}
+
+          {visitedCount > 0 && (
+            <button
+              onClick={() => setShowVisitedOnly(!showVisitedOnly)}
+              className={`
+                flex items-center gap-1 px-2 py-1 text-[10px] font-display font-bold rounded-lg border-2 border-off-black transition-colors uppercase
+                ${showVisitedOnly ? 'bg-green text-white' : 'bg-cream text-off-black hover:bg-green/20'}
+              `}
+            >
+              &#10003; {visitedCount}
+            </button>
           )}
         </div>
       </div>
@@ -163,7 +193,7 @@ export default function FilterBar() {
                 }
               `}
             >
-              {a}
+              {ACTIVITY_LABEL[a] ?? a}
             </button>
           ))}
         </div>

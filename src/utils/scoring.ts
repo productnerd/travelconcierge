@@ -541,6 +541,65 @@ export function bestTimeScore(d: ClimateInput, preset: AlgorithmPreset = 'balanc
   return raw
 }
 
+// ── Best Time breakdown (for visualization) ─────────────────────────
+
+export interface BestTimeBreakdown {
+  weather: { score: number; weight: number }
+  crowds: { score: number; weight: number }
+  floraFauna: { score: number; active: boolean }
+  penalties: { label: string; value: number }[]
+  finalScore: number
+}
+
+/**
+ * Decompose bestTimeScore into its components for visualization.
+ * Returns weather (0-100), crowds (0-100), flora&fauna (0-100, neutral=50),
+ * plus active weather penalties.
+ */
+export function bestTimeScoreBreakdown(
+  d: ClimateInput, preset: AlgorithmPreset = 'balanced', activities: string[] = [], countryCode?: string,
+): BestTimeBreakdown {
+  const alpha = PRESET_ALPHA[preset]
+  const weatherScore = goodWeatherScore(d, activities)
+  const Q = Math.max(1 - (d.busyness - 1) * 0.2, 0.2)
+  const crowdScore = Math.round(Q * 100) // 0-100 scale
+
+  // Flora & Fauna — mirrors logic in bestTimeScore
+  let floraFaunaScore = 50 // neutral
+  let floraActive = false
+  if (countryCode) {
+    const bio = BIODIVERSITY[countryCode]
+    const hasWater = activities.some(a => ['diving', 'freediving', 'beach'].includes(a))
+    const hasHiking = activities.includes('hiking')
+    if (hasWater || hasHiking) {
+      floraActive = true
+      let bioScore = 0.5
+      if (bio) {
+        if (hasWater && bio.marine !== undefined) bioScore = bio.marine / 100
+        else if (hasHiking) bioScore = bio.protected !== undefined ? (bio.index * 0.6 + bio.protected * 0.4) / 100 : bio.index / 100
+        else bioScore = bio.index / 100
+      }
+      let bloomScore = 0.5
+      if (d.month !== undefined && d.latitude !== undefined) {
+        const bf = bloomFactor(d.month, d.latitude, d.temp_avg_c, d.rainfall_mm)
+        bloomScore = (bf - 0.96) / 0.08
+      }
+      floraFaunaScore = Math.round((bioScore * 0.6 + bloomScore * 0.4) * 100)
+    }
+  }
+
+  // Reuse weather penalties from weatherScoreBreakdown
+  const wb = weatherScoreBreakdown(d, activities)
+
+  return {
+    weather: { score: Math.round(weatherScore), weight: alpha },
+    crowds: { score: crowdScore, weight: 1 - alpha },
+    floraFauna: { score: floraFaunaScore, active: floraActive },
+    penalties: wb.penalties,
+    finalScore: Math.round(bestTimeScore(d, preset, activities, countryCode)),
+  }
+}
+
 // ── Color helpers ────────────────────────────────────────────────────
 
 /** Map a 0–100 score to a green→amber→red color. */

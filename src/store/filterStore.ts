@@ -17,6 +17,8 @@ export interface FilterState {
   selectedContinents: string[]
   showShortlistOnly: boolean
   hideRisky: boolean
+  hideVisited: boolean
+  showVisitedOnly: boolean
   agentAppliedKeys: string[]
   colorMode: ColorMode
   algorithmPreset: AlgorithmPreset
@@ -37,6 +39,8 @@ interface FilterActions {
   toggleContinent: (continent: string) => void
   setShowShortlistOnly: (show: boolean) => void
   setHideRisky: (hide: boolean) => void
+  setHideVisited: (hide: boolean) => void
+  setShowVisitedOnly: (show: boolean) => void
   setFilter: (key: string, value: unknown) => void
   clearFilter: (key: string) => void
   setFilters: (filters: Partial<FilterState>, fromAgent?: boolean) => void
@@ -60,6 +64,8 @@ const initialState: FilterState = {
   selectedContinents: [],
   showShortlistOnly: false,
   hideRisky: true,
+  hideVisited: false,
+  showVisitedOnly: false,
   agentAppliedKeys: [],
   colorMode: 'overall' as ColorMode,
   algorithmPreset: 'balanced' as AlgorithmPreset,
@@ -117,6 +123,8 @@ export const useFilterStore = create<FilterState & FilterActions>()(
 
       setShowShortlistOnly: (show) => set({ showShortlistOnly: show }),
       setHideRisky: (hide) => set({ hideRisky: hide }),
+      setHideVisited: (hide) => set({ hideVisited: hide }),
+      setShowVisitedOnly: (show) => set({ showVisitedOnly: show }),
 
       setFilter: (key, value) => set({ [key]: value } as Partial<FilterState>),
 
@@ -132,6 +140,8 @@ export const useFilterStore = create<FilterState & FilterActions>()(
           selectedContinents: [],
           showShortlistOnly: false,
           hideRisky: true,
+          hideVisited: false,
+          showVisitedOnly: false,
         }
         set((s) => ({
           ...s,
@@ -176,6 +186,7 @@ export const useFilterStore = create<FilterState & FilterActions>()(
         selectedLandscapes: state.selectedLandscapes,
         selectedContinents: state.selectedContinents,
         hideRisky: state.hideRisky,
+        hideVisited: state.hideVisited,
         colorMode: state.colorMode,
         algorithmPreset: state.algorithmPreset,
         sortBy: state.sortBy,
