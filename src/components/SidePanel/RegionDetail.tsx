@@ -107,6 +107,12 @@ export default function RegionDetail({ region }: Props) {
   // Sort months by month number
   const sortedMonths = [...region.months].sort((a, b) => a.month - b.month)
 
+  // Memoize shuffled dishes so they don't re-sort on unrelated re-renders
+  const dishes = useMemo(
+    () => region.cuisine_tags?.length ? getRegionDishes(region.cuisine_tags) : [],
+    [region.slug]
+  )
+
   // Compute per-month scores
   const monthlyScores = useMemo(() => {
     return sortedMonths.map((m) => {
@@ -521,18 +527,15 @@ export default function RegionDetail({ region }: Props) {
           </span>
           <span className="text-[9px] text-off-black/30 italic ml-auto">TasteAtlas 2025</span>
         </div>
-        {region.cuisine_tags && region.cuisine_tags.length > 0 && (() => {
-          const dishes = getRegionDishes(region.cuisine_tags)
-          return dishes.length > 0 ? (
-            <div className="flex flex-wrap gap-1">
-              {dishes.map((d) => (
-                <span key={d.name} className="px-2 py-0.5 text-[10px] font-display bg-white border border-off-black/20 rounded-full">
-                  {d.emoji} {d.name}
-                </span>
-              ))}
-            </div>
-          ) : null
-        })()}
+        {dishes.length > 0 && (
+          <div className="flex flex-wrap gap-1">
+            {dishes.map((d) => (
+              <span key={d.name} className="px-2 py-0.5 text-[10px] font-display bg-white border border-off-black/20 rounded-full">
+                {d.emoji} {d.name}
+              </span>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* Flora & Fauna */}
