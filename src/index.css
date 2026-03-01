@@ -114,3 +114,45 @@
   background-color: #FDF3D0 !important;
   box-shadow: inset 0 0 0 1.5px var(--color-off-black);
 }
+
+/* Red slider thumb for all range inputs */
+input[type="range"] {
+  -webkit-appearance: none;
+  appearance: none;
+  background: transparent;
+  cursor: pointer;
+  height: 14px;
+}
+
+input[type="range"]::-webkit-slider-runnable-track {
+  height: 4px;
+  background: var(--color-off-black);
+  border-radius: 2px;
+  opacity: 0.3;
+}
+
+input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--color-red);
+  border: none;
+  margin-top: -5px;
+}
+
+input[type="range"]::-moz-range-track {
+  height: 4px;
+  background: var(--color-off-black);
+  border-radius: 2px;
+  opacity: 0.3;
+}
+
+input[type="range"]::-moz-range-thumb {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--color-red);
+  border: none;
+}

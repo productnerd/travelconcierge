@@ -15,7 +15,7 @@ export default function TempFilter() {
         value={tempMin ?? -10}
         onChange={(e) => setTempRange(Number(e.target.value), tempMax)}
         onDoubleClick={() => setTempRange(null, tempMax)}
-        className="w-16 h-1 accent-red"
+        className="w-16"
       />
       <span className="text-xs font-mono w-8">{tempMin ?? -10}°</span>
       <span className="text-xs">—</span>
@@ -26,7 +26,7 @@ export default function TempFilter() {
         value={tempMax ?? 45}
         onChange={(e) => setTempRange(tempMin, Number(e.target.value))}
         onDoubleClick={() => setTempRange(tempMin, null)}
-        className="w-16 h-1 accent-red"
+        className="w-16"
       />
       <span className="text-xs font-mono w-8">{tempMax ?? 45}°</span>
     </div>

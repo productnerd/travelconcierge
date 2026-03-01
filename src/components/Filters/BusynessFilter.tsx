@@ -16,7 +16,7 @@ export default function BusynessFilter() {
         value={busynessMax}
         onChange={(e) => setBusynessMax(Number(e.target.value))}
         onDoubleClick={() => setBusynessMax(5)}
-        className="w-20 h-1 accent-red"
+        className="w-20"
       />
       <span className="text-xs font-mono">
         {busynessMax >= 5 ? 'Any' : `≤${busynessMax} ${busynessLabel(busynessMax)}`}

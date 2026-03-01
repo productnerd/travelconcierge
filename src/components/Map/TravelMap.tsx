@@ -329,13 +329,15 @@ export default function TravelMap({ regions, geojson }: Props) {
               <button
                 key={mode}
                 onClick={() => setColorMode(mode)}
-                title={tip}
                 className={`
-                  px-1.5 py-0.5 text-[10px] font-display font-bold rounded border-2 border-off-black transition-colors uppercase text-left
+                  relative group px-1.5 py-0.5 text-[10px] font-display font-bold rounded border-2 border-off-black transition-colors uppercase text-left
                   ${colorMode === mode ? 'bg-off-black text-cream' : 'bg-cream text-off-black hover:bg-off-black/10'}
                 `}
               >
                 {label}
+                <span className="absolute left-full top-1/2 -translate-y-1/2 ml-2 px-2 py-1 bg-off-black text-cream text-[10px] normal-case leading-snug rounded shadow-lg opacity-0 group-hover:opacity-100 group-hover:delay-500 pointer-events-none transition-opacity duration-200 whitespace-nowrap z-50">
+                  {tip}
+                </span>
               </button>
             ))}
           </div>
