@@ -12,7 +12,7 @@ import { createClient } from '@supabase/supabase-js'
 import { mkdirSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 
-import { COST_INDEX, SAFETY_TIER, COUNTRY_CONTINENT, costLabel, safetyLabel } from '@/data/costIndex'
+import { COST_INDEX, SAFETY_TIER, COUNTRY_CONTINENT, costLabel, safetyLabel, SAFETY_MULTIPLIER } from '@/data/costIndex'
 import { cuisineScore } from '@/data/cuisineScore'
 import { NATIVE_WILDLIFE, NATIVE_FLORA, NATIONAL_PARKS } from '@/data/wildlife'
 import { SEASONAL_ADVISORIES } from '@/data/seasonalAdvisories'
@@ -49,6 +49,43 @@ function simpleBestTimeScore(m: RegionMonth): number {
 
 function busynessLabel(b: number): string {
   return ['', 'Very Quiet', 'Quiet', 'Moderate', 'Busy', 'Peak Season'][b] ?? ''
+}
+
+/** Individual weather sub-scores for breakdown display. */
+function weatherSubScores(m: RegionMonth) {
+  const temp = m.temp_avg_c ?? 20
+  const tempS = temp >= 22 && temp <= 27 ? 1 : Math.exp(-((temp < 22 ? 22 - temp : temp - 27) ** 2) / (2 * (temp < 22 ? 36 : 16)))
+  const rainS = m.rainfall_mm !== null ? 1 / (1 + (m.rainfall_mm / 120) ** 2.5) : 0.5
+  const sunS = m.sunshine_hours_day !== null ? Math.min(m.sunshine_hours_day / 10, 1) : 0.5
+  const humS = m.humidity_pct !== null ? (m.humidity_pct <= 55 ? 1 : Math.max(0, 1 - ((m.humidity_pct - 55) / 45) ** 1.8)) : 0.5
+  const windS = m.wind_speed_kmh !== null ? (m.wind_speed_kmh <= 20 ? 1 : m.wind_speed_kmh >= 50 ? 0 : 1 - ((m.wind_speed_kmh - 20) / 30) ** 2) : 0.5
+  const crowdS = Math.max(1 - (m.busyness - 1) * 0.2, 0.2)
+  const weather = 0.35 * tempS + 0.25 * rainS + 0.20 * sunS + 0.15 * humS + 0.05 * windS
+  return {
+    temperature: Math.round(tempS * 100),
+    rainfall: Math.round(rainS * 100),
+    sunshine: Math.round(sunS * 100),
+    humidity: Math.round(humS * 100),
+    wind: Math.round(windS * 100),
+    weather: Math.round(weather * 100),
+    crowds: Math.round(crowdS * 100),
+  }
+}
+
+function scoreColor(score: number): string {
+  if (score >= 80) return '#3B7A4A'
+  if (score >= 60) return '#6BAF78'
+  if (score >= 40) return '#F5C842'
+  if (score >= 20) return '#D93B2B'
+  return '#8B1A10'
+}
+
+function scoreLabel(score: number): string {
+  if (score >= 80) return 'Excellent'
+  if (score >= 60) return 'Good'
+  if (score >= 40) return 'Fair'
+  if (score >= 20) return 'Poor'
+  return 'Bad'
 }
 
 // ── Types ───────────────────────────────────────────────────────────
@@ -102,6 +139,20 @@ function generateRegionPage(region: Region): string {
   const dishes = region.cuisine_tags.length > 0
     ? region.cuisine_tags.flatMap((tag) => REGIONAL_DISHES[tag] ?? []).slice(0, 5)
     : []
+
+  // Overall score computation
+  const bestMonthScore = top3[0]?.score ?? 0
+  const costValue = 120 - costTier * 20 // 1→100, 2→80, 3→60, 4→40, 5→20
+  const safetyMult = SAFETY_MULTIPLIER[safetyTier] ?? 1
+  const overallRaw = bestMonthScore * 0.75 + costValue * 0.25
+  const overallFinal = Math.round(overallRaw * safetyMult)
+
+  // Weather breakdown for each month
+  const monthBreakdowns = months.map((m) => ({
+    month: m.month,
+    ...weatherSubScores(m),
+    bestTime: Math.round(simpleBestTimeScore(m)),
+  }))
 
   const title = `${region.name}, ${region.country_name} — Best Time to Visit | FarFarAway`
   const description = `When to visit ${region.name}, ${region.country_name}: month-by-month climate data, best time scores, costs, safety, and travel tips. Best months: ${top3.map((t) => MONTH_NAMES[t.month - 1]).join(', ')}.`
@@ -188,10 +239,13 @@ function generateRegionPage(region: Region): string {
     :root{--cream:#FAF3E0;--ink:#1a1a1a;--red:#D93B2B;--green:#3B7A4A}
     *{margin:0;padding:0;box-sizing:border-box}
     body{font-family:system-ui,-apple-system,sans-serif;background:var(--cream);color:var(--ink);max-width:900px;margin:0 auto;padding:0 0 24px;line-height:1.6}
-    .map-banner{width:100%;height:280px;object-fit:cover;display:block;border-bottom:3px solid var(--ink)}
-    .flag{width:96px;height:auto;border-radius:10px;border:4px solid var(--cream);margin-top:-48px;margin-left:16px;display:block;box-shadow:0 4px 12px rgba(0,0,0,0.25);position:relative;z-index:1}
+    .banner-wrap{position:relative}
+    .map-banner{width:100%;height:280px;object-fit:cover;display:block}
+    .flag{width:96px;height:auto;border-radius:10px;border:4px solid var(--cream);position:absolute;bottom:0;left:16px;transform:translateY(50%);box-shadow:0 4px 12px rgba(0,0,0,0.25);z-index:2}
+    .top-cta{position:absolute;top:12px;right:16px;padding:8px 16px;background:var(--red);color:#fff;font-weight:700;border-radius:6px;font-size:0.8rem;text-transform:uppercase;text-decoration:none;z-index:2;box-shadow:0 2px 8px rgba(0,0,0,0.3)}
+    .top-cta:hover{opacity:0.9;text-decoration:none;color:#fff}
     .content{padding:24px 16px 0}
-    .content-with-flag{padding:12px 16px 0}
+    .content-with-flag{padding:60px 16px 0}
     h1{font-size:1.8rem;margin-bottom:4px}
     h2{font-size:1.2rem;margin:32px 0 12px;border-bottom:2px solid var(--ink);padding-bottom:4px}
     h3{font-size:1rem;margin:20px 0 8px}
@@ -219,11 +273,25 @@ function generateRegionPage(region: Region): string {
     .advisory-warn{background:rgba(217,59,43,0.1);color:var(--red)}
     .advisory-boost{background:rgba(59,122,74,0.1);color:var(--green)}
     .brief{font-size:0.85rem;line-height:1.5;margin:8px 0;opacity:0.85}
+    .score-card{display:flex;align-items:center;gap:20px;margin:16px 0;padding:16px;border:2px solid var(--ink);border-radius:10px}
+    .score-big{font-size:2.4rem;font-weight:700;line-height:1;min-width:60px;text-align:center}
+    .score-detail{flex:1}
+    .score-bar{display:flex;align-items:center;gap:8px;margin:4px 0;font-size:0.8rem}
+    .score-bar-label{width:80px;font-weight:600;text-transform:uppercase;font-size:0.7rem;opacity:0.6}
+    .score-bar-track{flex:1;height:8px;background:rgba(26,26,26,0.08);border-radius:4px;overflow:hidden}
+    .score-bar-fill{height:100%;border-radius:4px}
+    .score-bar-val{width:30px;text-align:right;font-weight:600;font-size:0.75rem}
+    .pill-best{background:var(--green);color:#fff;border-color:var(--green)}
+    .safety-note{font-size:0.8rem;margin-top:4px;opacity:0.7}
+    .attr{font-size:0.7rem;opacity:0.4;margin-top:4px}
   </style>
 </head>
 <body>
-  ${mapImgUrl ? `<img class="map-banner" src="${mapImgUrl}" alt="Map of ${escapeHtml(region.name)}, ${escapeHtml(region.country_name)}" loading="lazy" width="1200" height="400">` : ''}
-  <img class="flag" src="https://flagcdn.com/w160/${region.country_code.toLowerCase()}.png" alt="Flag of ${escapeHtml(region.country_name)}" width="96">
+  ${mapImgUrl ? `<div class="banner-wrap">
+    <img class="map-banner" src="${mapImgUrl}" alt="Map of ${escapeHtml(region.name)}, ${escapeHtml(region.country_name)}" loading="lazy" width="1200" height="400">
+    <img class="flag" src="https://flagcdn.com/w160/${region.country_code.toLowerCase()}.png" alt="Flag of ${escapeHtml(region.country_name)}" width="96">
+    <a class="top-cta" href="${BASE_URL}/">Explore on FarFarAway →</a>
+  </div>` : ''}
   <div class="${mapImgUrl ? 'content-with-flag' : 'content'}">
   <header>
     <h1>${escapeHtml(region.name)}</h1>
@@ -249,6 +317,64 @@ function generateRegionPage(region: Region): string {
   <div class="pills">
     ${region.landscape_type.map((l) => `<span class="pill pill-green">${escapeHtml(l)}</span>`).join('')}
   </div>` : ''}
+
+  <!-- Overall score -->
+  <h2>Overall Score</h2>
+  <div class="score-card">
+    <div class="score-big" style="color:${scoreColor(overallFinal)}">${overallFinal}</div>
+    <div class="score-detail">
+      <div class="score-bar">
+        <span class="score-bar-label">Best Time</span>
+        <div class="score-bar-track"><div class="score-bar-fill" style="width:${Math.round(bestMonthScore)}%;background:${scoreColor(Math.round(bestMonthScore))}"></div></div>
+        <span class="score-bar-val">${Math.round(bestMonthScore)}</span>
+      </div>
+      <div class="score-bar">
+        <span class="score-bar-label">Cost</span>
+        <div class="score-bar-track"><div class="score-bar-fill" style="width:${costValue}%;background:${scoreColor(costValue)}"></div></div>
+        <span class="score-bar-val">${costValue}</span>
+      </div>
+      <div class="score-bar">
+        <span class="score-bar-label">Cuisine</span>
+        <div class="score-bar-track"><div class="score-bar-fill" style="width:${cuisine}%;background:${scoreColor(cuisine)}"></div></div>
+        <span class="score-bar-val">${cuisine}</span>
+      </div>
+      ${safetyMult < 1 ? `<p class="safety-note">⚠️ Safety multiplier: ×${safetyMult} (tier ${safetyTier}/4)</p>` : ''}
+    </div>
+  </div>
+
+  <!-- Best Time Score breakdown -->
+  <h2>Best Time Score Breakdown</h2>
+  <table>
+    <thead>
+      <tr>
+        <th>Month</th>
+        <th>Temp</th>
+        <th>Rain</th>
+        <th>Sun</th>
+        <th>Humidity</th>
+        <th>Wind</th>
+        <th>Weather</th>
+        <th>Crowds</th>
+        <th>Best Time</th>
+      </tr>
+    </thead>
+    <tbody>
+      ${monthBreakdowns.map((mb) => {
+        const isBest = top3.some((t) => t.month === mb.month)
+        return `<tr${isBest ? ' class="best"' : ''}>
+          <td>${MONTH_SHORT[mb.month - 1]}${isBest ? ' <span class="pill pill-best" style="font-size:0.6rem;padding:1px 5px">Best</span>' : ''}</td>
+          <td>${mb.temperature}</td>
+          <td>${mb.rainfall}</td>
+          <td>${mb.sunshine}</td>
+          <td>${mb.humidity}</td>
+          <td>${mb.wind}</td>
+          <td>${mb.weather}</td>
+          <td>${mb.crowds}</td>
+          <td><strong>${mb.bestTime}</strong></td>
+        </tr>`
+      }).join('\n      ')}
+    </tbody>
+  </table>
 
   <!-- Monthly climate table -->
   <h2>Month-by-Month Climate</h2>
@@ -310,14 +436,16 @@ function generateRegionPage(region: Region): string {
   <h2>Wildlife &amp; Nature</h2>
   <div class="pills">
     ${wildlife.map((w) => `<span class="pill">${w.emoji} ${escapeHtml(w.name)}</span>`).join('')}
-  </div>` : ''}
+  </div>
+  <p class="attr">Wildlife data sourced from <a href="https://www.iucnredlist.org/" target="_blank" rel="noopener">IUCN Red List</a> &amp; national biodiversity databases</p>` : ''}
 
   <!-- Cuisine -->
   ${dishes.length > 0 ? `
   <h2>Must-Try Dishes</h2>
   <div class="pills">
     ${dishes.map((d) => `<span class="pill">${d.emoji} ${escapeHtml(d.name)}</span>`).join('')}
-  </div>` : ''}
+  </div>
+  <p class="attr">Cuisine data sourced from <a href="https://www.tasteatlas.com/" target="_blank" rel="noopener">TasteAtlas</a></p>` : ''}
 
   <!-- Flora -->
   ${flora.length > 0 ? `
@@ -331,7 +459,8 @@ function generateRegionPage(region: Region): string {
   <h2>National Parks &amp; Reserves</h2>
   <div class="pills">
     ${parks.map((p) => `<span class="pill pill-park">${p.emoji} ${escapeHtml(p.name)}</span>`).join('')}
-  </div>` : ''}
+  </div>
+  <p class="attr">Parks data sourced from <a href="https://www.protectedplanet.net/" target="_blank" rel="noopener">Protected Planet (UNEP-WCMC)</a></p>` : ''}
 
   <!-- FAQ -->
   <h2>Frequently Asked Questions</h2>
