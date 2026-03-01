@@ -104,16 +104,18 @@ export default function FilterBar() {
             Hide Risky
           </button>
 
-          <button
-            onClick={() => setHideVisited(!hideVisited)}
-            title="Hide regions you've already visited"
-            className={`
-              px-2 py-1 text-[10px] font-display font-bold rounded-lg border-2 border-off-black transition-colors uppercase
-              ${hideVisited ? 'bg-off-black text-cream' : 'bg-cream text-off-black hover:bg-off-black/10'}
-            `}
-          >
-            Hide Visited
-          </button>
+          {visitedCount > 0 && (
+            <button
+              onClick={() => { if (!hideVisited) setShowVisitedOnly(false); setHideVisited(!hideVisited) }}
+              title="Hide regions you've already visited"
+              className={`
+                px-2 py-1 text-[10px] font-display font-bold rounded-lg border-2 border-off-black transition-colors uppercase
+                ${hideVisited ? 'bg-off-black text-cream' : 'bg-cream text-off-black hover:bg-off-black/10'}
+              `}
+            >
+              Hide Visited
+            </button>
+          )}
 
           {shortlistedCount > 0 && (
             <>
@@ -139,7 +141,7 @@ export default function FilterBar() {
 
           {visitedCount > 0 && (
             <button
-              onClick={() => setShowVisitedOnly(!showVisitedOnly)}
+              onClick={() => { if (!showVisitedOnly) setHideVisited(false); setShowVisitedOnly(!showVisitedOnly) }}
               className={`
                 flex items-center gap-1 px-2 py-1 text-[10px] font-display font-bold rounded-lg border-2 border-off-black transition-colors uppercase
                 ${showVisitedOnly ? 'bg-green text-white' : 'bg-cream text-off-black hover:bg-green/20'}
