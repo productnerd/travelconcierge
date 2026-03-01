@@ -17,14 +17,10 @@ export default function ProfilePanel({ open, onClose }: ProfilePanelProps) {
   const signOut = useAuthStore((s) => s.signOut)
   const friends = useSocialStore((s) => s.friends)
   const pendingRequests = useSocialStore((s) => s.pendingRequests)
-  const sendFriendRequest = useSocialStore((s) => s.sendFriendRequest)
   const acceptRequest = useSocialStore((s) => s.acceptRequest)
   const declineRequest = useSocialStore((s) => s.declineRequest)
   const removeFriend = useSocialStore((s) => s.removeFriend)
 
-  const [friendCode, setFriendCode] = useState('')
-  const [friendError, setFriendError] = useState<string | null>(null)
-  const [friendSuccess, setFriendSuccess] = useState(false)
   const [editingName, setEditingName] = useState(false)
   const [nameInput, setNameInput] = useState(profile?.display_name ?? '')
   const [copied, setCopied] = useState(false)
@@ -37,14 +33,6 @@ export default function ProfilePanel({ open, onClose }: ProfilePanelProps) {
     await navigator.clipboard.writeText(friendLink)
     setCopied(true)
     setTimeout(() => setCopied(false), 2000)
-  }
-
-  const handleSendRequest = async () => {
-    setFriendError(null)
-    setFriendSuccess(false)
-    const { error } = await sendFriendRequest(friendCode.trim())
-    if (error) setFriendError(error)
-    else { setFriendSuccess(true); setFriendCode('') }
   }
 
   const handleSaveName = () => {
@@ -144,28 +132,6 @@ export default function ProfilePanel({ open, onClose }: ProfilePanelProps) {
               {copied ? 'Copied!' : 'Copy'}
             </button>
           </div>
-        </div>
-
-        {/* Add friend by code */}
-        <div className="mb-4">
-          <p className="text-[10px] font-display font-bold uppercase mb-1 text-off-black/60">Add friend by code</p>
-          <div className="flex gap-2">
-            <input
-              value={friendCode}
-              onChange={(e) => setFriendCode(e.target.value)}
-              placeholder="Paste friend code"
-              className="flex-1 px-2 py-1.5 text-[10px] font-mono border-2 border-off-black/20 rounded bg-white"
-            />
-            <button
-              onClick={handleSendRequest}
-              disabled={!friendCode.trim()}
-              className="px-3 py-1.5 text-[10px] font-display font-bold uppercase rounded border-2 border-off-black bg-off-black text-cream hover:bg-off-black/80 disabled:opacity-30 transition-colors shrink-0"
-            >
-              Add
-            </button>
-          </div>
-          {friendError && <p className="text-[10px] text-red mt-1">{friendError}</p>}
-          {friendSuccess && <p className="text-[10px] text-green mt-1">Friend request sent!</p>}
         </div>
 
         {/* Pending requests */}

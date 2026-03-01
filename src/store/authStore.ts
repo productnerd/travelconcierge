@@ -68,25 +68,20 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   },
 
   init: () => {
-    // Check existing session
-    supabase.auth.getSession().then(async ({ data: { session } }) => {
+    // Single source of truth: onAuthStateChange handles all auth events
+    // including INITIAL_SESSION (page load), SIGNED_IN (magic link redirect),
+    // TOKEN_REFRESHED, and SIGNED_OUT.
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
       if (session?.user) {
         const profile = await fetchOrCreateProfile(session.user.id, session.user.email)
         set({ user: session.user, profile, initialized: true })
       } else {
-        set({ initialized: true })
+        set({ user: null, profile: null, initialized: true })
       }
     })
 
-    // Listen for auth changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      if (event === 'SIGNED_IN' && session?.user) {
-        const profile = await fetchOrCreateProfile(session.user.id, session.user.email)
-        set({ user: session.user, profile })
-      } else if (event === 'SIGNED_OUT') {
-        set({ user: null, profile: null })
-      }
-    })
+    // Trigger initial session check + URL hash processing for magic link redirects
+    supabase.auth.getSession()
 
     return () => subscription.unsubscribe()
   },
