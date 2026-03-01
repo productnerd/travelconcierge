@@ -128,7 +128,7 @@ export default function FilterBar() {
               </button>
 
               <button
-                onClick={() => setShowShortlistOnly(!showShortlistOnly)}
+                onClick={() => { if (!showShortlistOnly) setShowVisitedOnly(false); setShowShortlistOnly(!showShortlistOnly) }}
                 className={`
                   flex items-center gap-1 px-2 py-1 text-[10px] font-display font-bold rounded-lg border-2 border-off-black transition-colors uppercase
                   ${showShortlistOnly ? 'bg-red text-white' : 'bg-cream text-off-black hover:bg-red-light'}
@@ -141,7 +141,7 @@ export default function FilterBar() {
 
           {visitedCount > 0 && (
             <button
-              onClick={() => { if (!showVisitedOnly) setHideVisited(false); setShowVisitedOnly(!showVisitedOnly) }}
+              onClick={() => { if (!showVisitedOnly) { setHideVisited(false); setShowShortlistOnly(false) } setShowVisitedOnly(!showVisitedOnly) }}
               className={`
                 flex items-center gap-1 px-2 py-1 text-[10px] font-display font-bold rounded-lg border-2 border-off-black transition-colors uppercase
                 ${showVisitedOnly ? 'bg-green text-white' : 'bg-cream text-off-black hover:bg-green/20'}
