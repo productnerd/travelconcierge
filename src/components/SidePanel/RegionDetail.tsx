@@ -6,6 +6,7 @@ import type { FilteredRegion } from '@/hooks/useRegions'
 import { busynessColor, countryFlag } from '@/types'
 import { useFilterStore } from '@/store/filterStore'
 import { useSocialStore } from '@/store/socialStore'
+import { useAuthStore } from '@/store/authStore'
 import { scoreColor, goodWeatherScore, bestTimeScore, estimateSnowCm, weatherScoreBreakdown, bloomFactor, type ClimateInput } from '@/utils/scoring'
 import { COST_INDEX, costLabel, skiCostLabel, overallScoreBreakdown } from '@/data/costIndex'
 import { activeAdvisories, seasonalPenalty } from '@/data/seasonalAdvisories'
@@ -108,6 +109,7 @@ export default function RegionDetail({ region }: Props) {
   const enabledFriendIds = useSocialStore((s) => s.enabledFriendIds)
   const friends = useSocialStore((s) => s.friends)
   const friendData = useSocialStore((s) => s.friendData)
+  const profile = useAuthStore((s) => s.profile)
 
   // Sort months by month number
   const sortedMonths = [...region.months].sort((a, b) => a.month - b.month)
@@ -297,33 +299,34 @@ export default function RegionDetail({ region }: Props) {
         </div>
       </div>
 
-      {/* Friend avatars who hearted/visited this region */}
+      {/* User + Friend avatars (only when friends toggled on) */}
       {enabledFriendIds.length > 0 && (() => {
-        const avatars = enabledFriendIds
-          .map((fId) => {
-            const friend = friends.find((f) => f.userId === fId)
-            const data = friendData[fId]
-            if (!friend || !data) return null
-            const hearted = data.shortlistedSlugs.includes(region.slug)
-            const visited = data.visitedSlugs.includes(region.slug)
-            if (!hearted && !visited) return null
-            return { friend, hearted, visited }
-          })
-          .filter(Boolean)
+        const avatars: { emoji: string; color: string; name: string; hearted: boolean; visited: boolean; key: string }[] = []
+        if (profile && (isShortlisted || isVisited)) {
+          avatars.push({ emoji: profile.avatar_emoji, color: profile.avatar_color, name: 'You', hearted: isShortlisted, visited: isVisited, key: 'me' })
+        }
+        for (const fId of enabledFriendIds) {
+          const friend = friends.find((f) => f.userId === fId)
+          const data = friendData[fId]
+          if (!friend || !data) continue
+          const hearted = data.shortlistedSlugs.includes(region.slug)
+          const visited = data.visitedSlugs.includes(region.slug)
+          if (hearted || visited) avatars.push({ emoji: friend.avatarEmoji, color: friend.avatarColor, name: friend.displayName, hearted, visited, key: fId })
+        }
         if (avatars.length === 0) return null
         return (
           <div className="flex items-center gap-1.5 mt-2">
             {avatars.map((a) => (
-              <div key={a!.friend.userId} className="flex items-center gap-0.5" title={`${a!.friend.displayName}: ${a!.hearted ? '❤️' : ''} ${a!.visited ? '✓' : ''}`}>
+              <div key={a.key} className="flex items-center gap-0.5" title={`${a.name}: ${a.hearted ? '❤️' : ''} ${a.visited ? '✓' : ''}`}>
                 <span
                   className="w-5 h-5 rounded-full flex items-center justify-center text-[10px] border border-off-black/30"
-                  style={{ backgroundColor: a!.friend.avatarColor }}
+                  style={{ backgroundColor: a.color }}
                 >
-                  {a!.friend.avatarEmoji}
+                  {a.emoji}
                 </span>
                 <span className="text-[9px] font-display text-off-black/50">
-                  {a!.hearted && <span className="text-red">❤</span>}
-                  {a!.visited && <span className="text-green">✓</span>}
+                  {a.hearted && <span className="text-red">❤</span>}
+                  {a.visited && <span className="text-green">✓</span>}
                 </span>
               </div>
             ))}

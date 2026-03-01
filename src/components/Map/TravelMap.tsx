@@ -3,7 +3,9 @@ import MapGL, { Layer, Source, Popup, Marker } from 'react-map-gl/mapbox'
 import type { MapRef, MapMouseEvent } from 'react-map-gl/mapbox'
 import { useUIStore } from '@/store/uiStore'
 import { useShortlistStore } from '@/store/shortlistStore'
+import { useVisitedStore } from '@/store/visitedStore'
 import { useFilterStore } from '@/store/filterStore'
+import { useAuthStore } from '@/store/authStore'
 import { useSocialStore } from '@/store/socialStore'
 import type { FilteredRegion } from '@/hooks/useRegions'
 import { busynessColor, busynessLabel, countryFlag } from '@/types'
@@ -32,6 +34,8 @@ export default function TravelMap({ regions, geojson }: Props) {
   const highlightedSlugs = useUIStore((s) => s.highlightedSlugs)
   const eliminatedSlugs = useUIStore((s) => s.eliminatedSlugs)
   const shortlistedSlugs = useShortlistStore((s) => s.shortlistedSlugs)
+  const visitedSlugs = useVisitedStore((s) => s.visitedSlugs)
+  const profile = useAuthStore((s) => s.profile)
   const colorMode = useFilterStore((s) => s.colorMode)
   const setColorMode = useFilterStore((s) => s.setColorMode)
   const selectedActivities = useFilterStore((s) => s.selectedActivities)
@@ -280,6 +284,32 @@ export default function TravelMap({ regions, geojson }: Props) {
           </Marker>
         ))}
 
+      {/* User's own avatar markers (only when friends toggled on) */}
+      {enabledFriendIds.length > 0 && profile && (() => {
+        const mySlugs = [...new Set([...shortlistedSlugs, ...visitedSlugs])]
+        return mySlugs
+          .map((slug) => regions.find((r) => r.slug === slug))
+          .filter(Boolean)
+          .map((r) => (
+            <Marker
+              key={`me-${r!.slug}`}
+              longitude={r!.centroid_lon}
+              latitude={r!.centroid_lat}
+              anchor="top-left"
+              offset={[10, 4]}
+            >
+              <div
+                className="w-5 h-5 rounded-full flex items-center justify-center text-[10px] border border-off-black/40 shadow-sm cursor-pointer"
+                style={{ backgroundColor: profile.avatar_color }}
+                title={`You: ${shortlistedSlugs.includes(r!.slug) ? '❤️' : ''} ${visitedSlugs.includes(r!.slug) ? '✓' : ''}`}
+                onClick={() => selectRegion(r!.slug)}
+              >
+                {profile.avatar_emoji}
+              </div>
+            </Marker>
+          ))
+      })()}
+
       {/* Friend markers at region centroids */}
       {enabledFriendIds.flatMap((fId) => {
         const friend = friends.find((f) => f.userId === fId)
@@ -296,7 +326,7 @@ export default function TravelMap({ regions, geojson }: Props) {
               longitude={r!.centroid_lon}
               latitude={r!.centroid_lat}
               anchor="top-left"
-              offset={[10 + idx * 14, 4]}
+              offset={[10 + (idx + 1) * 14, 4]}
             >
               <div
                 className="w-5 h-5 rounded-full flex items-center justify-center text-[10px] border border-off-black/40 shadow-sm cursor-pointer"
