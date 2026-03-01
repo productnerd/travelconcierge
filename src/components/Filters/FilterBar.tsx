@@ -4,10 +4,12 @@ import BusynessFilter from './BusynessFilter'
 import TempFilter from './TempFilter'
 import SunshineFilter from './SunshineFilter'
 import ActivePills from './ActivePills'
+import FriendToggles from '@/components/Social/FriendToggles'
 import { useFilterStore } from '@/store/filterStore'
 import { useShortlistStore } from '@/store/shortlistStore'
 import { useVisitedStore } from '@/store/visitedStore'
 import { useUIStore } from '@/store/uiStore'
+import AuthButton from '@/components/Auth/AuthButton'
 
 const ACTIVITIES = ['surfing', 'hiking', 'diving', 'freediving', 'beach', 'skiing', 'food']
 const ACTIVITY_LABEL: Record<string, string> = { food: 'good food' }
@@ -163,6 +165,9 @@ export default function FilterBar() {
               </span>
             </button>
           )}
+
+          <div className="w-px h-6 bg-off-black/20" />
+          <AuthButton />
         </div>
       </div>
 
@@ -237,7 +242,10 @@ export default function FilterBar() {
         </div>
       </div>
 
-      {/* Row 3: Active filter pills */}
+      {/* Row 3: Friend toggles (social) */}
+      <FriendToggles />
+
+      {/* Row 4: Active filter pills */}
       <ActivePills />
     </div>
   )

@@ -7,6 +7,7 @@ import { scoreColor, bestTimeScore as computeBestTime, type ClimateInput } from 
 import { COST_INDEX, costLabel, safetyLabel, overallScore as computeOverall } from '@/data/costIndex'
 import { cuisineScore } from '@/data/cuisineScore'
 import { activeAdvisories } from '@/data/seasonalAdvisories'
+import { useSocialStore } from '@/store/socialStore'
 
 interface Props {
   region: FilteredRegion
@@ -18,6 +19,9 @@ export default function RegionCard({ region }: Props) {
   const selectedActivities = useFilterStore((s) => s.selectedActivities)
   const selectedMonths = useFilterStore((s) => s.selectedMonths)
   const algorithmPreset = useFilterStore((s) => s.algorithmPreset)
+  const enabledFriendIds = useSocialStore((s) => s.enabledFriendIds)
+  const friends = useSocialStore((s) => s.friends)
+  const friendData = useSocialStore((s) => s.friendData)
 
   const overall = Math.round(computeOverall(region.bestTimeScore, region.country_code, selectedActivities))
 
@@ -122,6 +126,40 @@ export default function RegionCard({ region }: Props) {
         ))}
 
       </div>
+
+      {/* Friend avatars */}
+      {enabledFriendIds.length > 0 && (() => {
+        const avatars = enabledFriendIds
+          .map((fId) => {
+            const friend = friends.find((f) => f.userId === fId)
+            const data = friendData[fId]
+            if (!friend || !data) return null
+            const hearted = data.shortlistedSlugs.includes(region.slug)
+            const visited = data.visitedSlugs.includes(region.slug)
+            if (!hearted && !visited) return null
+            return { friend, hearted, visited }
+          })
+          .filter(Boolean)
+        if (avatars.length === 0) return null
+        return (
+          <div className="flex items-center gap-1 mt-2">
+            {avatars.map((a) => (
+              <div key={a!.friend.userId} className="flex items-center gap-0.5" title={`${a!.friend.displayName}: ${a!.hearted ? '❤️' : ''} ${a!.visited ? '✓' : ''}`}>
+                <span
+                  className="w-4 h-4 rounded-full flex items-center justify-center text-[8px] border border-off-black/20"
+                  style={{ backgroundColor: a!.friend.avatarColor }}
+                >
+                  {a!.friend.avatarEmoji}
+                </span>
+                <span className="text-[8px]">
+                  {a!.hearted && <span className="text-red">❤</span>}
+                  {a!.visited && <span className="text-green">✓</span>}
+                </span>
+              </div>
+            ))}
+          </div>
+        )
+      })()}
     </div>
   )
 }

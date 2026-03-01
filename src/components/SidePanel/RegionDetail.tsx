@@ -5,6 +5,7 @@ import { useVisitedStore } from '@/store/visitedStore'
 import type { FilteredRegion } from '@/hooks/useRegions'
 import { busynessColor, countryFlag } from '@/types'
 import { useFilterStore } from '@/store/filterStore'
+import { useSocialStore } from '@/store/socialStore'
 import { scoreColor, goodWeatherScore, bestTimeScore, estimateSnowCm, weatherScoreBreakdown, bloomFactor, type ClimateInput } from '@/utils/scoring'
 import { COST_INDEX, costLabel, skiCostLabel, overallScoreBreakdown } from '@/data/costIndex'
 import { activeAdvisories, seasonalPenalty } from '@/data/seasonalAdvisories'
@@ -103,6 +104,10 @@ export default function RegionDetail({ region }: Props) {
   const selectedMonths = useFilterStore((s) => s.selectedMonths)
   const algorithmPreset = useFilterStore((s) => s.algorithmPreset)
   const selectedActivities = useFilterStore((s) => s.selectedActivities)
+
+  const enabledFriendIds = useSocialStore((s) => s.enabledFriendIds)
+  const friends = useSocialStore((s) => s.friends)
+  const friendData = useSocialStore((s) => s.friendData)
 
   // Sort months by month number
   const sortedMonths = [...region.months].sort((a, b) => a.month - b.month)
@@ -291,6 +296,40 @@ export default function RegionDetail({ region }: Props) {
           </button>
         </div>
       </div>
+
+      {/* Friend avatars who hearted/visited this region */}
+      {enabledFriendIds.length > 0 && (() => {
+        const avatars = enabledFriendIds
+          .map((fId) => {
+            const friend = friends.find((f) => f.userId === fId)
+            const data = friendData[fId]
+            if (!friend || !data) return null
+            const hearted = data.shortlistedSlugs.includes(region.slug)
+            const visited = data.visitedSlugs.includes(region.slug)
+            if (!hearted && !visited) return null
+            return { friend, hearted, visited }
+          })
+          .filter(Boolean)
+        if (avatars.length === 0) return null
+        return (
+          <div className="flex items-center gap-1.5 mt-2">
+            {avatars.map((a) => (
+              <div key={a!.friend.userId} className="flex items-center gap-0.5" title={`${a!.friend.displayName}: ${a!.hearted ? '❤️' : ''} ${a!.visited ? '✓' : ''}`}>
+                <span
+                  className="w-5 h-5 rounded-full flex items-center justify-center text-[10px] border border-off-black/30"
+                  style={{ backgroundColor: a!.friend.avatarColor }}
+                >
+                  {a!.friend.avatarEmoji}
+                </span>
+                <span className="text-[9px] font-display text-off-black/50">
+                  {a!.hearted && <span className="text-red">❤</span>}
+                  {a!.visited && <span className="text-green">✓</span>}
+                </span>
+              </div>
+            ))}
+          </div>
+        )
+      })()}
 
       {/* Description */}
       {region.description && (

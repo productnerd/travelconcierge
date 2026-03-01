@@ -61,6 +61,7 @@ export const BIODIVERSITY: Record<string, BioData> = {
   GB: { index: 32, protected: 28, marine: 52 },
   VA: { index: 5, protected: 0 },
   FO: { index: 18, protected: 5, marine: 45 },
+  GL: { index: 20, protected: 42, marine: 55 },
 
   // ── Asia ─────────────────────────────────────────────────────────────
   AF: { index: 28, protected: 4 },

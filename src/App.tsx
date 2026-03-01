@@ -12,6 +12,12 @@ import { useAgent } from '@/hooks/useAgent'
 import { useShareableLink } from '@/hooks/useShareableLink'
 import { useUIStore } from '@/store/uiStore'
 import { useFilterStore } from '@/store/filterStore'
+import { useAuthStore } from '@/store/authStore'
+import { useShortlistStore } from '@/store/shortlistStore'
+import { useVisitedStore } from '@/store/visitedStore'
+import { useSocialStore } from '@/store/socialStore'
+import { useFriendLink } from '@/hooks/useFriendLink'
+import SignupNudge from '@/components/Auth/SignupNudge'
 
 class MapErrorBoundary extends Component<{ children: ReactNode }, { hasError: boolean }> {
   state = { hasError: false }
@@ -80,6 +86,37 @@ function App() {
     setToasts((t) => t.filter((toast) => toast.id !== id))
   }, [])
 
+  // Initialize auth and sync data on login
+  const initAuth = useAuthStore((s) => s.init)
+  const authUser = useAuthStore((s) => s.user)
+  const authInitialized = useAuthStore((s) => s.initialized)
+  const migrateShortlist = useShortlistStore((s) => s.migrateToSupabase)
+  const migrateVisited = useVisitedStore((s) => s.migrateToSupabase)
+
+  useEffect(() => {
+    const unsub = initAuth()
+    return unsub
+  }, [initAuth])
+
+  // Load friends when user logs in
+  const loadFriends = useSocialStore((s) => s.loadFriends)
+  const loadPendingRequests = useSocialStore((s) => s.loadPendingRequests)
+
+  // Migrate localStorage data to Supabase on first login
+  const migrated = useRef(false)
+  useEffect(() => {
+    if (authUser && authInitialized && !migrated.current) {
+      migrated.current = true
+      migrateShortlist()
+      migrateVisited()
+      loadFriends()
+      loadPendingRequests()
+    }
+  }, [authUser, authInitialized, migrateShortlist, migrateVisited, loadFriends, loadPendingRequests])
+
+  // Handle ?friend= URL parameter
+  useFriendLink()
+
   // Hydrate from URL params on mount
   useShareableLink()
 
@@ -141,6 +178,9 @@ function App() {
       {toasts.map((toast) => (
         <Toast key={toast.id} message={toast.message} onDone={() => removeToast(toast.id)} />
       ))}
+
+      {/* Signup nudge for anonymous users */}
+      <SignupNudge />
     </div>
   )
 }

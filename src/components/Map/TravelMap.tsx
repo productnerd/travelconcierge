@@ -4,6 +4,7 @@ import type { MapRef, MapMouseEvent } from 'react-map-gl/mapbox'
 import { useUIStore } from '@/store/uiStore'
 import { useShortlistStore } from '@/store/shortlistStore'
 import { useFilterStore } from '@/store/filterStore'
+import { useSocialStore } from '@/store/socialStore'
 import type { FilteredRegion } from '@/hooks/useRegions'
 import { busynessColor, busynessLabel, countryFlag } from '@/types'
 import { scoreColor, scoreLabel, bestTimeScore as computeBestTime, type ClimateInput } from '@/utils/scoring'
@@ -38,6 +39,10 @@ export default function TravelMap({ regions, geojson }: Props) {
   const algorithmPreset = useFilterStore((s) => s.algorithmPreset)
   const hiddenScoreTiers = useFilterStore((s) => s.hiddenScoreTiers)
   const toggleScoreTier = useFilterStore((s) => s.toggleScoreTier)
+
+  const enabledFriendIds = useSocialStore((s) => s.enabledFriendIds)
+  const friends = useSocialStore((s) => s.friends)
+  const friendData = useSocialStore((s) => s.friendData)
 
   // Regions where selected month is in top 3 best months
   const bestMonthSlugs = useMemo(() => {
@@ -274,6 +279,36 @@ export default function TravelMap({ regions, geojson }: Props) {
             <div className="text-red text-xs">&#10084;</div>
           </Marker>
         ))}
+
+      {/* Friend markers at region centroids */}
+      {enabledFriendIds.flatMap((fId) => {
+        const friend = friends.find((f) => f.userId === fId)
+        const data = friendData[fId]
+        if (!friend || !data) return []
+        const allSlugs = [...new Set([...data.shortlistedSlugs, ...data.visitedSlugs])]
+        const idx = enabledFriendIds.indexOf(fId)
+        return allSlugs
+          .map((slug) => regions.find((r) => r.slug === slug))
+          .filter(Boolean)
+          .map((r) => (
+            <Marker
+              key={`friend-${fId}-${r!.slug}`}
+              longitude={r!.centroid_lon}
+              latitude={r!.centroid_lat}
+              anchor="top-left"
+              offset={[10 + idx * 14, 4]}
+            >
+              <div
+                className="w-5 h-5 rounded-full flex items-center justify-center text-[10px] border border-off-black/40 shadow-sm cursor-pointer"
+                style={{ backgroundColor: friend.avatarColor }}
+                title={`${friend.displayName}: ${data.shortlistedSlugs.includes(r!.slug) ? '❤️' : ''} ${data.visitedSlugs.includes(r!.slug) ? '✓' : ''}`}
+                onClick={() => selectRegion(r!.slug)}
+              >
+                {friend.avatarEmoji}
+              </div>
+            </Marker>
+          ))
+      })}
 
       {/* Hover popup */}
       {hovered && (

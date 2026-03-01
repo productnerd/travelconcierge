@@ -11,7 +11,7 @@ export const COUNTRY_CONTINENT: Record<string, Continent> = {
   LV: 'Europe', LI: 'Europe', LT: 'Europe', LU: 'Europe', MT: 'Europe', MD: 'Europe', MC: 'Europe',
   ME: 'Europe', NL: 'Europe', MK: 'Europe', NO: 'Europe', PL: 'Europe', PT: 'Europe', RO: 'Europe',
   RU: 'Europe', SM: 'Europe', RS: 'Europe', SK: 'Europe', SI: 'Europe', ES: 'Europe', SE: 'Europe',
-  CH: 'Europe', UA: 'Europe', GB: 'Europe', VA: 'Europe', FO: 'Europe',
+  CH: 'Europe', UA: 'Europe', GB: 'Europe', VA: 'Europe', FO: 'Europe', GL: 'Europe',
   // Asia
   AF: 'Asia', AM: 'Asia', AZ: 'Asia', BH: 'Asia', BD: 'Asia', BT: 'Asia', BN: 'Asia', KH: 'Asia',
   CN: 'Asia', GE: 'Asia', IN: 'Asia', ID: 'Asia', IR: 'Asia', IQ: 'Asia', IL: 'Asia', JP: 'Asia',
@@ -80,7 +80,7 @@ export const COST_INDEX: Record<string, number> = {
   AU: 4, FJ: 3, KI: 3, MH: 3, FM: 3, NR: 4, NZ: 4, PW: 4, PG: 3, WS: 3,
   SB: 3, TO: 3, TV: 3, VU: 3,
   // Territory islands
-  PF: 5, AW: 4, TC: 5, CK: 4, FO: 5, RE: 4, CW: 3, GP: 3, MQ: 3, BM: 5, PR: 3,
+  PF: 5, AW: 4, TC: 5, CK: 4, FO: 5, RE: 4, CW: 3, GP: 3, MQ: 3, BM: 5, PR: 3, GL: 5,
 }
 
 export function costLabel(tier: number): string {

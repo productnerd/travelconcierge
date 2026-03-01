@@ -74,6 +74,19 @@ export interface DecisionQuestion {
   }[]
 }
 
+// ── Social types ─────────────────────────────────────────────────────
+
+export interface TravelProfile {
+  id: string
+  user_id: string
+  display_name: string
+  avatar_emoji: string
+  avatar_color: string
+  friend_code: string
+  created_at: string
+  updated_at: string
+}
+
 // Country code to flag emoji
 export function countryFlag(code: string): string {
   return code

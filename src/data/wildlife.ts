@@ -21,6 +21,7 @@ export const NATIVE_WILDLIFE: Record<string, Species[]> = {
   DE: [{ emoji: '🐗', name: 'Wild Boar' }, { emoji: '🦌', name: 'Red Deer' }, { emoji: '🦅', name: 'White-tailed Eagle' }, { emoji: '🦫', name: 'Eurasian Beaver' }],
   GR: [{ emoji: '🐢', name: 'Loggerhead Turtle' }, { emoji: '🦭', name: 'Monk Seal' }, { emoji: '🐬', name: 'Striped Dolphin' }, { emoji: '🦅', name: 'Griffon Vulture' }],
   HU: [{ emoji: '🦌', name: 'Red Deer' }, { emoji: '🐗', name: 'Wild Boar' }, { emoji: '🦅', name: 'Saker Falcon' }],
+  GL: [{ emoji: '🐻‍❄️', name: 'Polar Bear' }, { emoji: '🦌', name: 'Musk Ox' }, { emoji: '🐋', name: 'Humpback Whale' }, { emoji: '🦊', name: 'Arctic Fox' }, { emoji: '🦭', name: 'Ringed Seal' }],
   IS: [{ emoji: '🦜', name: 'Atlantic Puffin' }, { emoji: '🦊', name: 'Arctic Fox' }, { emoji: '🐋', name: 'Humpback Whale' }, { emoji: '🦭', name: 'Harbour Seal' }],
   IE: [{ emoji: '🦌', name: 'Red Deer' }, { emoji: '🦜', name: 'Atlantic Puffin' }, { emoji: '🐬', name: 'Bottlenose Dolphin' }],
   IT: [{ emoji: '🐺', name: 'Italian Wolf' }, { emoji: '🐻', name: 'Marsican Bear' }, { emoji: '🦩', name: 'Greater Flamingo' }, { emoji: '🐬', name: 'Bottlenose Dolphin' }],
@@ -240,6 +241,7 @@ export const NATIVE_FLORA: Record<string, Species[]> = {
   FR: [{ emoji: '🌿', name: 'Lavender' }, { emoji: '🌸', name: 'Fleur-de-lis' }, { emoji: '🌲', name: 'Maritime Pine' }],
   DE: [{ emoji: '🌲', name: 'German Oak' }, { emoji: '🌿', name: 'Cornflower' }],
   GR: [{ emoji: '🫒', name: 'Olive Tree' }, { emoji: '🌿', name: 'Greek Oregano' }, { emoji: '🌸', name: 'Cretan Cistus' }],
+  GL: [{ emoji: '🌿', name: 'Arctic Willow' }, { emoji: '🌸', name: 'Fireweed' }],
   IS: [{ emoji: '🌿', name: 'Arctic Thyme' }, { emoji: '🍃', name: 'Downy Birch' }],
   IE: [{ emoji: '🍀', name: 'Shamrock' }, { emoji: '🌿', name: 'Bog Myrtle' }],
   IT: [{ emoji: '🫒', name: 'Olive Tree' }, { emoji: '🌸', name: 'Lily of Florence' }, { emoji: '🌲', name: 'Stone Pine' }],
@@ -542,6 +544,11 @@ export const NATIONAL_PARKS: Record<string, Species[]> = {
     { emoji: '🌲', name: 'Bükk' },
     { emoji: '🌿', name: 'Aggtelek' },
     { emoji: '🌿', name: 'Kiskunság' },
+  ],
+  GL: [
+    { emoji: '🏔️', name: 'Northeast Greenland' },
+    { emoji: '🧊', name: 'Ilulissat Icefjord' },
+    { emoji: '🏔️', name: 'Sermersooq' },
   ],
   IS: [
     { emoji: '🌋', name: 'Vatnajökull' },
