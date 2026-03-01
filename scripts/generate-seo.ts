@@ -51,24 +51,40 @@ function busynessLabel(b: number): string {
   return ['', 'Very Quiet', 'Quiet', 'Moderate', 'Busy', 'Peak Season'][b] ?? ''
 }
 
-/** Individual weather sub-scores for breakdown display. */
-function weatherSubScores(m: RegionMonth) {
+/** Bloom factor (0.96–1.04): vegetation lushness by month + latitude. */
+function simpleBloomFactor(month: number, lat: number, tempC: number | null, rainfallMm: number | null): number {
+  const rain = rainfallMm ?? 30
+  const temp = tempC ?? 15
+  if (rain < 10 && temp > 25) return 1.0 // arid desert
+  if (Math.abs(lat) < 23.5) { // tropical
+    if (rain > 50) return 1.02
+    if (rain < 15) return 0.98
+    return 1.0
+  }
+  // temperate/polar — seasonal
+  const peakMonth = lat >= 0 ? 7 : 1
+  const angle = 2 * Math.PI * (month - peakMonth) / 12
+  let factor = 1.0 + Math.cos(angle) * 0.04
+  if (Math.cos(angle) > 0 && rain < 20) factor = Math.max(factor - 0.02, 0.96)
+  return factor
+}
+
+/** Breakdown for Best Time table: weather, crowds, bloom. */
+function bestTimeBreakdown(m: RegionMonth, lat: number) {
   const temp = m.temp_avg_c ?? 20
   const tempS = temp >= 22 && temp <= 27 ? 1 : Math.exp(-((temp < 22 ? 22 - temp : temp - 27) ** 2) / (2 * (temp < 22 ? 36 : 16)))
   const rainS = m.rainfall_mm !== null ? 1 / (1 + (m.rainfall_mm / 120) ** 2.5) : 0.5
   const sunS = m.sunshine_hours_day !== null ? Math.min(m.sunshine_hours_day / 10, 1) : 0.5
   const humS = m.humidity_pct !== null ? (m.humidity_pct <= 55 ? 1 : Math.max(0, 1 - ((m.humidity_pct - 55) / 45) ** 1.8)) : 0.5
   const windS = m.wind_speed_kmh !== null ? (m.wind_speed_kmh <= 20 ? 1 : m.wind_speed_kmh >= 50 ? 0 : 1 - ((m.wind_speed_kmh - 20) / 30) ** 2) : 0.5
-  const crowdS = Math.max(1 - (m.busyness - 1) * 0.2, 0.2)
   const weather = 0.35 * tempS + 0.25 * rainS + 0.20 * sunS + 0.15 * humS + 0.05 * windS
+  const crowds = Math.max(1 - (m.busyness - 1) * 0.2, 0.2)
+  const bloom = simpleBloomFactor(m.month, lat, m.temp_avg_c, m.rainfall_mm)
   return {
-    temperature: Math.round(tempS * 100),
-    rainfall: Math.round(rainS * 100),
-    sunshine: Math.round(sunS * 100),
-    humidity: Math.round(humS * 100),
-    wind: Math.round(windS * 100),
     weather: Math.round(weather * 100),
-    crowds: Math.round(crowdS * 100),
+    crowds: Math.round(crowds * 100),
+    bloom: Math.round((bloom - 0.96) / 0.08 * 100), // 0–100 scale (0.96→0, 1.0→50, 1.04→100)
+    bestTime: Math.round(simpleBestTimeScore(m)),
   }
 }
 
@@ -119,6 +135,11 @@ function escapeHtml(s: string): string {
   return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;')
 }
 
+/** Renders a small "?" icon with a hover tooltip. */
+function infoTip(text: string): string {
+  return `<span class="info"><span class="info-dot">?</span><span class="info-tip">${escapeHtml(text)}</span></span>`
+}
+
 function generateRegionPage(region: Region): string {
   const months = [...region.travel_region_months].sort((a, b) => a.month - b.month)
   const scored = months.map((m) => ({ month: m.month, score: simpleBestTimeScore(m), data: m }))
@@ -140,18 +161,18 @@ function generateRegionPage(region: Region): string {
     ? region.cuisine_tags.flatMap((tag) => REGIONAL_DISHES[tag] ?? []).slice(0, 5)
     : []
 
-  // Overall score computation
+  // Overall score: bestTime × 0.75 + cost × 0.25, then × safety
+  // (Cuisine only factors in when user selects "food" activity — not applicable for SEO pages)
   const bestMonthScore = top3[0]?.score ?? 0
   const costValue = 120 - costTier * 20 // 1→100, 2→80, 3→60, 4→40, 5→20
   const safetyMult = SAFETY_MULTIPLIER[safetyTier] ?? 1
   const overallRaw = bestMonthScore * 0.75 + costValue * 0.25
   const overallFinal = Math.round(overallRaw * safetyMult)
 
-  // Weather breakdown for each month
+  // Best Time breakdown for each month
   const monthBreakdowns = months.map((m) => ({
     month: m.month,
-    ...weatherSubScores(m),
-    bestTime: Math.round(simpleBestTimeScore(m)),
+    ...bestTimeBreakdown(m, region.centroid_lat),
   }))
 
   const title = `${region.name}, ${region.country_name} — Best Time to Visit | FarFarAway`
@@ -284,6 +305,10 @@ function generateRegionPage(region: Region): string {
     .pill-best{background:var(--green);color:#fff;border-color:var(--green)}
     .safety-note{font-size:0.8rem;margin-top:4px;opacity:0.7}
     .attr{font-size:0.7rem;opacity:0.4;margin-top:4px}
+    .info{position:relative;display:inline-flex;align-items:center;cursor:help}
+    .info-dot{display:inline-flex;align-items:center;justify-content:center;width:14px;height:14px;border-radius:50%;background:rgba(26,26,26,0.12);color:rgba(26,26,26,0.5);font-size:9px;font-weight:700;margin-left:4px;flex-shrink:0}
+    .info-tip{position:absolute;bottom:100%;left:50%;transform:translateX(-50%);margin-bottom:6px;padding:8px 10px;background:var(--ink);color:var(--cream);font-size:0.7rem;border-radius:6px;white-space:normal;width:240px;opacity:0;pointer-events:none;transition:opacity 0.2s;z-index:10;font-weight:400;line-height:1.4;text-transform:none;box-shadow:0 4px 12px rgba(0,0,0,0.2)}
+    .info:hover .info-tip{opacity:1}
   </style>
 </head>
 <body>
@@ -302,10 +327,9 @@ function generateRegionPage(region: Region): string {
   <!-- Quick facts -->
   <dl class="meta">
     <div><dt>Best Months</dt><dd>${top3.map((t) => `<strong>${MONTH_SHORT[t.month - 1]}</strong>`).join(', ')}</dd></div>
-    <div><dt>Daily Budget</dt><dd>${costStr} (${costDesc})</dd></div>
-    <div><dt>Safety</dt><dd>${safety ?? 'No advisory'}</dd></div>
-    <div><dt>Cuisine Score</dt><dd>${cuisine}/100</dd></div>
-    ${region.is_coastal ? '<div><dt>Coastal</dt><dd>Yes</dd></div>' : ''}
+    <div><dt>Daily Budget ${infoTip('Based on Numbeo cost-of-living data and traveler budget surveys. Includes accommodation, food, transport, and activities.')}</dt><dd>${costStr} (${costDesc})</dd></div>
+    <div><dt>Safety ${infoTip('Travel advisory level based on UK FCDO, US State Department, and Australian DFAT guidance. Tier 1 = safest, Tier 4 = do not travel.')}</dt><dd>${safety ?? 'No advisory'}</dd></div>
+    <div><dt>Cuisine Score ${infoTip('Cuisine quality rating (0–100) compiled from TasteAtlas rankings and culinary diversity data.')}</dt><dd>${cuisine}/100</dd></div>
   </dl>
 
   ${region.activities.length > 0 ? `
@@ -319,42 +343,38 @@ function generateRegionPage(region: Region): string {
   </div>` : ''}
 
   <!-- Overall score -->
-  <h2>Overall Score</h2>
+  <h2>Overall Score ${infoTip('Combines Best Time (weather + crowds) at 75% weight with Cost at 25%, then applies a safety multiplier. Higher = better destination for the best month.')}</h2>
   <div class="score-card">
-    <div class="score-big" style="color:${scoreColor(overallFinal)}">${overallFinal}</div>
+    <div class="score-big" style="color:${scoreColor(overallFinal)}">${overallFinal}<div style="font-size:0.6rem;font-weight:400;opacity:0.5">/100</div></div>
     <div class="score-detail">
       <div class="score-bar">
-        <span class="score-bar-label">Best Time</span>
+        <span class="score-bar-label">Best Time ${infoTip('Score for the best month of the year. Combines weather quality (80%) and crowd levels (20%) using a geometric mean.')}</span>
         <div class="score-bar-track"><div class="score-bar-fill" style="width:${Math.round(bestMonthScore)}%;background:${scoreColor(Math.round(bestMonthScore))}"></div></div>
         <span class="score-bar-val">${Math.round(bestMonthScore)}</span>
       </div>
       <div class="score-bar">
-        <span class="score-bar-label">Cost</span>
+        <span class="score-bar-label">Cost ${infoTip('Budget-friendliness score. Tier 1 (cheapest) = 100, Tier 5 (most expensive) = 20. Based on daily travel costs from Numbeo.')}</span>
         <div class="score-bar-track"><div class="score-bar-fill" style="width:${costValue}%;background:${scoreColor(costValue)}"></div></div>
         <span class="score-bar-val">${costValue}</span>
       </div>
       <div class="score-bar">
-        <span class="score-bar-label">Cuisine</span>
-        <div class="score-bar-track"><div class="score-bar-fill" style="width:${cuisine}%;background:${scoreColor(cuisine)}"></div></div>
-        <span class="score-bar-val">${cuisine}</span>
+        <span class="score-bar-label">Safety ${infoTip('Safety multiplier from government travel advisories (FCDO, US State Dept, DFAT). Tier 1 = 1.0×, Tier 2 = 0.95×, Tier 3 = 0.75×, Tier 4 = 0.35×.')}</span>
+        <div class="score-bar-track"><div class="score-bar-fill" style="width:${Math.round(safetyMult * 100)}%;background:${scoreColor(Math.round(safetyMult * 100))}"></div></div>
+        <span class="score-bar-val">${safetyMult < 1 ? `×${safetyMult}` : '✓'}</span>
       </div>
-      ${safetyMult < 1 ? `<p class="safety-note">⚠️ Safety multiplier: ×${safetyMult} (tier ${safetyTier}/4)</p>` : ''}
+      <p class="attr">Overall = Best Time (75%) + Cost (25%)${safetyMult < 1 ? ` × Safety (${safetyMult})` : ''}</p>
     </div>
   </div>
 
   <!-- Best Time Score breakdown -->
-  <h2>Best Time Score Breakdown</h2>
+  <h2>Best Time Score Breakdown ${infoTip('Monthly breakdown of the Best Time Score. Best Time = Weather^0.8 × Crowds^0.2 (geometric mean), with Bloom as a ±4% vegetation adjustment.')}</h2>
   <table>
     <thead>
       <tr>
         <th>Month</th>
-        <th>Temp</th>
-        <th>Rain</th>
-        <th>Sun</th>
-        <th>Humidity</th>
-        <th>Wind</th>
-        <th>Weather</th>
-        <th>Crowds</th>
+        <th>Weather ${infoTip('Composite of temperature (35%), rainfall (25%), sunshine (20%), humidity (15%), and wind (5%). Ideal: 22–27°C, low rain, high sun.')}</th>
+        <th>Crowds ${infoTip('Inverse of busyness level. 100 = very quiet, 20 = peak season. Based on Google Trends search volume and tourism board data.')}</th>
+        <th>Bloom ${infoTip('Vegetation lushness (0–100 scale). Based on rainfall, temperature, and latitude. Higher = greener landscapes and more wildflowers.')}</th>
         <th>Best Time</th>
       </tr>
     </thead>
@@ -363,21 +383,18 @@ function generateRegionPage(region: Region): string {
         const isBest = top3.some((t) => t.month === mb.month)
         return `<tr${isBest ? ' class="best"' : ''}>
           <td>${MONTH_SHORT[mb.month - 1]}${isBest ? ' <span class="pill pill-best" style="font-size:0.6rem;padding:1px 5px">Best</span>' : ''}</td>
-          <td>${mb.temperature}</td>
-          <td>${mb.rainfall}</td>
-          <td>${mb.sunshine}</td>
-          <td>${mb.humidity}</td>
-          <td>${mb.wind}</td>
           <td>${mb.weather}</td>
           <td>${mb.crowds}</td>
+          <td>${mb.bloom}</td>
           <td><strong>${mb.bestTime}</strong></td>
         </tr>`
       }).join('\n      ')}
     </tbody>
   </table>
+  <p class="attr">Best Time = Weather (80%) × Crowds (20%). Bloom adjusts ±4% for vegetation lushness.</p>
 
   <!-- Monthly climate table -->
-  <h2>Month-by-Month Climate</h2>
+  <h2>Month-by-Month Climate ${infoTip('Climate averages sourced from Visual Crossing, Open-Meteo, and national meteorological agencies. Values are multi-year averages.')}</h2>
   <table>
     <thead>
       <tr>
@@ -452,7 +469,8 @@ function generateRegionPage(region: Region): string {
   <h2>Native Plants &amp; Flora</h2>
   <div class="pills">
     ${flora.map((f) => `<span class="pill pill-green">${f.emoji} ${escapeHtml(f.name)}</span>`).join('')}
-  </div>` : ''}
+  </div>
+  <p class="attr">Flora data sourced from <a href="https://www.iucnredlist.org/" target="_blank" rel="noopener">IUCN Red List</a> &amp; national biodiversity databases</p>` : ''}
 
   <!-- National Parks -->
   ${parks.length > 0 ? `
@@ -472,7 +490,7 @@ function generateRegionPage(region: Region): string {
   </div>
 
   <footer>
-    <p>Data from FarFarAway Travel Concierge. Climate data averaged from multiple sources. Scores are algorithmic estimates.</p>
+    <p><strong>Data sources:</strong> Climate data from Visual Crossing, Open-Meteo &amp; national meteorological agencies · Cost data from Numbeo · Safety from UK FCDO, US State Dept &amp; Australian DFAT · Cuisine from TasteAtlas · Wildlife &amp; flora from IUCN Red List · Parks from Protected Planet (UNEP-WCMC) · Crowd levels from Google Trends &amp; tourism boards. Scores are algorithmic estimates — see <a href="${BASE_URL}/destinations/methodology/">methodology</a>.</p>
     <p><a href="${BASE_URL}/">FarFarAway</a> — Find your perfect destination</p>
   </footer>
 </body>
@@ -484,6 +502,7 @@ function generateSitemap(regions: Region[]): string {
   const today = new Date().toISOString().split('T')[0]
   const urls = [
     `  <url><loc>${BASE_URL}/</loc><changefreq>weekly</changefreq><priority>1.0</priority><lastmod>${today}</lastmod></url>`,
+    `  <url><loc>${BASE_URL}/destinations/methodology/</loc><changefreq>monthly</changefreq><priority>0.7</priority><lastmod>${today}</lastmod></url>`,
     ...regions.map((r) =>
       `  <url><loc>${BASE_URL}/destinations/${r.slug}/</loc><changefreq>monthly</changefreq><priority>0.8</priority><lastmod>${today}</lastmod></url>`
     ),
@@ -538,15 +557,193 @@ function generateLlmsTxt(regions: Region[]): string {
     lines.push('')
   }
 
-  lines.push('## Data methodology')
+  lines.push('## Data Sources')
   lines.push('')
-  lines.push('Scores (0–100) combine weather quality (temperature, rainfall, sunshine, humidity, wind) with crowd levels using a geometric mean. Cost tiers are based on daily travel budgets. Safety tiers follow government travel advisories (FCDO, US State Dept, DFAT).')
+  lines.push('- **Climate data**: Multi-year averages from Visual Crossing, Open-Meteo, and national meteorological agencies')
+  lines.push('- **Cost data**: Daily travel budgets from Numbeo cost-of-living indices and traveler surveys')
+  lines.push('- **Safety data**: Government travel advisory levels from UK FCDO, US State Department, and Australian DFAT')
+  lines.push('- **Cuisine data**: Quality ratings compiled from TasteAtlas rankings and culinary diversity data')
+  lines.push('- **Wildlife & flora**: Species data from IUCN Red List and national biodiversity databases')
+  lines.push('- **National parks**: Protected areas from Protected Planet (UNEP-WCMC)')
+  lines.push('- **Crowd levels**: Busyness estimates from Google Trends search volume and tourism board seasonal data')
+  lines.push('')
+  lines.push('## Scoring Methodology')
+  lines.push('')
+  lines.push('### Weather Score (0–100)')
+  lines.push('Composite of 5 climate factors with the following weights:')
+  lines.push('- Temperature (35%): Gaussian curve centered on 22–27°C ideal range')
+  lines.push('- Rainfall (25%): Inverse sigmoid, penalizes >120mm/month')
+  lines.push('- Sunshine (20%): Linear scale, capped at 10 hours/day')
+  lines.push('- Humidity (15%): Penalty above 55%, using power curve')
+  lines.push('- Wind (5%): Full score ≤20 km/h, zero at ≥50 km/h')
+  lines.push('')
+  lines.push('### Crowds Score (0–100)')
+  lines.push('Inverse of busyness level (1–5 scale from Supabase):')
+  lines.push('- 1 (Very Quiet) → 100, 2 (Quiet) → 80, 3 (Moderate) → 60, 4 (Busy) → 40, 5 (Peak) → 20')
+  lines.push('')
+  lines.push('### Bloom Factor (±4%)')
+  lines.push('Vegetation lushness adjustment by month, latitude, temperature, and rainfall:')
+  lines.push('- Tropical regions (|lat| < 23.5°): +2% during wet periods, -2% during dry')
+  lines.push('- Temperate regions: Seasonal cosine curve peaking in summer (Jul N hemisphere, Jan S hemisphere)')
+  lines.push('- Arid/desert: Neutral (no adjustment)')
+  lines.push('')
+  lines.push('### Best Time Score (0–100)')
+  lines.push('Geometric mean: `100 × Weather^0.8 × Crowds^0.2`')
+  lines.push('Weather dominates (80% weight) but crowd levels still matter (20%).')
+  lines.push('Bloom factor applies as a ±4% multiplier.')
+  lines.push('')
+  lines.push('### Cost Score (0–100)')
+  lines.push('Derived from 5-tier cost index: `120 - tier × 20`')
+  lines.push('- Tier 1 (€15–25/day) → 100, Tier 2 → 80, Tier 3 → 60, Tier 4 → 40, Tier 5 (€190+/day) → 20')
+  lines.push('')
+  lines.push('### Safety Multiplier')
+  lines.push('Applied as a multiplier to the overall score:')
+  lines.push('- Tier 1 (no advisory): ×1.0, Tier 2 (caution): ×0.95, Tier 3 (risky): ×0.75, Tier 4 (do not travel): ×0.35')
+  lines.push('')
+  lines.push('### Overall Score (0–100)')
+  lines.push('`Overall = (BestTimeScore × 0.75 + CostScore × 0.25) × SafetyMultiplier`')
+  lines.push('Note: Cuisine is only factored into the interactive app when the user selects "food" as an activity. It is not included in the static SEO scores.')
   lines.push('')
   lines.push('## Contact')
   lines.push('')
   lines.push(`Interactive tool: ${BASE_URL}/`)
 
   return lines.join('\n')
+}
+
+// ── Methodology page ─────────────────────────────────────────────────
+function generateMethodologyPage(): string {
+  return `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Scoring Methodology — FarFarAway Travel Concierge</title>
+  <meta name="description" content="How FarFarAway calculates travel destination scores: weather, crowds, cost, safety, bloom. Full formulas and data sources explained.">
+  <link rel="canonical" href="${BASE_URL}/destinations/methodology/">
+  <link rel="icon" type="image/png" href="${BASE_URL}/favicon.png">
+  <style>
+    :root{--cream:#FAF3E0;--ink:#1a1a1a;--red:#D93B2B;--green:#3B7A4A}
+    *{margin:0;padding:0;box-sizing:border-box}
+    body{font-family:system-ui,-apple-system,sans-serif;background:var(--cream);color:var(--ink);max-width:760px;margin:0 auto;padding:24px 16px;line-height:1.7}
+    h1{font-size:1.8rem;margin-bottom:8px}
+    h2{font-size:1.2rem;margin:28px 0 10px;border-bottom:2px solid var(--ink);padding-bottom:4px}
+    h3{font-size:1rem;margin:18px 0 6px}
+    a{color:var(--red);text-decoration:none}
+    a:hover{text-decoration:underline}
+    .subtitle{color:rgba(26,26,26,0.6);margin-bottom:20px}
+    code{background:rgba(26,26,26,0.06);padding:2px 6px;border-radius:4px;font-size:0.85em}
+    pre{background:rgba(26,26,26,0.06);padding:12px 16px;border-radius:8px;overflow-x:auto;font-size:0.82rem;line-height:1.5;margin:8px 0}
+    table{width:100%;border-collapse:collapse;font-size:0.85rem;margin:8px 0}
+    th,td{padding:6px 10px;text-align:left;border:1px solid rgba(26,26,26,0.15)}
+    th{background:var(--ink);color:var(--cream);font-size:0.75rem;text-transform:uppercase}
+    tr:nth-child(even){background:rgba(26,26,26,0.03)}
+    ul,ol{margin:8px 0 8px 20px}
+    li{margin:4px 0}
+    .cta{display:inline-block;margin:28px 0;padding:12px 24px;background:var(--red);color:#fff;font-weight:700;border-radius:8px;text-transform:uppercase;font-size:0.85rem}
+    .cta:hover{text-decoration:none;opacity:0.9}
+    footer{margin-top:48px;padding:16px 0;border-top:1px solid rgba(26,26,26,0.15);font-size:0.75rem;opacity:0.5}
+  </style>
+</head>
+<body>
+  <h1>Scoring Methodology</h1>
+  <p class="subtitle">How FarFarAway calculates destination scores</p>
+  <p>All scores are algorithmic estimates designed to help travelers compare destinations objectively. This page explains every formula and data source used.</p>
+
+  <h2>Data Sources</h2>
+  <table>
+    <thead><tr><th>Data</th><th>Source</th></tr></thead>
+    <tbody>
+      <tr><td>Climate (temperature, rainfall, sunshine, humidity, wind, sea temp)</td><td>Visual Crossing, Open-Meteo, national meteorological agencies — multi-year averages</td></tr>
+      <tr><td>Cost / daily budget</td><td>Numbeo cost-of-living indices, traveler budget surveys</td></tr>
+      <tr><td>Safety / travel advisories</td><td>UK FCDO, US State Department, Australian DFAT</td></tr>
+      <tr><td>Cuisine quality</td><td>TasteAtlas rankings, culinary diversity data</td></tr>
+      <tr><td>Wildlife &amp; flora</td><td>IUCN Red List, national biodiversity databases</td></tr>
+      <tr><td>National parks</td><td>Protected Planet (UNEP-WCMC)</td></tr>
+      <tr><td>Crowd levels / busyness</td><td>Google Trends search volume, tourism board seasonal data</td></tr>
+    </tbody>
+  </table>
+
+  <h2>Weather Score (0–100)</h2>
+  <p>A weighted composite of five climate factors:</p>
+  <pre>Weather = 0.35 × Temp + 0.25 × Rain + 0.20 × Sun + 0.15 × Humidity + 0.05 × Wind</pre>
+  <table>
+    <thead><tr><th>Factor</th><th>Weight</th><th>Ideal</th><th>Curve</th></tr></thead>
+    <tbody>
+      <tr><td>Temperature</td><td>35%</td><td>22–27°C</td><td>Gaussian bell curve; σ²=36 below 22°C, σ²=16 above 27°C</td></tr>
+      <tr><td>Rainfall</td><td>25%</td><td>0 mm</td><td>Inverse power: 1 / (1 + (mm/120)^2.5)</td></tr>
+      <tr><td>Sunshine</td><td>20%</td><td>≥10 h/day</td><td>Linear: min(hours/10, 1)</td></tr>
+      <tr><td>Humidity</td><td>15%</td><td>≤55%</td><td>No penalty below 55%; power decay above</td></tr>
+      <tr><td>Wind</td><td>5%</td><td>≤20 km/h</td><td>Full score ≤20; quadratic decay to 0 at 50 km/h</td></tr>
+    </tbody>
+  </table>
+
+  <h2>Crowds Score (0–100)</h2>
+  <p>Derived from a 1–5 busyness scale:</p>
+  <pre>Crowds = max(1 - (busyness - 1) × 0.2, 0.2) × 100</pre>
+  <table>
+    <thead><tr><th>Busyness</th><th>Label</th><th>Crowds Score</th></tr></thead>
+    <tbody>
+      <tr><td>1</td><td>Very Quiet</td><td>100</td></tr>
+      <tr><td>2</td><td>Quiet</td><td>80</td></tr>
+      <tr><td>3</td><td>Moderate</td><td>60</td></tr>
+      <tr><td>4</td><td>Busy</td><td>40</td></tr>
+      <tr><td>5</td><td>Peak Season</td><td>20</td></tr>
+    </tbody>
+  </table>
+
+  <h2>Bloom Factor (±4%)</h2>
+  <p>A vegetation lushness adjustment based on month, latitude, temperature, and rainfall:</p>
+  <ul>
+    <li><strong>Tropical regions</strong> (|latitude| &lt; 23.5°): +2% during wet periods (rain &gt; 50mm), −2% during dry (rain &lt; 15mm)</li>
+    <li><strong>Temperate regions</strong>: Seasonal cosine curve peaking in summer (July in Northern Hemisphere, January in Southern); amplitude ±4%</li>
+    <li><strong>Arid/desert</strong> (rain &lt; 10mm and temp &gt; 25°C): No adjustment (factor = 1.0)</li>
+  </ul>
+
+  <h2>Best Time Score (0–100)</h2>
+  <p>Geometric mean combining weather and crowd levels:</p>
+  <pre>BestTime = 100 × Weather^0.8 × Crowds^0.2</pre>
+  <p>Weather dominates at 80% weight. Bloom factor is applied as a ±4% multiplier. The score shown for each month reflects how ideal that month is for visiting.</p>
+
+  <h2>Cost Score (0–100)</h2>
+  <p>Derived from a 5-tier daily budget index:</p>
+  <pre>CostScore = 120 - tier × 20</pre>
+  <table>
+    <thead><tr><th>Tier</th><th>Daily Budget</th><th>Score</th></tr></thead>
+    <tbody>
+      <tr><td>1</td><td>€15–25/day</td><td>100</td></tr>
+      <tr><td>2</td><td>€25–45/day</td><td>80</td></tr>
+      <tr><td>3</td><td>€45–95/day</td><td>60</td></tr>
+      <tr><td>4</td><td>€95–190/day</td><td>40</td></tr>
+      <tr><td>5</td><td>€190+/day</td><td>20</td></tr>
+    </tbody>
+  </table>
+
+  <h2>Safety Multiplier</h2>
+  <p>Applied as a multiplier to the overall score based on government travel advisory levels:</p>
+  <table>
+    <thead><tr><th>Tier</th><th>Advisory Level</th><th>Multiplier</th></tr></thead>
+    <tbody>
+      <tr><td>1</td><td>No advisory</td><td>×1.0</td></tr>
+      <tr><td>2</td><td>Exercise caution</td><td>×0.95</td></tr>
+      <tr><td>3</td><td>Reconsider travel</td><td>×0.75</td></tr>
+      <tr><td>4</td><td>Do not travel</td><td>×0.35</td></tr>
+    </tbody>
+  </table>
+
+  <h2>Overall Score (0–100)</h2>
+  <p>The final destination rating:</p>
+  <pre>Overall = (BestTimeScore × 0.75 + CostScore × 0.25) × SafetyMultiplier</pre>
+  <p>Best Time (weather + crowds) carries 75% of the weight, while affordability carries 25%. Safety acts as a penalty multiplier for destinations with travel advisories.</p>
+  <p><strong>Note:</strong> In the interactive app, cuisine quality can also factor into the overall score when the user selects "food" as an activity preference. The static SEO pages do not include this adjustment.</p>
+
+  <a class="cta" href="${BASE_URL}/">Explore Destinations on FarFarAway →</a>
+
+  <footer>
+    <p><a href="${BASE_URL}/">FarFarAway</a> — Find your perfect destination</p>
+  </footer>
+</body>
+</html>`
 }
 
 // ── Main ────────────────────────────────────────────────────────────
@@ -564,6 +761,12 @@ async function main() {
     count++
   }
   console.log(`Generated ${count} destination pages`)
+
+  // Generate methodology page
+  const methDir = join(DIST, 'destinations', 'methodology')
+  mkdirSync(methDir, { recursive: true })
+  writeFileSync(join(methDir, 'index.html'), generateMethodologyPage())
+  console.log('Generated methodology page')
 
   // Generate sitemap
   writeFileSync(join(DIST, 'sitemap.xml'), generateSitemap(regions))
