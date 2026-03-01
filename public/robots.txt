@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://productnerd.github.io/travelconcierge/sitemap.xml

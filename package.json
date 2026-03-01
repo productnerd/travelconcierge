@@ -6,6 +6,8 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
+    "build:seo": "tsx --tsconfig tsconfig.scripts.json scripts/generate-seo.ts",
+    "build:all": "npm run build && npm run build:seo",
     "lint": "eslint .",
     "preview": "vite preview",
     "seed": "tsx scripts/seed.ts"
