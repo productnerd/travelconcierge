@@ -321,7 +321,7 @@ export default function TravelMap({ regions, geojson }: Props) {
           {/* Color mode toggle — vertical stack */}
           <div className="flex flex-col gap-1">
             {([
-              { mode: 'overall' as ColorMode, label: 'Overall', tip: 'Combines weather, crowds, cost, and safety' },
+              { mode: 'overall' as ColorMode, label: 'Overall', tip: 'Best time score combined with cost and safety data' },
               { mode: 'bestTime' as ColorMode, label: 'Best Time', tip: 'Best combination of good weather and low crowds' },
               { mode: 'busyness' as ColorMode, label: 'Crowds', tip: 'Tourist crowd levels 1 (very quiet) to 5 (peak season)' },
               { mode: 'weather' as ColorMode, label: 'Weather', tip: 'Temperature, rainfall, sunshine, humidity, wind, cloud cover' },

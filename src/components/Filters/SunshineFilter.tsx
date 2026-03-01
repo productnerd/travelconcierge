@@ -17,7 +17,8 @@ export default function SunshineFilter() {
           const v = Number(e.target.value)
           setSunshineMin(v === 0 ? null : v)
         }}
-        className="w-20 h-1 accent-amber"
+        onDoubleClick={() => setSunshineMin(null)}
+        className="w-20 h-1 accent-red"
       />
       <span className="text-xs font-mono">{sunshineMin ?? 0}h+</span>
     </div>

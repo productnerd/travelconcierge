@@ -19,9 +19,9 @@ function tempScore(avgC: number): number {
   return Math.exp(-(dist * dist) / (2 * sigma * sigma))
 }
 
-/** Rainfall: logistic decay, inflection at 60 mm, steep power. */
+/** Rainfall: logistic decay, inflection at 120 mm. Tropical-friendly. */
 function rainScore(mm: number): number {
-  return 1 / (1 + Math.pow(mm / 60, 3))
+  return 1 / (1 + Math.pow(mm / 120, 2.5))
 }
 
 /** Sunshine reward: linear up to 10 h/day cap. */

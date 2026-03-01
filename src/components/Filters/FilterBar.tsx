@@ -84,6 +84,7 @@ export default function FilterBar() {
                   const v = Number(e.target.value)
                   setFilter('rainfallMax', v >= 500 ? null : v)
                 }}
+                onDoubleClick={() => setFilter('rainfallMax', null)}
                 className="w-20 h-1 accent-red"
               />
               <span className="text-xs font-mono">{rainfallMax ?? '∞'}mm</span>
@@ -95,25 +96,29 @@ export default function FilterBar() {
         <div className="flex items-center gap-2 shrink-0">
           <button
             onClick={() => setHideRisky(!hideRisky)}
-            title="Hide regions with Risky or Avoid travel advisories"
             className={`
-              px-2 py-1 text-[10px] font-display font-bold rounded-lg border-2 border-off-black transition-colors uppercase
+              relative group px-2 py-1 text-[10px] font-display font-bold rounded-lg border-2 border-off-black transition-colors uppercase
               ${hideRisky ? 'bg-off-black text-cream' : 'bg-cream text-off-black hover:bg-off-black/10'}
             `}
           >
             Hide Risky
+            <span className="absolute bottom-full left-1/2 -translate-x-1/2 mb-1 px-2 py-1 bg-off-black text-cream text-[10px] normal-case leading-snug rounded shadow-lg opacity-0 group-hover:opacity-100 group-hover:delay-500 pointer-events-none transition-opacity duration-200 whitespace-nowrap z-50">
+              Hide regions with risky travel advisories
+            </span>
           </button>
 
           {visitedCount > 0 && (
             <button
               onClick={() => { if (!hideVisited) setShowVisitedOnly(false); setHideVisited(!hideVisited) }}
-              title="Hide regions you've already visited"
               className={`
-                px-2 py-1 text-[10px] font-display font-bold rounded-lg border-2 border-off-black transition-colors uppercase
+                relative group px-2 py-1 text-[10px] font-display font-bold rounded-lg border-2 border-off-black transition-colors uppercase
                 ${hideVisited ? 'bg-off-black text-cream' : 'bg-cream text-off-black hover:bg-off-black/10'}
               `}
             >
               Hide Visited
+              <span className="absolute bottom-full left-1/2 -translate-x-1/2 mb-1 px-2 py-1 bg-off-black text-cream text-[10px] normal-case leading-snug rounded shadow-lg opacity-0 group-hover:opacity-100 group-hover:delay-500 pointer-events-none transition-opacity duration-200 whitespace-nowrap z-50">
+                Hide places you've already visited
+              </span>
             </button>
           )}
 
@@ -121,20 +126,25 @@ export default function FilterBar() {
             <>
               <button
                 onClick={togglePlanner}
-                title="Trip Planner"
-                className="px-2 py-1 text-[10px] font-display font-bold rounded-lg border-2 border-off-black transition-colors uppercase bg-cream text-off-black hover:bg-off-black/10"
+                className="relative group px-2 py-1 text-[10px] font-display font-bold rounded-lg border-2 border-off-black transition-colors uppercase bg-cream text-off-black hover:bg-off-black/10"
               >
                 &#128197;
+                <span className="absolute bottom-full left-1/2 -translate-x-1/2 mb-1 px-2 py-1 bg-off-black text-cream text-[10px] normal-case leading-snug rounded shadow-lg opacity-0 group-hover:opacity-100 group-hover:delay-500 pointer-events-none transition-opacity duration-200 whitespace-nowrap z-50">
+                  Plan your trip itinerary
+                </span>
               </button>
 
               <button
                 onClick={() => { if (!showShortlistOnly) setShowVisitedOnly(false); setShowShortlistOnly(!showShortlistOnly) }}
                 className={`
-                  flex items-center gap-1 px-2 py-1 text-[10px] font-display font-bold rounded-lg border-2 border-off-black transition-colors uppercase
+                  relative group flex items-center gap-1 px-2 py-1 text-[10px] font-display font-bold rounded-lg border-2 border-off-black transition-colors uppercase
                   ${showShortlistOnly ? 'bg-red text-white' : 'bg-cream text-off-black hover:bg-red-light'}
                 `}
               >
                 &#10084; {shortlistedCount}
+                <span className="absolute bottom-full left-1/2 -translate-x-1/2 mb-1 px-2 py-1 bg-off-black text-cream text-[10px] normal-case leading-snug rounded shadow-lg opacity-0 group-hover:opacity-100 group-hover:delay-500 pointer-events-none transition-opacity duration-200 whitespace-nowrap z-50">
+                  Show only your shortlisted regions
+                </span>
               </button>
             </>
           )}
@@ -143,11 +153,14 @@ export default function FilterBar() {
             <button
               onClick={() => { if (!showVisitedOnly) { setHideVisited(false); setShowShortlistOnly(false) } setShowVisitedOnly(!showVisitedOnly) }}
               className={`
-                flex items-center gap-1 px-2 py-1 text-[10px] font-display font-bold rounded-lg border-2 border-off-black transition-colors uppercase
+                relative group flex items-center gap-1 px-2 py-1 text-[10px] font-display font-bold rounded-lg border-2 border-off-black transition-colors uppercase
                 ${showVisitedOnly ? 'bg-green text-white' : 'bg-cream text-off-black hover:bg-green/20'}
               `}
             >
               &#10003; {visitedCount}
+              <span className="absolute bottom-full left-1/2 -translate-x-1/2 mb-1 px-2 py-1 bg-off-black text-cream text-[10px] normal-case leading-snug rounded shadow-lg opacity-0 group-hover:opacity-100 group-hover:delay-500 pointer-events-none transition-opacity duration-200 whitespace-nowrap z-50">
+                Show only places you've visited
+              </span>
             </button>
           )}
         </div>
@@ -172,6 +185,7 @@ export default function FilterBar() {
                 const v = Number(e.target.value)
                 setFilter('rainfallMax', v >= 500 ? null : v)
               }}
+              onDoubleClick={() => setFilter('rainfallMax', null)}
               className="w-20 h-1 accent-red"
             />
             <span className="text-xs font-mono">{rainfallMax ?? '∞'}mm</span>
