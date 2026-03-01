@@ -424,7 +424,7 @@ export default function RegionDetail({ region }: Props) {
                   Bloom
                   <span className="relative group cursor-help">
                     <span className="inline-flex items-center justify-center w-2.5 h-2.5 rounded-full bg-off-black/15 text-off-black/50 text-[6px] font-bold leading-none">?</span>
-                    <span className="absolute bottom-full left-1/2 -translate-x-1/2 mb-1 w-36 p-1.5 bg-off-black text-cream text-[7px] leading-tight rounded shadow-lg opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity z-10">
+                    <span className="absolute bottom-full left-1/2 -translate-x-1/2 mb-1 w-44 p-2 bg-off-black text-cream text-[11px] normal-case leading-snug rounded shadow-lg opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity z-10">
                       Seasonal vegetation lushness — how green and in-bloom the landscape is based on temperature, rainfall, and latitude.
                     </span>
                   </span>

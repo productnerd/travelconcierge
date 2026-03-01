@@ -172,6 +172,7 @@ export default function TravelMap({ regions, geojson }: Props) {
       style={{ width: '100%', height: '100%' }}
       mapStyle="mapbox://styles/mapbox/light-v11"
       projection={{ name: 'globe' }}
+      attributionControl={false}
       interactiveLayerIds={['region-fill']}
       onClick={handleClick}
       onMouseMove={handleMouseMove}
