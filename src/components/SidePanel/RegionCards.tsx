@@ -2,9 +2,6 @@ import { useMemo, useCallback, useState } from 'react'
 import type { FilteredRegion } from '@/hooks/useRegions'
 import RegionCard from './RegionCard'
 import { useFilterStore, type SortBy } from '@/store/filterStore'
-import { useShortlistStore } from '@/store/shortlistStore'
-import { useVisitedStore } from '@/store/visitedStore'
-import { useSocialStore } from '@/store/socialStore'
 import { COST_INDEX, overallScore, CONTINENTS } from '@/data/costIndex'
 
 function haversineKm(lat1: number, lon1: number, lat2: number, lon2: number): number {
@@ -41,13 +38,6 @@ export default function RegionCards({ regions }: Props) {
   const toggleContinent = useFilterStore((s) => s.toggleContinent)
   const [search, setSearch] = useState('')
 
-  const viewMode = useSocialStore((s) => s.viewMode)
-  const enabledFriendIds = useSocialStore((s) => s.enabledFriendIds)
-  const friends = useSocialStore((s) => s.friends)
-  const friendData = useSocialStore((s) => s.friendData)
-  const shortlistedSlugs = useShortlistStore((s) => s.shortlistedSlugs)
-  const visitedSlugs = useVisitedStore((s) => s.visitedSlugs)
-
   const handleSortClick = useCallback((key: SortBy) => {
     if (key === 'distance' && !userLocation) {
       navigator.geolocation.getCurrentPosition(
@@ -62,38 +52,9 @@ export default function RegionCards({ regions }: Props) {
     setSortBy(key)
   }, [userLocation, setSortBy, setUserLocation])
 
-  // Collect combined slugs for "Our Hearts" / "Our Visits" mode
-  const combinedSlugs = useMemo(() => {
-    if (viewMode === 'default') return null
-    const listKey = viewMode === 'ourHearts' ? 'shortlistedSlugs' : 'visitedSlugs'
-    const mySlugs = viewMode === 'ourHearts' ? shortlistedSlugs : visitedSlugs
-    const allSlugs = new Set(mySlugs)
-    for (const fId of enabledFriendIds) {
-      const data = friendData[fId]
-      if (data) data[listKey].forEach((s) => allSlugs.add(s))
-    }
-    return allSlugs
-  }, [viewMode, enabledFriendIds, friendData, shortlistedSlugs, visitedSlugs])
-
   const sorted = useMemo(() => {
     const q = search.toLowerCase().trim()
-    let arr = q ? regions.filter((r) => r.name.toLowerCase().includes(q) || r.country_name.toLowerCase().includes(q)) : [...regions]
-
-    // Filter by combined view mode
-    if (combinedSlugs) {
-      arr = arr.filter((r) => combinedSlugs.has(r.slug))
-
-      // Sort shared (common) regions to top: count how many people have it
-      const mySlugs = viewMode === 'ourHearts' ? shortlistedSlugs : visitedSlugs
-      const listKey = viewMode === 'ourHearts' ? 'shortlistedSlugs' : 'visitedSlugs'
-      arr.sort((a, b) => {
-        const countA = (mySlugs.includes(a.slug) ? 1 : 0) + enabledFriendIds.filter((fId) => friendData[fId]?.[listKey].includes(a.slug)).length
-        const countB = (mySlugs.includes(b.slug) ? 1 : 0) + enabledFriendIds.filter((fId) => friendData[fId]?.[listKey].includes(b.slug)).length
-        return countB - countA
-      })
-      return arr
-    }
-
+    const arr = q ? regions.filter((r) => r.name.toLowerCase().includes(q) || r.country_name.toLowerCase().includes(q)) : [...regions]
     switch (sortBy) {
       case 'overall':
         return arr.sort((a, b) => regionOverall(b, selectedActivities) - regionOverall(a, selectedActivities))
@@ -112,7 +73,7 @@ export default function RegionCards({ regions }: Props) {
       default:
         return arr
     }
-  }, [regions, sortBy, userLocation, selectedActivities, search, combinedSlugs, viewMode, shortlistedSlugs, visitedSlugs, enabledFriendIds, friendData])
+  }, [regions, sortBy, userLocation, selectedActivities, search])
 
   if (regions.length === 0) {
     return (
@@ -174,13 +135,6 @@ export default function RegionCards({ regions }: Props) {
       />
 
       <p className="text-[10px] font-display text-off-black/60 mb-3 uppercase">
-        {viewMode !== 'default' && (() => {
-          const friendNames = enabledFriendIds
-            .map((fId) => friends.find((f) => f.userId === fId)?.displayName)
-            .filter(Boolean)
-          const label = viewMode === 'ourHearts' ? '❤️ from' : '✓ from'
-          return `${label} You${friendNames.length ? ' + ' + friendNames.join(', ') : ''} · `
-        })()}
         {sorted.length} region{sorted.length !== 1 ? 's' : ''}
       </p>
 

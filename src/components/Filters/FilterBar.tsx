@@ -8,6 +8,7 @@ import FriendToggles from '@/components/Social/FriendToggles'
 import { useFilterStore } from '@/store/filterStore'
 import { useShortlistStore } from '@/store/shortlistStore'
 import { useVisitedStore } from '@/store/visitedStore'
+import { useSocialStore } from '@/store/socialStore'
 import { useUIStore } from '@/store/uiStore'
 import AuthButton from '@/components/Auth/AuthButton'
 
@@ -35,13 +36,29 @@ export default function FilterBar() {
   const setHideRisky = useFilterStore((s) => s.setHideRisky)
   const rainfallMax = useFilterStore((s) => s.rainfallMax)
   const setFilter = useFilterStore((s) => s.setFilter)
-  const shortlistedCount = useShortlistStore((s) => s.shortlistedSlugs.length)
+  const myShortlistedSlugs = useShortlistStore((s) => s.shortlistedSlugs)
   const hideVisited = useFilterStore((s) => s.hideVisited)
   const setHideVisited = useFilterStore((s) => s.setHideVisited)
   const showVisitedOnly = useFilterStore((s) => s.showVisitedOnly)
   const setShowVisitedOnly = useFilterStore((s) => s.setShowVisitedOnly)
-  const visitedCount = useVisitedStore((s) => s.visitedSlugs.length)
+  const myVisitedSlugs = useVisitedStore((s) => s.visitedSlugs)
+  const enabledFriendIds = useSocialStore((s) => s.enabledFriendIds)
+  const friendData = useSocialStore((s) => s.friendData)
   const togglePlanner = useUIStore((s) => s.togglePlanner)
+
+  // Combined counts: user + enabled friends (unique slugs)
+  const shortlistedCount = (() => {
+    if (enabledFriendIds.length === 0) return myShortlistedSlugs.length
+    const all = new Set(myShortlistedSlugs)
+    for (const fId of enabledFriendIds) friendData[fId]?.shortlistedSlugs.forEach((s) => all.add(s))
+    return all.size
+  })()
+  const visitedCount = (() => {
+    if (enabledFriendIds.length === 0) return myVisitedSlugs.length
+    const all = new Set(myVisitedSlugs)
+    for (const fId of enabledFriendIds) friendData[fId]?.visitedSlugs.forEach((s) => all.add(s))
+    return all.size
+  })()
 
   return (
     <div className="border-b-2 border-off-black bg-cream px-3 md:px-4 py-2 md:py-3 shrink-0">

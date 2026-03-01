@@ -3,6 +3,7 @@ import { supabase } from '@/lib/supabase'
 import { useFilterStore } from '@/store/filterStore'
 import { useShortlistStore } from '@/store/shortlistStore'
 import { useVisitedStore } from '@/store/visitedStore'
+import { useSocialStore } from '@/store/socialStore'
 import type { RegionWithMonths } from '@/types'
 import { goodWeatherScore, bestTimeScore, type ClimateInput } from '@/utils/scoring'
 import { SAFETY_TIER, COUNTRY_CONTINENT, overallScore } from '@/data/costIndex'
@@ -53,6 +54,8 @@ export function useRegions() {
   const algorithmPreset = useFilterStore((s) => s.algorithmPreset)
   const shortlistedSlugs = useShortlistStore((s) => s.shortlistedSlugs)
   const visitedSlugs = useVisitedStore((s) => s.visitedSlugs)
+  const enabledFriendIds = useSocialStore((s) => s.enabledFriendIds)
+  const friendData = useSocialStore((s) => s.friendData)
 
   // Fetch all regions + all months once
   useEffect(() => {
@@ -184,12 +187,20 @@ export function useRegions() {
       // Safety filter — hide Risky (tier 3) and Avoid (tier 4)
       if (filters.hideRisky && (SAFETY_TIER[r.country_code] ?? 1) > 2) return false
 
-      // Shortlist-only filter
-      if (filters.showShortlistOnly && !shortlistedSlugs.includes(r.slug)) return false
+      // Shortlist-only filter (includes friends' data when toggled on)
+      if (filters.showShortlistOnly) {
+        const inMine = shortlistedSlugs.includes(r.slug)
+        const inFriends = enabledFriendIds.some((fId) => friendData[fId]?.shortlistedSlugs.includes(r.slug))
+        if (!inMine && !inFriends) return false
+      }
 
-      // Visited filters
+      // Visited filters (hideVisited = user's own only, showVisitedOnly includes friends)
       if (filters.hideVisited && visitedSlugs.includes(r.slug)) return false
-      if (filters.showVisitedOnly && !visitedSlugs.includes(r.slug)) return false
+      if (filters.showVisitedOnly) {
+        const inMine = visitedSlugs.includes(r.slug)
+        const inFriends = enabledFriendIds.some((fId) => friendData[fId]?.visitedSlugs.includes(r.slug))
+        if (!inMine && !inFriends) return false
+      }
 
       // Score-tier filter (from clickable legend)
       if (filters.hiddenScoreTiers.length > 0) {

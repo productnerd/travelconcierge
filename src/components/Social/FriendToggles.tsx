@@ -6,12 +6,8 @@ export default function FriendToggles() {
   const friends = useSocialStore((s) => s.friends)
   const enabledFriendIds = useSocialStore((s) => s.enabledFriendIds)
   const toggleFriend = useSocialStore((s) => s.toggleFriend)
-  const viewMode = useSocialStore((s) => s.viewMode)
-  const setViewMode = useSocialStore((s) => s.setViewMode)
 
   if (!user || friends.length === 0) return null
-
-  const hasEnabled = enabledFriendIds.length > 0
 
   return (
     <div className="flex items-center gap-2 mt-1.5 overflow-x-auto pb-0.5">
@@ -38,31 +34,6 @@ export default function FriendToggles() {
           </button>
         )
       })}
-
-      {/* View mode toggles — only when friends are enabled */}
-      {hasEnabled && (
-        <>
-          <div className="w-px h-5 bg-off-black/20 shrink-0" />
-          <button
-            onClick={() => setViewMode(viewMode === 'ourHearts' ? 'default' : 'ourHearts')}
-            className={`
-              px-1.5 py-0.5 text-[10px] font-display font-bold rounded-lg border-2 border-off-black transition-colors uppercase shrink-0
-              ${viewMode === 'ourHearts' ? 'bg-red text-white' : 'bg-cream text-off-black hover:bg-red-light'}
-            `}
-          >
-            Our ❤️
-          </button>
-          <button
-            onClick={() => setViewMode(viewMode === 'ourVisits' ? 'default' : 'ourVisits')}
-            className={`
-              px-1.5 py-0.5 text-[10px] font-display font-bold rounded-lg border-2 border-off-black transition-colors uppercase shrink-0
-              ${viewMode === 'ourVisits' ? 'bg-green text-white' : 'bg-cream text-off-black hover:bg-green/20'}
-            `}
-          >
-            Our ✓
-          </button>
-        </>
-      )}
     </div>
   )
 }
