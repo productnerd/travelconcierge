@@ -42,6 +42,11 @@
 }
 
 @layer components {
+  /* Hide native summary disclosure triangle (Safari/WebKit) */
+  summary::-webkit-details-marker {
+    display: none;
+  }
+
   /* Custom scrollbar for side panel */
   .scrollbar-thin::-webkit-scrollbar {
     width: 4px;
