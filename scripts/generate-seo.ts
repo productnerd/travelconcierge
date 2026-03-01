@@ -189,7 +189,9 @@ function generateRegionPage(region: Region): string {
     *{margin:0;padding:0;box-sizing:border-box}
     body{font-family:system-ui,-apple-system,sans-serif;background:var(--cream);color:var(--ink);max-width:900px;margin:0 auto;padding:0 0 24px;line-height:1.6}
     .map-banner{width:100%;height:280px;object-fit:cover;display:block;border-bottom:3px solid var(--ink)}
+    .flag{width:96px;height:auto;border-radius:10px;border:4px solid var(--cream);margin-top:-48px;margin-left:16px;display:block;box-shadow:0 4px 12px rgba(0,0,0,0.25);position:relative;z-index:1}
     .content{padding:24px 16px 0}
+    .content-with-flag{padding:12px 16px 0}
     h1{font-size:1.8rem;margin-bottom:4px}
     h2{font-size:1.2rem;margin:32px 0 12px;border-bottom:2px solid var(--ink);padding-bottom:4px}
     h3{font-size:1rem;margin:20px 0 8px}
@@ -221,7 +223,8 @@ function generateRegionPage(region: Region): string {
 </head>
 <body>
   ${mapImgUrl ? `<img class="map-banner" src="${mapImgUrl}" alt="Map of ${escapeHtml(region.name)}, ${escapeHtml(region.country_name)}" loading="lazy" width="1200" height="400">` : ''}
-  <div class="content">
+  <img class="flag" src="https://flagcdn.com/w160/${region.country_code.toLowerCase()}.png" alt="Flag of ${escapeHtml(region.country_name)}" width="96">
+  <div class="${mapImgUrl ? 'content-with-flag' : 'content'}">
   <header>
     <h1>${escapeHtml(region.name)}</h1>
     <p class="subtitle">${escapeHtml(region.country_name)} · ${escapeHtml(continent)}</p>
