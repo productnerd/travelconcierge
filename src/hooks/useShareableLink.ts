@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react'
 import { useFilterStore, type FilterState } from '@/store/filterStore'
 import { useShortlistStore } from '@/store/shortlistStore'
+import { useUIStore } from '@/store/uiStore'
 import { supabase } from '@/lib/supabase'
 
 // Default values — only non-default values are written to URL
@@ -99,6 +100,12 @@ if (legacyParam) {
   } catch {
     console.warn('Failed to decode legacy filter params')
   }
+}
+
+// Deep-link: ?region=<slug> → auto-select region on load
+const regionParam = initialParams.get('region')
+if (regionParam) {
+  useUIStore.getState().selectRegion(regionParam)
 }
 
 export function useShareableLink() {

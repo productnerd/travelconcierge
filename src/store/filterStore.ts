@@ -64,7 +64,7 @@ const initialState: FilterState = {
   selectedContinents: [],
   showShortlistOnly: false,
   hideRisky: true,
-  hideVisited: false,
+  hideVisited: true,
   showVisitedOnly: false,
   agentAppliedKeys: [],
   colorMode: 'overall' as ColorMode,
@@ -140,7 +140,7 @@ export const useFilterStore = create<FilterState & FilterActions>()(
           selectedContinents: [],
           showShortlistOnly: false,
           hideRisky: true,
-          hideVisited: false,
+          hideVisited: true,
           showVisitedOnly: false,
         }
         set((s) => ({

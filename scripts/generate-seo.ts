@@ -317,7 +317,7 @@ function generateRegionPage(region: Region): string {
   ${mapImgUrl ? `<div class="banner-wrap">
     <img class="map-banner" src="${mapImgUrl}" alt="Map of ${escapeHtml(region.name)}, ${escapeHtml(region.country_name)}" loading="lazy" width="1200" height="400">
     <img class="flag" src="https://flagcdn.com/w160/${region.country_code.toLowerCase()}.png" alt="Flag of ${escapeHtml(region.country_name)}" width="96">
-    <a class="top-cta" href="${BASE_URL}/">Explore on FarFarAway →</a>
+    <a class="top-cta" href="${BASE_URL}/?region=${region.slug}">Explore on FarFarAway →</a>
   </div>` : ''}
   <div class="${mapImgUrl ? 'content-with-flag' : 'content'}">
   <header>
@@ -488,7 +488,7 @@ function generateRegionPage(region: Region): string {
   <p class="faq-q">${escapeHtml(f.q)}</p>
   <p class="faq-a">${escapeHtml(f.a)}</p>`).join('')}
 
-  <a class="cta" href="${BASE_URL}/">Explore ${escapeHtml(region.name)} on FarFarAway →</a>
+  <a class="cta" href="${BASE_URL}/?region=${region.slug}">Explore ${escapeHtml(region.name)} on FarFarAway →</a>
   </div>
 
   <footer>
