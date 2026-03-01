@@ -87,91 +87,90 @@ export function costLabel(tier: number): string {
   return '€'.repeat(tier)
 }
 
-// Travel advisory tier per country (1-4)
-// 1: Normal — no significant travel concerns
-// 2: Exercise caution — localized crime/petty theft but tourist-safe (e.g. South Africa, Brazil, Mexico)
+// Travel advisory tier per country (1-4) — calibrated for TOURIST SAFETY
+// 1: Normal — no significant travel concerns (default for unlisted countries)
+// 2: Exercise caution — localized crime/petty theft but tourist-safe
 // 3: Reconsider travel — significant instability, terrorism risk, or civil unrest
 // 4: Do not travel — active conflict, war zones, extreme danger
-// Only countries at tier 2+ are listed; unlisted countries default to tier 1.
-// Sources: UNDSS Security Phases, Global Peace Index 2025 (IEP), INFORM Risk Index (OCHA/JRC).
-// Cross-referenced for consensus; no single government advisory used.
+// Sources: FCDO, US State Dept, DFAT advisories cross-referenced with tourist reports.
+// Updated March 2026 to reflect US-Iran/Venezuela escalation and Israel-Lebanon conflict.
 
 export const SAFETY_TIER: Record<string, number> = {
   // Tier 4: Do not travel — active conflict / extreme danger
-  AF: 4, // Afghanistan — GPI 158, INFORM Very High
-  BF: 4, // Burkina Faso — GPI 152, INFORM Very High
-  CD: 4, // DR Congo — GPI 160, INFORM Very High
-  CF: 4, // Central African Republic — GPI 150, INFORM Very High
-  HT: 4, // Haiti — GPI 141, state collapse
-  IR: 4, // Iran — GPI 142, INFORM High
-  IQ: 4, // Iraq — GPI 147, INFORM High
-  KP: 4, // North Korea — GPI 149
-  LY: 4, // Libya — GPI 131
-  ML: 4, // Mali — GPI 154, INFORM Very High
-  MM: 4, // Myanmar — GPI 153, civil war
-  NE: 4, // Niger — GPI 143, military coup
-  RU: 4, // Russia — GPI 163 (least peaceful)
-  SD: 4, // Sudan — GPI 161, INFORM Very High
-  SO: 4, // Somalia — GPI 151, INFORM Very High
-  SS: 4, // South Sudan — GPI 156, INFORM Very High
-  SY: 4, // Syria — GPI 157, INFORM Very High
-  UA: 4, // Ukraine — GPI 162, active war
-  VE: 4, // Venezuela — GPI 139
-  YE: 4, // Yemen — GPI 159, INFORM Very High
+  AF: 4, // Afghanistan — active insurgency, no tourist infrastructure
+  BF: 4, // Burkina Faso — jihadist insurgency, kidnapping risk
+  CD: 4, // DR Congo — armed groups, especially east
+  CF: 4, // Central African Republic — armed conflict, lawlessness
+  HT: 4, // Haiti — state collapse, gang control of Port-au-Prince
+  IL: 4, // Israel — active conflict, rocket strikes on Tel Aviv (Mar 2026)
+  IR: 4, // Iran — US strikes ongoing, retaliating against Israel (Mar 2026)
+  KP: 4, // North Korea — no independent tourism permitted
+  LB: 4, // Lebanon — caught in Israel/Iran regional conflict escalation
+  LY: 4, // Libya — rival governments, militia violence
+  ML: 4, // Mali — jihadist insurgency, kidnapping risk
+  MM: 4, // Myanmar — civil war, martial law zones
+  NE: 4, // Niger — military coup, jihadist spillover
+  SD: 4, // Sudan — civil war between army and RSF
+  SO: 4, // Somalia — al-Shabaab, clan conflict
+  SS: 4, // South Sudan — civil conflict, famine
+  SY: 4, // Syria — post-conflict instability, unexploded ordnance
+  UA: 4, // Ukraine — active war, Russian invasion
+  VE: 4, // Venezuela — US strikes, severe instability (Mar 2026)
+  YE: 4, // Yemen — civil war, Houthi attacks
 
   // Tier 3: Reconsider travel — significant risk
-  BI: 3, // Burundi — GPI 133, INFORM High
-  BY: 3, // Belarus — GPI 120, authoritarian regime
-  CM: 3, // Cameroon — GPI 137, INFORM High
-  ER: 3, // Eritrea — GPI 132, INFORM High
-  ET: 3, // Ethiopia — GPI 138, INFORM Very High
-  GN: 3, // Guinea — GPI 119, INFORM High
-  IL: 3, // Israel — GPI 155
-  LB: 3, // Lebanon — GPI 136
-  NG: 3, // Nigeria — GPI 148, INFORM High
-  PK: 3, // Pakistan — GPI 144, INFORM High
-  PS: 3, // Palestine — GPI 145
-  TD: 3, // Chad — GPI 134, INFORM Very High
+  BI: 3, // Burundi — political repression, sporadic violence
+  BY: 3, // Belarus — authoritarian regime, arbitrary detention risk
+  CM: 3, // Cameroon — anglophone crisis, Boko Haram in north
+  ER: 3, // Eritrea — authoritarian, restricted movement
+  ET: 3, // Ethiopia — ethnic conflicts, Tigray aftermath
+  GN: 3, // Guinea — military junta, civil unrest
+  IQ: 3, // Iraq — Kurdistan increasingly touristed, Baghdad improving, still risky
+  NG: 3, // Nigeria — kidnapping risk, Boko Haram in northeast
+  PK: 3, // Pakistan — terrorism risk, Balochistan/KPK unsafe
+  PS: 3, // Palestine — occupation, Gaza devastation
+  TD: 3, // Chad — armed groups, cross-border instability
 
   // Tier 2: Exercise caution — localized crime but generally tourist-safe
-  AO: 2, // Angola — GPI 83
-  BD: 2, // Bangladesh — GPI 123
-  BJ: 2, // Benin — GPI 114
-  BR: 2, // Brazil — GPI 130
-  CG: 2, // Congo Republic — GPI 103
-  CI: 2, // Côte d'Ivoire — GPI 70
-  CO: 2, // Colombia — GPI 140
-  DZ: 2, // Algeria — GPI 91
-  EC: 2, // Ecuador — GPI 129
-  EG: 2, // Egypt — GPI 107
-  GH: 2, // Ghana — GPI 62
-  GT: 2, // Guatemala — GPI 108
-  GW: 2, // Guinea-Bissau — GPI 101
-  HN: 2, // Honduras — GPI 124
-  IN: 2, // India — GPI 117
-  JM: 2, // Jamaica — GPI 92
-  KE: 2, // Kenya — GPI 127
-  KG: 2, // Kyrgyzstan — GPI 84
-  LR: 2, // Liberia — GPI 94
-  MG: 2, // Madagascar — GPI 61
-  MR: 2, // Mauritania — GPI 112
-  MX: 2, // Mexico — GPI 135
-  MZ: 2, // Mozambique — GPI 121
-  PE: 2, // Peru — GPI 68
-  PG: 2, // Papua New Guinea — GPI 118
-  PH: 2, // Philippines — GPI 105
-  SL: 2, // Sierra Leone — GPI 58
-  SN: 2, // Senegal — GPI 52
-  SV: 2, // El Salvador — GPI 104
-  TG: 2, // Togo — GPI 126
-  TJ: 2, // Tajikistan — GPI 85
-  TM: 2, // Turkmenistan — GPI 87
-  TR: 2, // Turkey — GPI 146
-  TT: 2, // Trinidad & Tobago — GPI 88
-  TZ: 2, // Tanzania — GPI 55
-  UG: 2, // Uganda — GPI 115
-  ZA: 2, // South Africa — GPI 125
-  ZW: 2, // Zimbabwe — GPI 116
+  AO: 2, // Angola — petty crime, limited tourist infrastructure
+  BD: 2, // Bangladesh — political instability, petty crime
+  BJ: 2, // Benin — petty crime, limited infrastructure
+  BR: 2, // Brazil — urban crime hotspots, tourist areas manageable
+  CG: 2, // Congo Republic — petty crime, limited infrastructure
+  CI: 2, // Côte d'Ivoire — stable but northern border areas risky
+  CO: 2, // Colombia — much improved, some rural areas risky
+  DZ: 2, // Algeria — border areas risky, cities generally safe
+  EC: 2, // Ecuador — rising gang violence, tourist areas OK
+  EG: 2, // Egypt — Sinai risky, main tourist sites safe
+  GH: 2, // Ghana — petty crime, generally safe
+  GT: 2, // Guatemala — urban crime, tourist routes OK
+  GW: 2, // Guinea-Bissau — political instability, drug trafficking
+  HN: 2, // Honduras — gang violence in cities, Bay Islands safe
+  IN: 2, // India — scams, petty crime; vast majority of tourists fine
+  JM: 2, // Jamaica — violent crime in specific areas, resorts safe
+  KE: 2, // Kenya — petty crime, some border areas risky
+  KG: 2, // Kyrgyzstan — petty crime, remote areas challenging
+  LR: 2, // Liberia — limited infrastructure, petty crime
+  MG: 2, // Madagascar — petty crime, limited infrastructure
+  MR: 2, // Mauritania — border areas risky, cities OK
+  MX: 2, // Mexico — cartel violence in specific states, tourist zones safe
+  MZ: 2, // Mozambique — northern insurgency, south safe
+  PE: 2, // Peru — petty crime in cities, tourist trail safe
+  PG: 2, // Papua New Guinea — tribal conflict, limited infrastructure
+  PH: 2, // Philippines — Mindanao risky, main islands fine
+  RU: 2, // Russia — Moscow/St Petersburg safe; conflict is in Ukraine
+  SL: 2, // Sierra Leone — petty crime, limited infrastructure
+  SN: 2, // Senegal — generally safe, petty crime
+  SV: 2, // El Salvador — improving, gang presence still
+  TG: 2, // Togo — petty crime, northern border risky
+  TJ: 2, // Tajikistan — border areas risky, cities OK
+  TM: 2, // Turkmenistan — authoritarian but safe for tourists
+  TR: 2, // Turkey — border areas risky, Istanbul/coast safe
+  TT: 2, // Trinidad & Tobago — violent crime in specific areas
+  TZ: 2, // Tanzania — petty crime, safari areas safe
+  UG: 2, // Uganda — generally safe, DRC border risky
+  ZA: 2, // South Africa — high crime, tourist areas manageable with caution
+  ZW: 2, // Zimbabwe — economic hardship, tourists generally fine
 }
 
 // Multiplier applied to overall score per safety tier
