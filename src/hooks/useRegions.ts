@@ -6,7 +6,7 @@ import { useVisitedStore } from '@/store/visitedStore'
 import { useSocialStore } from '@/store/socialStore'
 import type { RegionWithMonths } from '@/types'
 import { goodWeatherScore, bestTimeScore, type ClimateInput } from '@/utils/scoring'
-import { SAFETY_TIER, COUNTRY_CONTINENT, overallScore } from '@/data/costIndex'
+import { SAFETY_TIER, COUNTRY_CONTINENT, COST_INDEX, overallScore } from '@/data/costIndex'
 import { seasonalPenalty } from '@/data/seasonalAdvisories'
 
 export interface FilteredRegion {
@@ -165,6 +165,12 @@ export function useRegions() {
 
       // Rainfall filter
       if (filters.rainfallMax !== null && r.avg_rainfall_mm !== null && r.avg_rainfall_mm > filters.rainfallMax) return false
+
+      // Cost filter
+      if (filters.costMax < 5) {
+        const tier = COST_INDEX[r.country_code] ?? 3
+        if (tier > filters.costMax) return false
+      }
 
       // Activity filter
       if (filters.selectedActivities.length > 0) {

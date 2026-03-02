@@ -12,6 +12,7 @@ export interface FilterState {
   tempMax: number | null
   sunshineMin: number | null
   rainfallMax: number | null
+  costMax: number
   selectedActivities: string[]
   selectedLandscapes: string[]
   selectedContinents: string[]
@@ -34,6 +35,7 @@ interface FilterActions {
   setTempRange: (min: number | null, max: number | null) => void
   setSunshineMin: (min: number | null) => void
   setRainfallMax: (max: number | null) => void
+  setCostMax: (max: number) => void
   toggleActivity: (activity: string) => void
   toggleLandscape: (landscape: string) => void
   toggleContinent: (continent: string) => void
@@ -59,6 +61,7 @@ const initialState: FilterState = {
   tempMax: null,
   sunshineMin: null,
   rainfallMax: null,
+  costMax: 5,
   selectedActivities: [],
   selectedLandscapes: [],
   selectedContinents: [],
@@ -100,6 +103,8 @@ export const useFilterStore = create<FilterState & FilterActions>()(
 
       setRainfallMax: (max) => set({ rainfallMax: max }),
 
+      setCostMax: (max) => set({ costMax: max }),
+
       toggleActivity: (activity) =>
         set((s) => ({
           selectedActivities: s.selectedActivities.includes(activity)
@@ -135,6 +140,7 @@ export const useFilterStore = create<FilterState & FilterActions>()(
           tempMax: null,
           sunshineMin: null,
           rainfallMax: null,
+          costMax: 5,
           selectedActivities: [],
           selectedLandscapes: [],
           selectedContinents: [],
@@ -182,6 +188,7 @@ export const useFilterStore = create<FilterState & FilterActions>()(
         tempMax: state.tempMax,
         sunshineMin: state.sunshineMin,
         rainfallMax: state.rainfallMax,
+        costMax: state.costMax,
         selectedActivities: state.selectedActivities,
         selectedLandscapes: state.selectedLandscapes,
         selectedContinents: state.selectedContinents,

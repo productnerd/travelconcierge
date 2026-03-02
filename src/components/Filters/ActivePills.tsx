@@ -26,6 +26,10 @@ export default function ActivePills() {
     pills.push({ key: 'rainfallMax', label: `Rain ≤ ${filters.rainfallMax}mm`, isAgent: filters.agentAppliedKeys.includes('rainfallMax') })
   }
 
+  if (filters.costMax < 5) {
+    pills.push({ key: 'costMax', label: `Cost ≤ ${'€'.repeat(filters.costMax)}`, isAgent: filters.agentAppliedKeys.includes('costMax') })
+  }
+
   // Activities and landscapes are toggled directly from the filter bar pills — no X-tags needed
 
   if (filters.showShortlistOnly) {

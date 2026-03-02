@@ -27,6 +27,7 @@ function stateToParams(s: FilterState): URLSearchParams {
   if (s.tempMax !== null) p.set('tmax', String(s.tempMax))
   if (s.sunshineMin !== null) p.set('sun', String(s.sunshineMin))
   if (s.rainfallMax !== null) p.set('rain', String(s.rainfallMax))
+  if (s.costMax < 5) p.set('cost', String(s.costMax))
   if (s.selectedActivities.length) p.set('activities', s.selectedActivities.join(','))
   if (s.selectedLandscapes.length) p.set('landscapes', s.selectedLandscapes.join(','))
   if (s.selectedContinents.length) p.set('continents', s.selectedContinents.join(','))
@@ -58,6 +59,9 @@ function paramsToFilters(p: URLSearchParams): Partial<FilterState> {
 
   const rain = p.get('rain')
   if (rain) f.rainfallMax = Number(rain)
+
+  const cost = p.get('cost')
+  if (cost) f.costMax = Number(cost)
 
   const activities = p.get('activities')
   if (activities) f.selectedActivities = activities.split(',')
@@ -157,6 +161,7 @@ export function useShareableLink() {
     filters.tempMax,
     filters.sunshineMin,
     filters.rainfallMax,
+    filters.costMax,
     filters.selectedActivities,
     filters.selectedLandscapes,
     filters.selectedContinents,
@@ -185,6 +190,7 @@ export function useShareableLink() {
           tempMax: state.tempMax,
           sunshineMin: state.sunshineMin,
           rainfallMax: state.rainfallMax,
+          costMax: state.costMax,
           selectedActivities: state.selectedActivities,
           selectedLandscapes: state.selectedLandscapes,
           selectedContinents: state.selectedContinents,

@@ -161,3 +161,31 @@ input[type="range"]::-moz-range-thumb {
   background: var(--color-red);
   border: none;
 }
+
+/* Dual-handle range slider (overlapping inputs) */
+.range-dual {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+.range-dual::-webkit-slider-runnable-track {
+  background: transparent !important;
+  opacity: 1 !important;
+}
+
+.range-dual::-moz-range-track {
+  background: transparent !important;
+  opacity: 1 !important;
+}
+
+.range-dual::-webkit-slider-thumb {
+  pointer-events: all;
+}
+
+.range-dual::-moz-range-thumb {
+  pointer-events: all;
+}

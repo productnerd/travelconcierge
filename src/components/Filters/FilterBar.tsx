@@ -35,6 +35,8 @@ export default function FilterBar() {
   const hideRisky = useFilterStore((s) => s.hideRisky)
   const setHideRisky = useFilterStore((s) => s.setHideRisky)
   const rainfallMax = useFilterStore((s) => s.rainfallMax)
+  const costMax = useFilterStore((s) => s.costMax)
+  const setCostMax = useFilterStore((s) => s.setCostMax)
   const setFilter = useFilterStore((s) => s.setFilter)
   const myShortlistedSlugs = useShortlistStore((s) => s.shortlistedSlugs)
   const hideVisited = useFilterStore((s) => s.hideVisited)
@@ -82,6 +84,24 @@ export default function FilterBar() {
 
           {/* Desktop-only inline filters */}
           <div className="hidden md:flex items-center gap-4">
+            {/* Cost */}
+            <div className="flex items-center gap-2">
+              <span className="text-[10px] font-display font-bold uppercase">Cost:</span>
+              <input
+                type="range"
+                min={1}
+                max={5}
+                step={1}
+                value={costMax}
+                onChange={(e) => setCostMax(Number(e.target.value))}
+                onDoubleClick={() => setCostMax(5)}
+                className="w-16"
+              />
+              <span className="text-xs font-mono">{costMax >= 5 ? 'Any' : '€'.repeat(costMax)}</span>
+            </div>
+
+            <div className="w-px h-6 bg-off-black/20" />
+
             <TempFilter />
 
             <div className="w-px h-6 bg-off-black/20" />
@@ -111,7 +131,7 @@ export default function FilterBar() {
           </div>
         </div>
 
-        {/* Pinned right: Planner + Hide Risky + Shortlist */}
+        {/* Pinned right: Hide toggles + Auth */}
         <div className="flex items-center gap-2 shrink-0">
           <button
             onClick={() => setHideRisky(!hideRisky)}
@@ -141,6 +161,101 @@ export default function FilterBar() {
             </button>
           )}
 
+          <div className="w-px h-6 bg-off-black/20" />
+          <AuthButton />
+        </div>
+      </div>
+
+      {/* Mobile expanded filters */}
+      {expanded && (
+        <div className="md:hidden flex items-center gap-3 mt-2 overflow-x-auto pb-1">
+          <div className="flex items-center gap-2 shrink-0">
+            <span className="text-[10px] font-display font-bold uppercase">Cost:</span>
+            <input
+              type="range"
+              min={1}
+              max={5}
+              step={1}
+              value={costMax}
+              onChange={(e) => setCostMax(Number(e.target.value))}
+              onDoubleClick={() => setCostMax(5)}
+              className="w-16"
+            />
+            <span className="text-xs font-mono">{costMax >= 5 ? 'Any' : '€'.repeat(costMax)}</span>
+          </div>
+          <div className="w-px h-6 bg-off-black/20 shrink-0" />
+          <TempFilter />
+          <div className="w-px h-6 bg-off-black/20 shrink-0" />
+          <SunshineFilter />
+          <div className="w-px h-6 bg-off-black/20 shrink-0" />
+          <div className="flex items-center gap-2 shrink-0">
+            <span className="text-[10px] font-display font-bold uppercase">Rain:</span>
+            <input
+              type="range"
+              min={0}
+              max={500}
+              step={10}
+              value={rainfallMax ?? 500}
+              onChange={(e) => {
+                const v = Number(e.target.value)
+                setFilter('rainfallMax', v >= 500 ? null : v)
+              }}
+              onDoubleClick={() => setFilter('rainfallMax', null)}
+              className="w-20"
+            />
+            <span className="text-xs font-mono">{rainfallMax ?? '∞'}mm</span>
+          </div>
+        </div>
+      )}
+
+      {/* Row 2: Activities + Landscapes + action buttons (right-aligned) */}
+      <div className="flex items-center gap-3 mt-2 overflow-x-auto pb-0.5">
+        <div className="flex items-center gap-1 shrink-0">
+          <span className="text-[10px] font-display font-bold mr-1 uppercase">Activities:</span>
+          {ACTIVITIES.map((a) => (
+            <button
+              key={a}
+              onClick={() => toggleActivity(a)}
+              className={`
+                px-1.5 py-0.5 text-[10px] font-display font-bold rounded border-2 border-off-black transition-colors uppercase shrink-0
+                ${selectedActivities.includes(a)
+                  ? 'bg-red text-white'
+                  : 'bg-cream text-off-black hover:bg-red-light'
+                }
+              `}
+            >
+              {ACTIVITY_LABEL[a] ?? a}
+            </button>
+          ))}
+        </div>
+
+        <div className="w-px h-5 bg-off-black/20 shrink-0" />
+
+        <div className="flex items-center gap-1 shrink-0">
+          <span className="text-[10px] font-display font-bold mr-1 uppercase">Landscape:</span>
+          {LANDSCAPES.map((l) => {
+            const cfg = LANDSCAPE_CONFIG[l]
+            const active = selectedLandscapes.includes(l)
+            return (
+              <button
+                key={l}
+                onClick={() => toggleLandscape(l)}
+                className={`
+                  px-1.5 py-0.5 text-[10px] font-display font-bold rounded border-2 transition-colors uppercase shrink-0
+                  ${active ? 'border-off-black bg-off-black text-white' : 'border-off-black/30 bg-transparent text-off-black hover:border-off-black'}
+                `}
+              >
+                {cfg.emoji} {l}
+              </button>
+            )
+          })}
+        </div>
+
+        {/* Spacer to push action buttons right */}
+        <div className="flex-1" />
+
+        {/* Action buttons: Planner, Shortlist, Visited */}
+        <div className="flex items-center gap-2 shrink-0">
           {shortlistedCount > 0 && (
             <>
               <button
@@ -182,80 +297,6 @@ export default function FilterBar() {
               </span>
             </button>
           )}
-
-          <div className="w-px h-6 bg-off-black/20" />
-          <AuthButton />
-        </div>
-      </div>
-
-      {/* Mobile expanded filters */}
-      {expanded && (
-        <div className="md:hidden flex items-center gap-3 mt-2 overflow-x-auto pb-1">
-          <TempFilter />
-          <div className="w-px h-6 bg-off-black/20 shrink-0" />
-          <SunshineFilter />
-          <div className="w-px h-6 bg-off-black/20 shrink-0" />
-          <div className="flex items-center gap-2 shrink-0">
-            <span className="text-[10px] font-display font-bold uppercase">Rain:</span>
-            <input
-              type="range"
-              min={0}
-              max={500}
-              step={10}
-              value={rainfallMax ?? 500}
-              onChange={(e) => {
-                const v = Number(e.target.value)
-                setFilter('rainfallMax', v >= 500 ? null : v)
-              }}
-              onDoubleClick={() => setFilter('rainfallMax', null)}
-              className="w-20"
-            />
-            <span className="text-xs font-mono">{rainfallMax ?? '∞'}mm</span>
-          </div>
-        </div>
-      )}
-
-      {/* Row 2: Activities + Landscapes (scrollable) */}
-      <div className="flex items-center gap-3 mt-2 overflow-x-auto pb-0.5">
-        <div className="flex items-center gap-1 shrink-0">
-          <span className="text-[10px] font-display font-bold mr-1 uppercase">Activities:</span>
-          {ACTIVITIES.map((a) => (
-            <button
-              key={a}
-              onClick={() => toggleActivity(a)}
-              className={`
-                px-1.5 py-0.5 text-[10px] font-display font-bold rounded border-2 border-off-black transition-colors uppercase shrink-0
-                ${selectedActivities.includes(a)
-                  ? 'bg-red text-white'
-                  : 'bg-cream text-off-black hover:bg-red-light'
-                }
-              `}
-            >
-              {ACTIVITY_LABEL[a] ?? a}
-            </button>
-          ))}
-        </div>
-
-        <div className="w-px h-5 bg-off-black/20 shrink-0" />
-
-        <div className="flex items-center gap-1 shrink-0">
-          <span className="text-[10px] font-display font-bold mr-1 uppercase">Landscape:</span>
-          {LANDSCAPES.map((l) => {
-            const cfg = LANDSCAPE_CONFIG[l]
-            const active = selectedLandscapes.includes(l)
-            return (
-              <button
-                key={l}
-                onClick={() => toggleLandscape(l)}
-                className={`
-                  px-1.5 py-0.5 text-[10px] font-display font-bold rounded border-2 transition-colors uppercase shrink-0
-                  ${active ? 'border-off-black bg-off-black text-white' : 'border-off-black/30 bg-transparent text-off-black hover:border-off-black'}
-                `}
-              >
-                {cfg.emoji} {l}
-              </button>
-            )
-          })}
         </div>
       </div>
 
