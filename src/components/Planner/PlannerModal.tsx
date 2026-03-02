@@ -4,7 +4,9 @@ import { useFilterStore } from '@/store/filterStore'
 import { bestTimeScore, type ClimateInput } from '@/utils/scoring'
 import { countryFlag } from '@/types/index'
 import { COUNTRY_CONTINENT, type Continent } from '@/data/costIndex'
+import { useSocialStore } from '@/store/socialStore'
 import type { FilteredRegion } from '@/hooks/useRegions'
+import FriendToggles from '@/components/Social/FriendToggles'
 
 const MONTH_NAMES = ['', 'January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December']
 
@@ -42,8 +44,17 @@ export default function PlannerModal({ regions }: Props) {
   const plannerOpen = useUIStore((s) => s.plannerOpen)
   const togglePlanner = useUIStore((s) => s.togglePlanner)
   const shortlistedSlugs = useShortlistStore((s) => s.shortlistedSlugs)
+  const enabledFriendIds = useSocialStore((s) => s.enabledFriendIds)
+  const friendData = useSocialStore((s) => s.friendData)
   const algorithmPreset = useFilterStore((s) => s.algorithmPreset)
   const selectedActivities = useFilterStore((s) => s.selectedActivities)
+
+  // Combined shortlist: user + enabled friends
+  const allShortlistedSlugs = (() => {
+    const all = new Set(shortlistedSlugs)
+    for (const fId of enabledFriendIds) friendData[fId]?.shortlistedSlugs.forEach((s) => all.add(s))
+    return [...all]
+  })()
 
   if (!plannerOpen) return null
 
@@ -53,7 +64,7 @@ export default function PlannerModal({ regions }: Props) {
     const map: Record<number, { slug: string; name: string; countryCode: string; score: number }[]> = {}
     for (let i = 1; i <= 12; i++) map[i] = []
 
-    const shortlisted = regions.filter((r) => shortlistedSlugs.includes(r.slug))
+    const shortlisted = regions.filter((r) => allShortlistedSlugs.includes(r.slug))
 
     for (const region of shortlisted) {
       if (!region.months?.length) continue
@@ -90,8 +101,14 @@ export default function PlannerModal({ regions }: Props) {
         className="relative bg-cream border-2 border-off-black rounded-xl max-w-[900px] w-full max-h-[90vh] overflow-auto"
         onClick={(e) => e.stopPropagation()}
       >
+        {/* Header: title + friend toggles */}
+        <div className="flex items-center justify-between px-4 py-2 border-b border-off-black/20">
+          <h2 className="font-display font-bold text-xs uppercase tracking-widest text-off-black/60">Trip Planner</h2>
+          <FriendToggles />
+        </div>
+
         {/* Calendar grid */}
-        {shortlistedSlugs.length === 0 ? (
+        {allShortlistedSlugs.length === 0 ? (
           <div className="px-4 py-12 text-center text-off-black/40 font-display text-xs uppercase">
             Heart some regions to see your trip calendar
           </div>
@@ -136,7 +153,7 @@ export default function PlannerModal({ regions }: Props) {
         )}
 
         {/* Legend */}
-        {shortlistedSlugs.length > 0 && (
+        {allShortlistedSlugs.length > 0 && (
           <div className="flex flex-wrap gap-3 px-4 py-2 border-t border-off-black/20">
             {Object.entries(CONTINENT_COLORS).map(([continent, color]) => {
               // Only show continents that appear in the calendar
