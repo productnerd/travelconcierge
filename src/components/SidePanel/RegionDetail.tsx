@@ -654,11 +654,11 @@ export default function RegionDetail({ region }: Props) {
             selectedMonths={selectedMonths}
           />
 
-          {/* Humidity sparkline */}
+          {/* Sunshine sparkline */}
           <Sparkline
-            label="💧 Humidity"
-            unit="%"
-            values={sortedMonths.map((m) => m.humidity_pct)}
+            label="☀️ Sunshine"
+            unit="h"
+            values={sortedMonths.map((m) => m.sunshine_hours_day)}
             selectedMonths={selectedMonths}
           />
         </div>

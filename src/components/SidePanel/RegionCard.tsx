@@ -58,7 +58,11 @@ export default function RegionCard({ region }: Props) {
       {/* Header row: name + avatars + best month */}
       <div className="flex items-start gap-2">
         <div className="flex-1 min-w-0">
-          <h3 className="font-display font-bold text-xs leading-tight uppercase">{region.name}</h3>
+          <h3 className="font-display font-bold text-xs leading-tight uppercase">
+            {region.name}
+            {myShortlisted.includes(region.slug) && <span className="text-red ml-1" title="Shortlisted">&#10084;</span>}
+            {myVisited.includes(region.slug) && <span className="text-green ml-1" title="Visited">&#10003;</span>}
+          </h3>
           <p className="text-xs text-off-black/60 mt-0.5">
             {countryFlag(region.country_code)} {region.country_name}
           </p>
