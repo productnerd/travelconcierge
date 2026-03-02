@@ -5,6 +5,7 @@ import { bestTimeScore, type ClimateInput } from '@/utils/scoring'
 import { countryFlag } from '@/types/index'
 import { COUNTRY_CONTINENT, type Continent } from '@/data/costIndex'
 import { useSocialStore } from '@/store/socialStore'
+import { useAuthStore } from '@/store/authStore'
 import type { FilteredRegion } from '@/hooks/useRegions'
 import FriendToggles from '@/components/Social/FriendToggles'
 
@@ -46,6 +47,8 @@ export default function PlannerModal({ regions }: Props) {
   const shortlistedSlugs = useShortlistStore((s) => s.shortlistedSlugs)
   const enabledFriendIds = useSocialStore((s) => s.enabledFriendIds)
   const friendData = useSocialStore((s) => s.friendData)
+  const friends = useSocialStore((s) => s.friends)
+  const profile = useAuthStore((s) => s.profile)
   const algorithmPreset = useFilterStore((s) => s.algorithmPreset)
   const selectedActivities = useFilterStore((s) => s.selectedActivities)
 
@@ -57,6 +60,23 @@ export default function PlannerModal({ regions }: Props) {
   })()
 
   if (!plannerOpen) return null
+
+  // Build per-region owner avatars (who shortlisted it)
+  const getOwners = (slug: string): { emoji: string; color: string; name: string }[] => {
+    if (enabledFriendIds.length === 0) return []
+    const owners: { emoji: string; color: string; name: string }[] = []
+    if (profile && shortlistedSlugs.includes(slug)) {
+      owners.push({ emoji: profile.avatar_emoji, color: profile.avatar_color, name: 'You' })
+    }
+    for (const fId of enabledFriendIds) {
+      const friend = friends.find((f) => f.userId === fId)
+      const data = friendData[fId]
+      if (friend && data?.shortlistedSlugs.includes(slug)) {
+        owners.push({ emoji: friend.avatarEmoji, color: friend.avatarColor, name: friend.displayName })
+      }
+    }
+    return owners
+  }
 
   // Build month → regions mapping for shortlisted regions
   // (computed only when modal is open)
@@ -131,6 +151,7 @@ export default function PlannerModal({ regions }: Props) {
                           {entries.map((entry) => {
                             const continent = COUNTRY_CONTINENT[entry.countryCode] as Continent | undefined
                             const color = continent ? CONTINENT_COLORS[continent] : '#888'
+                            const owners = getOwners(entry.slug)
                             return (
                               <div
                                 key={entry.slug}
@@ -138,7 +159,21 @@ export default function PlannerModal({ regions }: Props) {
                                 style={{ borderColor: color, backgroundColor: color + '18' }}
                               >
                                 <span>{countryFlag(entry.countryCode)}</span>
-                                <span className="truncate uppercase text-off-black">{entry.name}</span>
+                                <span className="truncate uppercase text-off-black flex-1">{entry.name}</span>
+                                {owners.length > 0 && (
+                                  <span className="flex items-center -space-x-1 shrink-0">
+                                    {owners.map((o) => (
+                                      <span
+                                        key={o.name}
+                                        className="w-4 h-4 rounded-full flex items-center justify-center text-[7px] border border-white/80"
+                                        style={{ backgroundColor: o.color }}
+                                        title={o.name}
+                                      >
+                                        {o.emoji}
+                                      </span>
+                                    ))}
+                                  </span>
+                                )}
                               </div>
                             )
                           })}
