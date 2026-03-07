@@ -22,7 +22,7 @@ export default function SidePanel({ regions, loading }: Props) {
       {/* Toggle button — desktop only */}
       <button
         onClick={toggleSidePanel}
-        className="hidden md:block absolute top-1/2 -translate-y-1/2 z-10 bg-cream border-2 border-off-black border-r-0 rounded-l-lg px-1 py-3 font-display text-xs hover:bg-red-light transition-colors relative group"
+        className="hidden md:block absolute top-1/2 -translate-y-1/2 z-10 bg-cream border-2 border-off-black border-r-0 rounded-l-lg px-1 py-3 font-display text-xs hover:bg-red-light transition-colors group"
         style={{ right: sidePanelOpen ? '400px' : '0px' }}
       >
         {sidePanelOpen ? '▶' : '◀'}

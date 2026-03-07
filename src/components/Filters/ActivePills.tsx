@@ -32,9 +32,6 @@ export default function ActivePills() {
 
   // Activities and landscapes are toggled directly from the filter bar pills — no X-tags needed
 
-  if (filters.showShortlistOnly) {
-    pills.push({ key: 'showShortlistOnly', label: 'Shortlist only', isAgent: false })
-  }
 
   if (pills.length === 0) return null
 
