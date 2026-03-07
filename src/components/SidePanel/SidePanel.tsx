@@ -40,23 +40,15 @@ export default function SidePanel({ regions, loading }: Props) {
       )}
 
       {/* Desktop panel — right side */}
-      <div
-        className={`
-          hidden md:block shrink-0 transition-all duration-300
-          ${sidePanelOpen
-            ? 'w-[400px] border-l-2 border-off-black bg-cream overflow-y-auto scrollbar-thin'
-            : 'w-0 overflow-hidden'
-          }
-        `}
-      >
-        {sidePanelOpen && (
-          selectedRegion ? (
+      {sidePanelOpen && (
+        <div className="hidden md:block w-[400px] border-l-2 border-off-black bg-cream overflow-y-auto scrollbar-thin shrink-0">
+          {selectedRegion ? (
             <RegionDetail region={selectedRegion} />
           ) : (
             <RegionCards regions={regions} loading={loading} />
-          )
-        )}
-      </div>
+          )}
+        </div>
+      )}
 
       {/* Mobile bottom sheet */}
       <div
