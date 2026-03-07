@@ -52,6 +52,9 @@ function App() {
   const sidePanelOpen = useUIStore((s) => s.sidePanelOpen)
   const selectRegion = useUIStore((s) => s.selectRegion)
 
+  const showShortlistOnly = useFilterStore((s) => s.showShortlistOnly)
+  const showVisitedOnly = useFilterStore((s) => s.showVisitedOnly)
+
   // Deselect region when filters or color mode change (but not month selection)
   const filterKey = useFilterStore((s) =>
     `${s.busynessMax}-${s.hideRisky}-${s.colorMode}-${s.algorithmPreset}-${s.tempMin}-${s.tempMax}-${s.sunshineMin}-${s.rainfallMax}-${s.costMax}-${s.selectedActivities.length}-${s.selectedLandscapes.length}-${s.selectedContinents.length}`
@@ -146,6 +149,15 @@ function App() {
                 geojson={geojson}
               />
             </MapErrorBoundary>
+          )}
+
+          {/* Mode headline overlay */}
+          {(showShortlistOnly || showVisitedOnly) && (
+            <div className="absolute top-3 left-3 z-10 px-4 py-2 bg-cream/70 backdrop-blur-sm rounded-xl border-2 border-off-black/20">
+              <h2 className="font-display font-bold text-lg uppercase tracking-widest">
+                {showShortlistOnly ? 'Bucket List' : 'Been There Done That'}
+              </h2>
+            </div>
           )}
 
           {/* Mobile: floating button to open side panel */}

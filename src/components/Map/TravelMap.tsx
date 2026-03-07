@@ -444,7 +444,7 @@ export default function TravelMap({ regions, geojson }: Props) {
                   <button
                     key={score}
                     onClick={() => toggleScoreTier(score)}
-                    className={`flex items-center gap-1.5 cursor-pointer ${hidden ? 'opacity-40 line-through' : ''}`}
+                    className={`relative group flex items-center gap-1.5 cursor-pointer ${hidden ? 'opacity-40 line-through' : ''}`}
                   >
                     <span
                       className="relative inline-flex items-center justify-center w-3 h-3 rounded-sm border border-off-black"
@@ -453,6 +453,9 @@ export default function TravelMap({ regions, geojson }: Props) {
                       {!hidden && <span className="text-white text-[8px] font-bold leading-none">✓</span>}
                     </span>
                     <span>{label}</span>
+                    <span className="absolute left-full top-1/2 -translate-y-1/2 ml-2 px-2 py-1 bg-off-black text-cream text-[10px] normal-case leading-snug rounded shadow-lg opacity-0 group-hover:opacity-100 group-hover:delay-500 pointer-events-none transition-opacity duration-200 whitespace-nowrap z-50">
+                      Click to {hidden ? 'show' : 'hide'} these regions
+                    </span>
                   </button>
                 )
               })
@@ -469,7 +472,7 @@ export default function TravelMap({ regions, geojson }: Props) {
                   <button
                     key={score}
                     onClick={() => toggleScoreTier(score)}
-                    className={`flex items-center gap-1.5 cursor-pointer ${hidden ? 'opacity-40 line-through' : ''}`}
+                    className={`relative group flex items-center gap-1.5 cursor-pointer ${hidden ? 'opacity-40 line-through' : ''}`}
                   >
                     <span
                       className="relative inline-flex items-center justify-center w-3 h-3 rounded-sm border border-off-black"
@@ -478,6 +481,9 @@ export default function TravelMap({ regions, geojson }: Props) {
                       {!hidden && <span className="text-white text-[8px] font-bold leading-none">✓</span>}
                     </span>
                     <span>{label}</span>
+                    <span className="absolute left-full top-1/2 -translate-y-1/2 ml-2 px-2 py-1 bg-off-black text-cream text-[10px] normal-case leading-snug rounded shadow-lg opacity-0 group-hover:opacity-100 group-hover:delay-500 pointer-events-none transition-opacity duration-200 whitespace-nowrap z-50">
+                      Click to {hidden ? 'show' : 'hide'} these regions
+                    </span>
                   </button>
                 )
               })

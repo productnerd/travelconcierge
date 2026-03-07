@@ -14,13 +14,22 @@ import AuthButton from '@/components/Auth/AuthButton'
 
 const ACTIVITIES = ['surfing', 'hiking', 'diving', 'freediving', 'beach', 'skiing', 'food']
 const ACTIVITY_LABEL: Record<string, string> = { food: 'good food' }
-const LANDSCAPE_CONFIG: Record<string, { emoji: string }> = {
-  seaside: { emoji: '🏖️' },
-  mountain: { emoji: '⛰️' },
-  jungle: { emoji: '🌿' },
-  desert: { emoji: '🏜️' },
-  city: { emoji: '🏙️' },
-  island: { emoji: '🏝️' },
+const ACTIVITY_TIP: Record<string, string> = {
+  surfing: 'Score destinations for surfing conditions',
+  hiking: 'Score destinations for hiking conditions',
+  diving: 'Score destinations for diving conditions',
+  freediving: 'Score destinations for freediving conditions',
+  beach: 'Score destinations for beach & sea conditions',
+  skiing: 'Score destinations for snow & ski conditions',
+  food: 'Show cuisine ratings and local dishes',
+}
+const LANDSCAPE_CONFIG: Record<string, { emoji: string; tip: string }> = {
+  seaside: { emoji: '🏖️', tip: 'Filter by coastal regions' },
+  mountain: { emoji: '⛰️', tip: 'Filter by mountain regions' },
+  jungle: { emoji: '🌿', tip: 'Filter by jungle & rainforest regions' },
+  desert: { emoji: '🏜️', tip: 'Filter by desert regions' },
+  city: { emoji: '🏙️', tip: 'Filter by city & urban regions' },
+  island: { emoji: '🏝️', tip: 'Filter by island regions' },
 }
 const LANDSCAPES = Object.keys(LANDSCAPE_CONFIG)
 
@@ -223,7 +232,7 @@ export default function FilterBar() {
               onClick={() => toggleActivity(a)}
               aria-pressed={selectedActivities.includes(a)}
               className={`
-                px-1.5 py-0.5 text-[10px] font-display font-bold rounded border-2 border-off-black transition-colors uppercase shrink-0
+                relative group px-1.5 py-0.5 text-[10px] font-display font-bold rounded border-2 border-off-black transition-colors uppercase shrink-0
                 ${selectedActivities.includes(a)
                   ? 'bg-red text-white'
                   : 'bg-cream text-off-black hover:bg-red-light'
@@ -231,6 +240,9 @@ export default function FilterBar() {
               `}
             >
               {ACTIVITY_LABEL[a] ?? a}
+              <span className="absolute top-full left-0 mt-1 px-2 py-1 bg-off-black text-cream text-[10px] normal-case leading-snug rounded shadow-lg opacity-0 group-hover:opacity-100 group-hover:delay-500 pointer-events-none transition-opacity duration-200 whitespace-nowrap z-50">
+                {ACTIVITY_TIP[a]}
+              </span>
             </button>
           ))}
         </div>
@@ -248,11 +260,14 @@ export default function FilterBar() {
                 onClick={() => toggleLandscape(l)}
                 aria-pressed={active}
                 className={`
-                  px-1.5 py-0.5 text-[10px] font-display font-bold rounded border-2 transition-colors uppercase shrink-0
+                  relative group px-1.5 py-0.5 text-[10px] font-display font-bold rounded border-2 transition-colors uppercase shrink-0
                   ${active ? 'border-off-black bg-off-black text-white' : 'border-off-black/30 bg-transparent text-off-black hover:border-off-black'}
                 `}
               >
                 {cfg.emoji} {l}
+                <span className="absolute top-full left-0 mt-1 px-2 py-1 bg-off-black text-cream text-[10px] normal-case leading-snug rounded shadow-lg opacity-0 group-hover:opacity-100 group-hover:delay-500 pointer-events-none transition-opacity duration-200 whitespace-nowrap z-50">
+                  {cfg.tip}
+                </span>
               </button>
             )
           })}
@@ -283,9 +298,9 @@ export default function FilterBar() {
                   ${showShortlistOnly ? 'bg-red text-white' : 'bg-cream text-off-black hover:bg-red-light'}
                 `}
               >
-                &#10084; {shortlistedCount}
+                &#10084; {showShortlistOnly ? 'Favourites Only' : shortlistedCount}
                 <span className="absolute top-full right-0 mt-1 px-2 py-1 bg-off-black text-cream text-[10px] normal-case leading-snug rounded shadow-lg opacity-0 group-hover:opacity-100 group-hover:delay-500 pointer-events-none transition-opacity duration-200 whitespace-nowrap z-50">
-                  Show only your shortlisted regions
+                  {showShortlistOnly ? 'Show all regions' : 'Show only your favourites'}
                 </span>
               </button>
             </>
@@ -299,9 +314,9 @@ export default function FilterBar() {
                 ${showVisitedOnly ? 'bg-green text-white' : 'bg-cream text-off-black hover:bg-green/20'}
               `}
             >
-              &#10003; {visitedCount}
+              &#10003; {showVisitedOnly ? "Places I've Been Only" : visitedCount}
               <span className="absolute top-full right-0 mt-1 px-2 py-1 bg-off-black text-cream text-[10px] normal-case leading-snug rounded shadow-lg opacity-0 group-hover:opacity-100 group-hover:delay-500 pointer-events-none transition-opacity duration-200 whitespace-nowrap z-50">
-                Show only places you've visited
+                {showVisitedOnly ? 'Show all regions' : "Show only places you've visited"}
               </span>
             </button>
           )}

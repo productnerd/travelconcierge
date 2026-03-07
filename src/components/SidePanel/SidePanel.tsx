@@ -22,10 +22,13 @@ export default function SidePanel({ regions, loading }: Props) {
       {/* Toggle button — desktop only */}
       <button
         onClick={toggleSidePanel}
-        className="hidden md:block absolute top-1/2 -translate-y-1/2 z-10 bg-cream border-2 border-off-black border-r-0 rounded-l-lg px-1 py-3 font-display text-xs hover:bg-red-light transition-colors"
+        className="hidden md:block absolute top-1/2 -translate-y-1/2 z-10 bg-cream border-2 border-off-black border-r-0 rounded-l-lg px-1 py-3 font-display text-xs hover:bg-red-light transition-colors relative group"
         style={{ right: sidePanelOpen ? '400px' : '0px' }}
       >
         {sidePanelOpen ? '▶' : '◀'}
+        <span className="absolute right-full top-1/2 -translate-y-1/2 mr-2 px-2 py-1 bg-off-black text-cream text-[10px] normal-case leading-snug rounded shadow-lg opacity-0 group-hover:opacity-100 group-hover:delay-500 pointer-events-none transition-opacity duration-200 whitespace-nowrap z-50">
+          {sidePanelOpen ? 'Close region list' : 'Open region list'}
+        </span>
       </button>
 
       {/* Mobile overlay backdrop — tap map area to close */}

@@ -313,24 +313,30 @@ export default function RegionDetail({ region }: Props) {
           <button
             onClick={() => toggleVisited(region.slug)}
             aria-label={isVisited ? 'Visited' : 'Mark as visited'}
-            className="w-8 h-8 flex items-center justify-center text-xl"
+            className="relative group w-8 h-8 flex items-center justify-center text-xl"
           >
             {isVisited ? (
               <span className="text-green">&#10003;</span>
             ) : (
               <span className="text-off-black/30 hover:text-green">&#9744;</span>
             )}
+            <span className="absolute bottom-full left-1/2 -translate-x-1/2 mb-1 px-2 py-1 bg-off-black text-cream text-[10px] normal-case leading-snug rounded shadow-lg opacity-0 group-hover:opacity-100 group-hover:delay-500 pointer-events-none transition-opacity duration-200 whitespace-nowrap z-50">
+              {isVisited ? 'Marked as visited' : 'Mark as visited'}
+            </span>
           </button>
           <button
             onClick={() => toggle(region.slug)}
             aria-label={isShortlisted ? 'Remove from shortlist' : 'Add to shortlist'}
-            className="w-8 h-8 flex items-center justify-center text-xl"
+            className="relative group w-8 h-8 flex items-center justify-center text-xl"
           >
             {isShortlisted ? (
               <span className="text-red">&#10084;</span>
             ) : (
               <span className="text-off-black/30 hover:text-red">&#9825;</span>
             )}
+            <span className="absolute bottom-full left-1/2 -translate-x-1/2 mb-1 px-2 py-1 bg-off-black text-cream text-[10px] normal-case leading-snug rounded shadow-lg opacity-0 group-hover:opacity-100 group-hover:delay-500 pointer-events-none transition-opacity duration-200 whitespace-nowrap z-50">
+              {isShortlisted ? 'Remove from shortlist' : 'Add to shortlist'}
+            </span>
           </button>
         </div>
       </div>
