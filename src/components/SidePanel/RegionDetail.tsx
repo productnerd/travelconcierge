@@ -1,4 +1,4 @@
-import { useMemo } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useUIStore } from '@/store/uiStore'
 import { useShortlistStore } from '@/store/shortlistStore'
 import { useVisitedStore } from '@/store/visitedStore'
@@ -11,10 +11,40 @@ import { scoreColor, goodWeatherScore, bestTimeScore, estimateSnowCm, weatherSco
 import { COST_INDEX, costLabel, skiCostLabel, overallScoreBreakdown } from '@/data/costIndex'
 import { activeAdvisories, seasonalPenalty } from '@/data/seasonalAdvisories'
 import { cuisineScore } from '@/data/cuisineScore'
-import { getRegionDishes } from '@/data/regionalDishes'
-import { BIODIVERSITY, biodiversityScore, biodiversityMetrics } from '@/data/biodiversity'
-import { NATIVE_WILDLIFE, NATIVE_FLORA, NATIONAL_PARKS } from '@/data/wildlife'
-import { MONTHLY_BRIEFS } from '@/data/monthlyBriefs'
+import type { RegionDish } from '@/data/regionalDishes'
+import type { BiodiversityEntry } from '@/data/biodiversity'
+import type { WildlifeEntry, ParkEntry } from '@/data/wildlife'
+import type { MonthlyBriefs } from '@/data/monthlyBriefs'
+
+// Lazy-loaded side-panel data (only fetched when RegionDetail mounts)
+let _lazyData: {
+  getRegionDishes: (tags: string[]) => RegionDish[]
+  BIODIVERSITY: Record<string, BiodiversityEntry>
+  biodiversityScore: (code: string) => number
+  biodiversityMetrics: (code: string) => string[]
+  NATIVE_WILDLIFE: Record<string, WildlifeEntry[]>
+  NATIVE_FLORA: Record<string, WildlifeEntry[]>
+  NATIONAL_PARKS: Record<string, ParkEntry[]>
+  MONTHLY_BRIEFS: MonthlyBriefs
+} | null = null
+const _lazyPromise = Promise.all([
+  import('@/data/regionalDishes'),
+  import('@/data/biodiversity'),
+  import('@/data/wildlife'),
+  import('@/data/monthlyBriefs'),
+]).then(([dishes, bio, wildlife, briefs]) => {
+  _lazyData = {
+    getRegionDishes: dishes.getRegionDishes,
+    BIODIVERSITY: bio.BIODIVERSITY,
+    biodiversityScore: bio.biodiversityScore,
+    biodiversityMetrics: bio.biodiversityMetrics,
+    NATIVE_WILDLIFE: wildlife.NATIVE_WILDLIFE,
+    NATIVE_FLORA: wildlife.NATIVE_FLORA,
+    NATIONAL_PARKS: wildlife.NATIONAL_PARKS,
+    MONTHLY_BRIEFS: briefs.MONTHLY_BRIEFS,
+  }
+  return _lazyData
+})
 
 const MONTH_LABELS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
 const MONTH_NAMES = ['', 'January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December']
@@ -97,6 +127,11 @@ interface Props {
 }
 
 export default function RegionDetail({ region }: Props) {
+  const [lazyData, setLazyData] = useState(_lazyData)
+  useEffect(() => {
+    if (!_lazyData) _lazyPromise.then(setLazyData)
+  }, [])
+
   const selectRegion = useUIStore((s) => s.selectRegion)
   const toggle = useShortlistStore((s) => s.toggle)
   const isShortlisted = useShortlistStore((s) => s.shortlistedSlugs.includes(region.slug))
@@ -116,8 +151,8 @@ export default function RegionDetail({ region }: Props) {
 
   // Memoize shuffled dishes so they don't re-sort on unrelated re-renders
   const dishes = useMemo(
-    () => region.cuisine_tags?.length ? getRegionDishes(region.cuisine_tags) : [],
-    [region.slug]
+    () => region.cuisine_tags?.length && lazyData ? lazyData.getRegionDishes(region.cuisine_tags) : [],
+    [region.slug, lazyData]
   )
 
   // Compute per-month scores
@@ -187,7 +222,7 @@ export default function RegionDetail({ region }: Props) {
     const hasHiking = selectedActivities.includes('hiking')
     const floraFaunaActive = hasWater || hasHiking
     let floraFaunaScore = 50
-    const bio = BIODIVERSITY[region.country_code]
+    const bio = lazyData?.BIODIVERSITY[region.country_code]
     if (bio) {
       if (hasWater && bio.marine !== undefined) floraFaunaScore = bio.marine
       else if (hasHiking) floraFaunaScore = bio.protected !== undefined ? Math.round(bio.index * 0.6 + bio.protected * 0.4) : bio.index
@@ -208,7 +243,7 @@ export default function RegionDetail({ region }: Props) {
       penalties: Array.from(penaltyMap.entries()).map(([label, value]) => ({ label, value })),
       finalScore: region.bestTimeScore,
     }
-  }, [sortedMonths, selectedMonths, selectedActivities, region.bestTimeScore, region.country_code])
+  }, [sortedMonths, selectedMonths, selectedActivities, region.bestTimeScore, region.country_code, lazyData])
 
   // Overall score breakdown
   const overallBd = useMemo(() => {
@@ -277,7 +312,7 @@ export default function RegionDetail({ region }: Props) {
         <div className="flex items-center gap-1 shrink-0">
           <button
             onClick={() => toggleVisited(region.slug)}
-            title={isVisited ? 'Visited' : 'Mark as visited'}
+            aria-label={isVisited ? 'Visited' : 'Mark as visited'}
             className="w-8 h-8 flex items-center justify-center text-xl"
           >
             {isVisited ? (
@@ -288,6 +323,7 @@ export default function RegionDetail({ region }: Props) {
           </button>
           <button
             onClick={() => toggle(region.slug)}
+            aria-label={isShortlisted ? 'Remove from shortlist' : 'Add to shortlist'}
             className="w-8 h-8 flex items-center justify-center text-xl"
           >
             {isShortlisted ? (
@@ -340,8 +376,8 @@ export default function RegionDetail({ region }: Props) {
       )}
 
       {/* Monthly briefs (collapsible) */}
-      {selectedMonths.map((monthNum) => {
-        const brief = MONTHLY_BRIEFS[region.slug]?.[monthNum]
+      {lazyData && selectedMonths.map((monthNum) => {
+        const brief = lazyData.MONTHLY_BRIEFS[region.slug]?.[monthNum]
         if (!brief) return null
         return (
           <details key={monthNum} className="mt-3 group">
@@ -581,11 +617,11 @@ export default function RegionDetail({ region }: Props) {
       </div>
 
       {/* Flora & Fauna */}
-      {(() => {
-        const bioScore = biodiversityScore(region.country_code)
-        const metrics = biodiversityMetrics(region.country_code)
-        const animals = NATIVE_WILDLIFE[region.country_code] ?? []
-        const flora = NATIVE_FLORA[region.country_code] ?? []
+      {lazyData && (() => {
+        const bioScore = lazyData.biodiversityScore(region.country_code)
+        const metrics = lazyData.biodiversityMetrics(region.country_code)
+        const animals = lazyData.NATIVE_WILDLIFE[region.country_code] ?? []
+        const flora = lazyData.NATIVE_FLORA[region.country_code] ?? []
         return metrics.length > 0 ? (
           <div className="bg-cream border border-off-black/30 rounded-lg px-2 py-1.5 mt-3">
             <div className="flex items-center gap-2 mb-1">
@@ -614,7 +650,7 @@ export default function RegionDetail({ region }: Props) {
             )}
             {/* National Parks */}
             {(() => {
-              const parks = NATIONAL_PARKS[region.country_code] ?? []
+              const parks = lazyData.NATIONAL_PARKS[region.country_code] ?? []
               return parks.length > 0 ? (
                 <div className="mt-1.5">
                   <div className="text-[9px] font-display text-off-black/40 uppercase mb-0.5">National Parks</div>

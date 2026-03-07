@@ -1,6 +1,8 @@
 // Must-try dishes per cuisine tag
 // 5 dishes each: at least 1 dessert/sweet, consider coffee/tea as drink
 
+export type RegionDish = { emoji: string; name: string }
+
 export const REGIONAL_DISHES: Record<string, Array<{ emoji: string; name: string }>> = {
   // ── Asia ────────────────────────────────────────────────────────────
   thai: [

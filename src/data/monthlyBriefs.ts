@@ -3,7 +3,9 @@
  * Key: region slug → month number (1–12) → brief text.
  * Written in phases — regions without briefs gracefully show nothing.
  */
-export const MONTHLY_BRIEFS: Record<string, Record<number, string>> = {
+export type MonthlyBriefs = Record<string, Record<number, string>>
+
+export const MONTHLY_BRIEFS: MonthlyBriefs = {
   'id-bali': {
     1: "January drops you right into monsoon season — expect daily downpours, 309mm of rain, and 92% humidity that'll have your sunglasses fogging up the moment you step outside. The upside? Crowds thin out to low-season levels, the rice terraces around Ubud are at their most electric green, and you can snag villa deals that would make July visitors weep. Sea temps sit at a balmy 28°C, though jellyfish are present and visibility takes a hit, so divers may want to stick to calmer sites. Dengue-carrying mosquitoes are active, so pack repellent and long sleeves for dusk. This is prime time for temple-hopping, Balinese cooking classes, and working your way through plates of Nasi Goreng without the summer crowds elbowing in.",
     2: "February is still firmly monsoon territory with 282mm of rain, but the showers tend to be shorter and more theatrical than January's — think dramatic afternoon cloudbursts followed by golden light. Crowds remain refreshingly low (busyness 3/5), and the warmth never dips below 20°C, so it's hardly suffering. The sea is 28°C and calm enough for snorkeling off Amed, though jellyfish linger and dive visibility stays modest. Dengue season continues, so keep that repellent handy. If you don't mind planning around the rain, February rewards you with lush jungle hikes, empty beach clubs in Seminyak, and satay vendors who actually have time to chat.",

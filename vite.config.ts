@@ -11,4 +11,20 @@ export default defineConfig({
       '@': path.resolve(__dirname, './src'),
     },
   },
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          'mapbox': ['mapbox-gl', 'react-map-gl/mapbox'],
+          'vendor': ['react', 'react-dom', 'zustand'],
+          'data': [
+            './src/data/monthlyBriefs.ts',
+            './src/data/wildlife.ts',
+            './src/data/regionalDishes.ts',
+            './src/data/biodiversity.ts',
+          ],
+        },
+      },
+    },
+  },
 })

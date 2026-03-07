@@ -3,6 +3,8 @@
 // Used in the biodiversity section of the region detail panel.
 
 type Species = { emoji: string; name: string }
+export type WildlifeEntry = Species
+export type ParkEntry = Species
 
 export const NATIVE_WILDLIFE: Record<string, Species[]> = {
   // ── Europe ──────────────────────────────────────────────────────────

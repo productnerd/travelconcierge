@@ -124,10 +124,11 @@ export function useShareableLink() {
     if (listParam) {
       supabase
         .from('travel_shortlists')
-        .select('*')
+        .select('region_slugs, filter_state')
         .eq('share_token', listParam)
         .single()
-        .then(({ data }) => {
+        .then(({ data, error }) => {
+          if (error) { console.warn('Failed to load shared list:', error.message); return }
           if (data) {
             shortlist.setAll(data.region_slugs)
             if (data.filter_state) {

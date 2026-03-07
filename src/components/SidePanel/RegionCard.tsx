@@ -49,7 +49,10 @@ export default function RegionCard({ region }: Props) {
 
   return (
     <div
+      role="button"
+      tabIndex={0}
       onClick={() => selectRegion(region.slug)}
+      onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); selectRegion(region.slug) } }}
       className={`
         relative bg-cream border rounded-xl p-4 cursor-pointer transition-colors
         ${selectedSlug === region.slug ? 'border-red' : 'border-off-black/30 hover:border-red'}

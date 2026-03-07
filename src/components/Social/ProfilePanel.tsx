@@ -41,18 +41,18 @@ export default function ProfilePanel({ open, onClose }: ProfilePanelProps) {
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center">
+    <div className="fixed inset-0 z-50 flex items-center justify-center" onKeyDown={(e) => { if (e.key === 'Escape') onClose() }}>
       {/* Backdrop */}
       <div className="absolute inset-0 bg-off-black/40" onClick={onClose} />
 
       {/* Panel */}
-      <div className="relative bg-cream border-2 border-off-black rounded-lg shadow-lg w-[90vw] max-w-md max-h-[80vh] overflow-y-auto p-5">
+      <div role="dialog" aria-modal="true" aria-labelledby="profile-title" className="relative bg-cream border-2 border-off-black rounded-lg shadow-lg w-[90vw] max-w-md max-h-[80vh] overflow-y-auto p-5">
         {/* Close button */}
-        <button onClick={onClose} className="absolute top-3 right-3 text-off-black/40 hover:text-off-black text-lg">
+        <button onClick={onClose} aria-label="Close profile" className="absolute top-3 right-3 text-off-black/40 hover:text-off-black text-lg">
           ✕
         </button>
 
-        <h2 className="text-sm font-display font-bold uppercase mb-4">Profile</h2>
+        <h2 id="profile-title" className="text-sm font-display font-bold uppercase mb-4">Profile</h2>
 
         {/* Avatar */}
         <div className="flex items-center gap-3 mb-4">

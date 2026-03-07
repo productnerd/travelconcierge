@@ -26,6 +26,8 @@ export default function Toast({ message, duration = 3000, onDone }: ToastProps) 
 
   return (
     <div
+      role="status"
+      aria-live="polite"
       className="fixed top-4 right-4 z-50 px-4 py-2 bg-off-black text-cream text-sm font-display rounded-lg shadow-lg"
       style={{
         transform: phase === 'visible' ? 'translateX(0)' : 'translateX(120%)',

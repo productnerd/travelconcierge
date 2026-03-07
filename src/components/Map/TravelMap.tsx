@@ -77,6 +77,53 @@ export default function TravelMap({ regions, geojson }: Props) {
     return lookup
   }, [regions])
 
+  // Build a lookup: slug → region data (for O(1) marker lookups)
+  const regionBySlug = useMemo(() => {
+    const lookup: Record<string, FilteredRegion> = {}
+    for (const r of regions) lookup[r.slug] = r
+    return lookup
+  }, [regions])
+
+  // Memoized user avatar markers
+  const myAvatarMarkers = useMemo(() => {
+    if (enabledFriendIds.length === 0 || !profile) return []
+    const mySlugs = [...new Set([...shortlistedSlugs, ...visitedSlugs])]
+    return mySlugs
+      .map((slug) => regionBySlug[slug])
+      .filter(Boolean)
+      .map((r) => ({
+        slug: r.slug,
+        lon: r.centroid_lon,
+        lat: r.centroid_lat,
+        color: profile.avatar_color,
+        emoji: profile.avatar_emoji,
+        title: `You: ${shortlistedSlugs.includes(r.slug) ? '❤️' : ''} ${visitedSlugs.includes(r.slug) ? '✓' : ''}`,
+      }))
+  }, [enabledFriendIds.length, profile, shortlistedSlugs, visitedSlugs, regionBySlug])
+
+  // Memoized friend markers
+  const friendMarkers = useMemo(() => {
+    return enabledFriendIds.flatMap((fId, idx) => {
+      const friend = friends.find((f) => f.userId === fId)
+      const data = friendData[fId]
+      if (!friend || !data) return []
+      const allSlugs = [...new Set([...data.shortlistedSlugs, ...data.visitedSlugs])]
+      return allSlugs
+        .map((slug) => regionBySlug[slug])
+        .filter(Boolean)
+        .map((r) => ({
+          key: `friend-${fId}-${r.slug}`,
+          slug: r.slug,
+          lon: r.centroid_lon,
+          lat: r.centroid_lat,
+          color: friend.avatarColor,
+          emoji: friend.avatarEmoji,
+          title: `${friend.displayName}: ${data.shortlistedSlugs.includes(r.slug) ? '❤️' : ''} ${data.visitedSlugs.includes(r.slug) ? '✓' : ''}`,
+          offset: [10 + (idx + 1) * 14, 4] as [number, number],
+        }))
+    })
+  }, [enabledFriendIds, friends, friendData, regionBySlug])
+
   // Enrich geojson features with region data
   const enrichedGeojson = useMemo(() => {
     if (!geojson) return null
@@ -285,60 +332,32 @@ export default function TravelMap({ regions, geojson }: Props) {
         ))}
 
       {/* User's own avatar markers (only when friends toggled on) */}
-      {enabledFriendIds.length > 0 && profile && (() => {
-        const mySlugs = [...new Set([...shortlistedSlugs, ...visitedSlugs])]
-        return mySlugs
-          .map((slug) => regions.find((r) => r.slug === slug))
-          .filter(Boolean)
-          .map((r) => (
-            <Marker
-              key={`me-${r!.slug}`}
-              longitude={r!.centroid_lon}
-              latitude={r!.centroid_lat}
-              anchor="top-left"
-              offset={[10, 4]}
-            >
-              <div
-                className="w-5 h-5 rounded-full flex items-center justify-center text-[10px] border border-off-black/40 shadow-sm cursor-pointer"
-                style={{ backgroundColor: profile.avatar_color }}
-                title={`You: ${shortlistedSlugs.includes(r!.slug) ? '❤️' : ''} ${visitedSlugs.includes(r!.slug) ? '✓' : ''}`}
-                onClick={() => selectRegion(r!.slug)}
-              >
-                {profile.avatar_emoji}
-              </div>
-            </Marker>
-          ))
-      })()}
+      {myAvatarMarkers.map((m) => (
+        <Marker key={`me-${m.slug}`} longitude={m.lon} latitude={m.lat} anchor="top-left" offset={[10, 4]}>
+          <div
+            className="w-5 h-5 rounded-full flex items-center justify-center text-[10px] border border-off-black/40 shadow-sm cursor-pointer"
+            style={{ backgroundColor: m.color }}
+            title={m.title}
+            onClick={() => selectRegion(m.slug)}
+          >
+            {m.emoji}
+          </div>
+        </Marker>
+      ))}
 
       {/* Friend markers at region centroids */}
-      {enabledFriendIds.flatMap((fId) => {
-        const friend = friends.find((f) => f.userId === fId)
-        const data = friendData[fId]
-        if (!friend || !data) return []
-        const allSlugs = [...new Set([...data.shortlistedSlugs, ...data.visitedSlugs])]
-        const idx = enabledFriendIds.indexOf(fId)
-        return allSlugs
-          .map((slug) => regions.find((r) => r.slug === slug))
-          .filter(Boolean)
-          .map((r) => (
-            <Marker
-              key={`friend-${fId}-${r!.slug}`}
-              longitude={r!.centroid_lon}
-              latitude={r!.centroid_lat}
-              anchor="top-left"
-              offset={[10 + (idx + 1) * 14, 4]}
-            >
-              <div
-                className="w-5 h-5 rounded-full flex items-center justify-center text-[10px] border border-off-black/40 shadow-sm cursor-pointer"
-                style={{ backgroundColor: friend.avatarColor }}
-                title={`${friend.displayName}: ${data.shortlistedSlugs.includes(r!.slug) ? '❤️' : ''} ${data.visitedSlugs.includes(r!.slug) ? '✓' : ''}`}
-                onClick={() => selectRegion(r!.slug)}
-              >
-                {friend.avatarEmoji}
-              </div>
-            </Marker>
-          ))
-      })}
+      {friendMarkers.map((m) => (
+        <Marker key={m.key} longitude={m.lon} latitude={m.lat} anchor="top-left" offset={m.offset}>
+          <div
+            className="w-5 h-5 rounded-full flex items-center justify-center text-[10px] border border-off-black/40 shadow-sm cursor-pointer"
+            style={{ backgroundColor: m.color }}
+            title={m.title}
+            onClick={() => selectRegion(m.slug)}
+          >
+            {m.emoji}
+          </div>
+        </Marker>
+      ))}
 
       {/* Hover popup */}
       {hovered && (

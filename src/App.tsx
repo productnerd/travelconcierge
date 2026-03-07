@@ -19,6 +19,16 @@ import { useSocialStore } from '@/store/socialStore'
 import { useFriendLink } from '@/hooks/useFriendLink'
 import SignupNudge from '@/components/Auth/SignupNudge'
 
+const ACTIVITY_TOAST_MAP: Record<string, string> = {
+  beach: '🏖️ Sea temperature & marine biodiversity taken into account',
+  skiing: '⛷️ Snow conditions taken into account',
+  surfing: '🏄 Wind conditions optimized for surfing',
+  diving: '🤿 Sea conditions & marine biodiversity taken into account',
+  freediving: '🤿 Calm water, sea conditions & marine biodiversity prioritized',
+  hiking: '🥾 Cooler temperatures & biodiversity taken into account',
+  food: '🍽️ Cuisine highlights shown',
+}
+
 class MapErrorBoundary extends Component<{ children: ReactNode }, { hasError: boolean }> {
   state = { hasError: false }
   static getDerivedStateFromError() { return { hasError: true } }
@@ -58,15 +68,7 @@ function App() {
   const toastIdRef = useRef(0)
   const prevActivitiesRef = useRef<string[]>([])
 
-  const ACTIVITY_TOASTS: Record<string, string> = {
-    beach: '🏖️ Sea temperature & marine biodiversity taken into account',
-    skiing: '⛷️ Snow conditions taken into account',
-    surfing: '🏄 Wind conditions optimized for surfing',
-    diving: '🤿 Sea conditions & marine biodiversity taken into account',
-    freediving: '🤿 Calm water, sea conditions & marine biodiversity prioritized',
-    hiking: '🥾 Cooler temperatures & biodiversity taken into account',
-    food: '🍽️ Cuisine highlights shown',
-  }
+  const ACTIVITY_TOASTS = ACTIVITY_TOAST_MAP
 
   useEffect(() => {
     const prev = prevActivitiesRef.current
@@ -122,6 +124,7 @@ function App() {
 
   return (
     <div className="h-full w-full flex flex-col bg-cream">
+      <h1 className="sr-only">Travel Concierge — Find Your Perfect Destination</h1>
       {/* Filter Bar */}
       <FilterBar />
 

@@ -77,6 +77,7 @@ export default function FilterBar() {
           {/* More filters toggle on mobile */}
           <button
             onClick={() => setExpanded(!expanded)}
+            aria-expanded={expanded}
             className="md:hidden px-2 py-1 text-[10px] font-display font-bold rounded border-2 border-off-black bg-cream shrink-0 uppercase"
           >
             {expanded ? 'Less' : 'More'}
@@ -95,6 +96,7 @@ export default function FilterBar() {
                 value={costMax}
                 onChange={(e) => setCostMax(Number(e.target.value))}
                 onDoubleClick={() => setCostMax(5)}
+                aria-label="Maximum cost level"
                 className="w-16"
               />
               <span className="text-xs font-mono">{costMax >= 5 ? 'Any' : '€'.repeat(costMax)}</span>
@@ -124,6 +126,7 @@ export default function FilterBar() {
                   setFilter('rainfallMax', v >= 500 ? null : v)
                 }}
                 onDoubleClick={() => setFilter('rainfallMax', null)}
+                aria-label="Maximum rainfall"
                 className="w-20"
               />
               <span className="text-xs font-mono">{rainfallMax ?? '∞'}mm</span>
@@ -179,6 +182,7 @@ export default function FilterBar() {
               value={costMax}
               onChange={(e) => setCostMax(Number(e.target.value))}
               onDoubleClick={() => setCostMax(5)}
+              aria-label="Maximum cost level"
               className="w-16"
             />
             <span className="text-xs font-mono">{costMax >= 5 ? 'Any' : '€'.repeat(costMax)}</span>
@@ -201,6 +205,7 @@ export default function FilterBar() {
                 setFilter('rainfallMax', v >= 500 ? null : v)
               }}
               onDoubleClick={() => setFilter('rainfallMax', null)}
+              aria-label="Maximum rainfall"
               className="w-20"
             />
             <span className="text-xs font-mono">{rainfallMax ?? '∞'}mm</span>
@@ -216,6 +221,7 @@ export default function FilterBar() {
             <button
               key={a}
               onClick={() => toggleActivity(a)}
+              aria-pressed={selectedActivities.includes(a)}
               className={`
                 px-1.5 py-0.5 text-[10px] font-display font-bold rounded border-2 border-off-black transition-colors uppercase shrink-0
                 ${selectedActivities.includes(a)
@@ -240,6 +246,7 @@ export default function FilterBar() {
               <button
                 key={l}
                 onClick={() => toggleLandscape(l)}
+                aria-pressed={active}
                 className={`
                   px-1.5 py-0.5 text-[10px] font-display font-bold rounded border-2 transition-colors uppercase shrink-0
                   ${active ? 'border-off-black bg-off-black text-white' : 'border-off-black/30 bg-transparent text-off-black hover:border-off-black'}
@@ -260,6 +267,7 @@ export default function FilterBar() {
             <>
               <button
                 onClick={togglePlanner}
+                aria-label="Open trip planner"
                 className="relative group px-2 py-1 text-[10px] font-display font-bold rounded-lg border-2 border-off-black transition-colors uppercase bg-cream text-off-black hover:bg-off-black/10"
               >
                 &#128197;

@@ -6,6 +6,8 @@
 //
 // Compound score rebalances automatically when a component is missing.
 
+export type BiodiversityEntry = BioData
+
 export interface BioData {
   index: number
   protected: number

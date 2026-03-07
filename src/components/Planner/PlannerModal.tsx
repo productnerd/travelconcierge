@@ -112,18 +112,21 @@ export default function PlannerModal({ regions }: Props) {
   })()
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4" onClick={togglePlanner}>
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4" onClick={togglePlanner} onKeyDown={(e) => { if (e.key === 'Escape') togglePlanner() }}>
       {/* Backdrop */}
       <div className="absolute inset-0 bg-black/50" />
 
       {/* Modal */}
       <div
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="planner-title"
         className="relative bg-cream border-2 border-off-black rounded-xl max-w-[900px] w-full max-h-[90vh] overflow-auto"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header: title + friend toggles */}
         <div className="flex items-center justify-between px-4 py-2 border-b border-off-black/20">
-          <h2 className="font-display font-bold text-xs uppercase tracking-widest text-off-black/60">Trip Planner</h2>
+          <h2 id="planner-title" className="font-display font-bold text-xs uppercase tracking-widest text-off-black/60">Trip Planner</h2>
           <FriendToggles />
         </div>
 

@@ -48,11 +48,11 @@ export const useVisitedStore = create<VisitedState>((set, get) => ({
             .eq('user_id', user.id)
             .eq('region_slug', slug)
             .eq('list_type', LIST_TYPE)
-            .then(() => {})
+            .then(({ error }) => { if (error) console.warn('Visited sync failed:', error.message) })
         } else {
           supabase.from('travel_user_regions')
             .insert({ user_id: user.id, region_slug: slug, list_type: LIST_TYPE })
-            .then(() => {})
+            .then(({ error }) => { if (error) console.warn('Visited sync failed:', error.message) })
         }
       }
 
