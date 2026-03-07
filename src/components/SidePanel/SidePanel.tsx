@@ -42,10 +42,10 @@ export default function SidePanel({ regions, loading }: Props) {
       {/* Desktop panel — right side */}
       <div
         className={`
-          hidden md:block bg-cream overflow-y-auto scrollbar-thin shrink-0 transition-all duration-300
+          hidden md:block shrink-0 transition-all duration-300
           ${sidePanelOpen
-            ? 'w-[400px] border-l-2 border-off-black'
-            : 'w-0 border-l-0'
+            ? 'w-[400px] border-l-2 border-off-black bg-cream overflow-y-auto scrollbar-thin'
+            : 'w-0 overflow-hidden'
           }
         `}
       >
