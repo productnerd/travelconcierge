@@ -71,10 +71,16 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     // Single source of truth: onAuthStateChange handles all auth events
     // including INITIAL_SESSION (page load), SIGNED_IN (magic link redirect),
     // TOKEN_REFRESHED, and SIGNED_OUT.
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       if (session?.user) {
-        const profile = await fetchOrCreateProfile(session.user.id, session.user.email)
-        set({ user: session.user, profile, initialized: true })
+        set({ user: session.user, initialized: true })
+        // Supabase holds its auth lock while this callback runs, and any
+        // supabase.from() call re-enters that lock. Defer the profile fetch
+        // out of the callback or it deadlocks and user never gets set.
+        const { id, email } = session.user
+        setTimeout(async () => {
+          set({ profile: await fetchOrCreateProfile(id, email) })
+        }, 0)
       } else {
         set({ user: null, profile: null, initialized: true })
       }

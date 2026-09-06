@@ -6,7 +6,7 @@ import { countryFlag } from '@/types/index'
 import { COUNTRY_CONTINENT, type Continent } from '@/data/costIndex'
 import { useSocialStore } from '@/store/socialStore'
 import { useAuthStore } from '@/store/authStore'
-import type { FilteredRegion } from '@/hooks/useRegions'
+import type { RegionWithMonths } from '@/types'
 import FriendToggles from '@/components/Social/FriendToggles'
 
 const MONTH_NAMES = ['', 'January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December']
@@ -38,7 +38,7 @@ const CONTINENT_COLORS: Record<Continent, string> = {
 }
 
 interface Props {
-  regions: FilteredRegion[]
+  regions: RegionWithMonths[]
 }
 
 export default function PlannerModal({ regions }: Props) {
@@ -87,9 +87,9 @@ export default function PlannerModal({ regions }: Props) {
     const shortlisted = regions.filter((r) => allShortlistedSlugs.includes(r.slug))
 
     for (const region of shortlisted) {
-      if (!region.months?.length) continue
+      if (!region.travel_region_months?.length) continue
       // Score all 12 months
-      const monthScores = region.months.map((m) => {
+      const monthScores = region.travel_region_months.map((m) => {
         const input: ClimateInput = {
           temp_avg_c: m.temp_avg_c, temp_min_c: m.temp_min_c, temp_max_c: m.temp_max_c,
           rainfall_mm: m.rainfall_mm, sunshine_hours_day: m.sunshine_hours_day,

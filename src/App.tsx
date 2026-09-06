@@ -45,7 +45,7 @@ class MapErrorBoundary extends Component<{ children: ReactNode }, { hasError: bo
 }
 
 function App() {
-  const { regions, loading: regionsLoading } = useRegions()
+  const { regions, allRegions, loading: regionsLoading } = useRegions()
   const { geojson } = useGeoJSON()
   const { messages, loading: agentLoading, sendMessage: _sendMessage, answerDecisionQuestion } = useAgent()
   const toggleSidePanel = useUIStore((s) => s.toggleSidePanel)
@@ -177,7 +177,7 @@ function App() {
       </div>
 
       {/* Trip Planner Modal */}
-      <PlannerModal regions={regions} />
+      <PlannerModal regions={allRegions} />
 
       {/* Agent Panel (expanded chat) */}
       <AgentPanel
