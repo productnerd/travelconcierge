@@ -1,6 +1,7 @@
 import { Component, useEffect, useRef, useState, useCallback, type ReactNode } from 'react'
 import FilterBar from '@/components/Filters/FilterBar'
 import Toast from '@/components/ui/Toast'
+import ErrorBanner from '@/components/ui/ErrorBanner'
 import TravelMap from '@/components/Map/TravelMap'
 import SidePanel from '@/components/SidePanel/SidePanel'
 // import AgentBar from '@/components/Agent/AgentBar'
@@ -188,6 +189,8 @@ function App() {
 
       {/* Agent Bar (bottom) — hidden for now, will re-enable later */}
       {/* <AgentBar onSend={_sendMessage} loading={agentLoading} /> */}
+
+      <ErrorBanner />
 
       {/* Activity-aware scoring toasts */}
       {toasts.map((toast) => (

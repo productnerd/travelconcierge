@@ -1,6 +1,7 @@
 import { create } from 'zustand'
 import { supabase } from '@/lib/supabase'
 import { useAuthStore } from './authStore'
+import { reportError } from './errorStore'
 
 const STORAGE_KEY = 'travel_visited'
 const LIST_TYPE = 'visited'
@@ -48,11 +49,11 @@ export const useVisitedStore = create<VisitedState>((set, get) => ({
             .eq('user_id', user.id)
             .eq('region_slug', slug)
             .eq('list_type', LIST_TYPE)
-            .then(({ error }) => { if (error) console.warn('Visited sync failed:', error.message) })
+            .then(({ error }) => { reportError('Saving your visited', error) })
         } else {
           supabase.from('travel_user_regions')
             .insert({ user_id: user.id, region_slug: slug, list_type: LIST_TYPE })
-            .then(({ error }) => { if (error) console.warn('Visited sync failed:', error.message) })
+            .then(({ error }) => { reportError('Saving your visited', error) })
         }
       }
 
@@ -74,11 +75,12 @@ export const useVisitedStore = create<VisitedState>((set, get) => ({
   syncFromSupabase: async () => {
     const user = useAuthStore.getState().user
     if (!user) return
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from('travel_user_regions')
       .select('region_slug')
       .eq('user_id', user.id)
       .eq('list_type', LIST_TYPE)
+    if (reportError('Loading your visited', error)) return
     if (data) {
       const slugs = data.map((r) => r.region_slug)
       saveToStorage(slugs)
@@ -90,27 +92,37 @@ export const useVisitedStore = create<VisitedState>((set, get) => ({
     const user = useAuthStore.getState().user
     if (!user) return
     const localSlugs = get().visitedSlugs
+    const migratedKey = `${STORAGE_KEY}_merged_${user.id}`
+    const alreadyMerged = localStorage.getItem(migratedKey) === '1'
 
     // Fetch existing server data
-    const { data: serverRows } = await supabase
+    const { data: serverRows, error } = await supabase
       .from('travel_user_regions')
       .select('region_slug')
       .eq('user_id', user.id)
       .eq('list_type', LIST_TYPE)
+    if (reportError('Loading your visited', error)) return
     const serverSlugs = (serverRows ?? []).map((r) => r.region_slug)
 
-    // Merge: union of local + server
-    const merged = [...new Set([...localSlugs, ...serverSlugs])]
-
-    // Insert any local-only slugs to server
-    const toInsert = localSlugs.filter((s) => !serverSlugs.includes(s))
-    if (toInsert.length > 0) {
-      await supabase.from('travel_user_regions').insert(
-        toInsert.map((slug) => ({ user_id: user.id, region_slug: slug, list_type: LIST_TYPE }))
-      )
+    if (alreadyMerged) {
+      // Server is the source of truth — this browser already pushed its local data up,
+      // so anything missing server-side was removed on another device.
+      saveToStorage(serverSlugs)
+      set({ visitedSlugs: serverSlugs })
+      return
     }
 
-    // Update local state with merged set
+    // First sign-in on this browser: don't lose anything hearted while signed out.
+    const toInsert = localSlugs.filter((s) => !serverSlugs.includes(s))
+    if (toInsert.length > 0) {
+      const { error: insertError } = await supabase.from('travel_user_regions').insert(
+        toInsert.map((slug) => ({ user_id: user.id, region_slug: slug, list_type: LIST_TYPE }))
+      )
+      if (reportError('Saving your visited', insertError)) return
+    }
+
+    const merged = [...new Set([...localSlugs, ...serverSlugs])]
+    localStorage.setItem(migratedKey, '1')
     saveToStorage(merged)
     set({ visitedSlugs: merged })
   },

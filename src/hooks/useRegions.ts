@@ -8,6 +8,7 @@ import type { RegionWithMonths } from '@/types'
 import { goodWeatherScore, bestTimeScore, type ClimateInput } from '@/utils/scoring'
 import { SAFETY_TIER, COUNTRY_CONTINENT, COST_INDEX, overallScore } from '@/data/costIndex'
 import { seasonalPenalty } from '@/data/seasonalAdvisories'
+import { reportError, useErrorStore } from '@/store/errorStore'
 
 export interface FilteredRegion {
   id: string
@@ -61,17 +62,25 @@ export function useRegions() {
   useEffect(() => {
     async function load() {
       setLoading(true)
-      const { data, error: err } = await supabase
-        .from('travel_regions')
-        .select('*, travel_region_months(*)')
+      try {
+        const { data, error: err } = await supabase
+          .from('travel_regions')
+          .select('*, travel_region_months(*)')
 
-      if (err) {
-        setError(err.message)
-        setLoading(false)
-        return
+        if (err) {
+          setError(err.message)
+          reportError('Loading regions', err)
+          setLoading(false)
+          return
+        }
+
+        setAllRegions(data as RegionWithMonths[])
+      } catch (e) {
+        // e.g. the auth lock timing out — this used to fail silently
+        const message = e instanceof Error ? e.message : String(e)
+        setError(message)
+        useErrorStore.getState().report('Loading regions', message)
       }
-
-      setAllRegions(data as RegionWithMonths[])
       setLoading(false)
     }
     load()

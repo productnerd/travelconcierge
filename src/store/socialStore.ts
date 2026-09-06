@@ -1,6 +1,7 @@
 import { create } from 'zustand'
 import { supabase } from '@/lib/supabase'
 import { useAuthStore } from './authStore'
+import { reportError } from './errorStore'
 import type { TravelProfile } from '@/types'
 
 export interface Friend {
@@ -53,11 +54,12 @@ export const useSocialStore = create<SocialState>((set, get) => ({
     const user = useAuthStore.getState().user
     if (!user) return
 
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from('travel_friendships')
       .select('id, requester_id, addressee_id, status')
       .eq('status', 'accepted')
       .or(`requester_id.eq.${user.id},addressee_id.eq.${user.id}`)
+    if (reportError('Loading friends', error)) return
 
     if (!data || data.length === 0) { set({ friends: [] }); return }
 
@@ -91,11 +93,12 @@ export const useSocialStore = create<SocialState>((set, get) => ({
     const user = useAuthStore.getState().user
     if (!user) return
 
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from('travel_friendships')
       .select('id, requester_id')
       .eq('addressee_id', user.id)
       .eq('status', 'pending')
+    if (reportError('Loading friend requests', error)) return
 
     if (!data || data.length === 0) { set({ pendingRequests: [] }); return }
 
@@ -129,10 +132,11 @@ export const useSocialStore = create<SocialState>((set, get) => ({
   },
 
   loadFriendData: async (userId) => {
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from('travel_user_regions')
       .select('region_slug, list_type')
       .eq('user_id', userId)
+    if (reportError('Loading friend data', error)) return
 
     if (data) {
       set((s) => ({

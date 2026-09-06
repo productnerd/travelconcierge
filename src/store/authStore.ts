@@ -2,6 +2,7 @@ import { create } from 'zustand'
 import type { User } from '@supabase/supabase-js'
 import { supabase } from '@/lib/supabase'
 import type { TravelProfile } from '@/types'
+import { reportError, useErrorStore } from '@/store/errorStore'
 
 interface AuthState {
   user: User | null
@@ -15,22 +16,30 @@ interface AuthState {
 }
 
 async function fetchOrCreateProfile(userId: string, email?: string): Promise<TravelProfile | null> {
-  const { data } = await supabase
+  const { data, error } = await supabase
     .from('travel_profiles')
     .select('*')
     .eq('user_id', userId)
-    .single()
+    .maybeSingle()
 
+  if (error) {
+    reportError('Loading your profile', error)
+    return null
+  }
   if (data) return data as TravelProfile
 
   // Create new profile
   const displayName = email?.split('@')[0] ?? ''
-  const { data: created } = await supabase
+  const { data: created, error: createError } = await supabase
     .from('travel_profiles')
     .insert({ user_id: userId, display_name: displayName })
     .select('*')
     .single()
 
+  if (createError) {
+    reportError('Creating your profile', createError)
+    return null
+  }
   return (created as TravelProfile) ?? null
 }
 
@@ -58,12 +67,13 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   updateProfile: async (updates) => {
     const { profile } = get()
     if (!profile) return
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from('travel_profiles')
       .update({ ...updates, updated_at: new Date().toISOString() })
       .eq('id', profile.id)
       .select('*')
       .single()
+    if (reportError('Saving your profile', error)) return
     if (data) set({ profile: data as TravelProfile })
   },
 
@@ -79,7 +89,11 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         // out of the callback or it deadlocks and user never gets set.
         const { id, email } = session.user
         setTimeout(async () => {
-          set({ profile: await fetchOrCreateProfile(id, email) })
+          try {
+            set({ profile: await fetchOrCreateProfile(id, email) })
+          } catch (e) {
+            useErrorStore.getState().report('Loading your profile', e instanceof Error ? e.message : String(e))
+          }
         }, 0)
       } else {
         set({ user: null, profile: null, initialized: true })
