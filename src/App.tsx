@@ -16,6 +16,7 @@ import { useFilterStore } from '@/store/filterStore'
 import { useAuthStore } from '@/store/authStore'
 import { useShortlistStore } from '@/store/shortlistStore'
 import { useVisitedStore } from '@/store/visitedStore'
+import { useNotesStore } from '@/store/notesStore'
 import { useSocialStore } from '@/store/socialStore'
 import { useFriendLink } from '@/hooks/useFriendLink'
 import SignupNudge from '@/components/Auth/SignupNudge'
@@ -98,6 +99,7 @@ function App() {
   const authInitialized = useAuthStore((s) => s.initialized)
   const migrateShortlist = useShortlistStore((s) => s.migrateToSupabase)
   const migrateVisited = useVisitedStore((s) => s.migrateToSupabase)
+  const migrateNotes = useNotesStore((s) => s.migrateToSupabase)
 
   useEffect(() => {
     const unsub = initAuth()
@@ -115,10 +117,11 @@ function App() {
       migrated.current = true
       migrateShortlist()
       migrateVisited()
+      migrateNotes()
       loadFriends()
       loadPendingRequests()
     }
-  }, [authUser, authInitialized, migrateShortlist, migrateVisited, loadFriends, loadPendingRequests])
+  }, [authUser, authInitialized, migrateShortlist, migrateVisited, migrateNotes, loadFriends, loadPendingRequests])
 
   // Handle ?friend= URL parameter
   useFriendLink()

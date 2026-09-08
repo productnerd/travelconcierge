@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useUIStore } from '@/store/uiStore'
 import { useShortlistStore } from '@/store/shortlistStore'
+import NoteEditor from '@/components/Notes/NoteEditor'
 import { useVisitedStore } from '@/store/visitedStore'
 import type { FilteredRegion } from '@/hooks/useRegions'
 import { busynessColor, countryFlag } from '@/types'
@@ -340,6 +341,16 @@ export default function RegionDetail({ region }: Props) {
           </button>
         </div>
       </div>
+
+      {/* Notes — only for shortlisted regions */}
+      {isShortlisted && (
+        <div className="mt-3">
+          <div className="font-display font-bold text-[10px] uppercase tracking-widest text-off-black/50 mb-1">
+            Your notes
+          </div>
+          <NoteEditor key={region.slug} slug={region.slug} />
+        </div>
+      )}
 
       {/* User + Friend avatars (only when friends toggled on) */}
       {enabledFriendIds.length > 0 && (() => {

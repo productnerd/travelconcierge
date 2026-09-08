@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { useUIStore } from '@/store/uiStore'
 import { useShortlistStore } from '@/store/shortlistStore'
 import { useFilterStore } from '@/store/filterStore'
@@ -8,6 +9,8 @@ import { useSocialStore } from '@/store/socialStore'
 import { useAuthStore } from '@/store/authStore'
 import type { RegionWithMonths } from '@/types'
 import FriendToggles from '@/components/Social/FriendToggles'
+import NoteEditor from '@/components/Notes/NoteEditor'
+import { useNotesStore } from '@/store/notesStore'
 
 const MONTH_NAMES = ['', 'January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December']
 
@@ -50,6 +53,8 @@ export default function PlannerModal({ regions }: Props) {
   const friends = useSocialStore((s) => s.friends)
   const profile = useAuthStore((s) => s.profile)
   const algorithmPreset = useFilterStore((s) => s.algorithmPreset)
+  const notes = useNotesStore((s) => s.notes)
+  const [noteSlug, setNoteSlug] = useState<string | null>(null)
   const selectedActivities = useFilterStore((s) => s.selectedActivities)
 
   // Combined shortlist: user + enabled friends
@@ -155,14 +160,18 @@ export default function PlannerModal({ regions }: Props) {
                             const continent = COUNTRY_CONTINENT[entry.countryCode] as Continent | undefined
                             const color = continent ? CONTINENT_COLORS[continent] : '#888'
                             const owners = getOwners(entry.slug)
+                            const isMine = shortlistedSlugs.includes(entry.slug)
                             return (
                               <div
                                 key={entry.slug}
-                                className="flex items-center gap-1.5 px-1.5 py-1 rounded border text-[10px] font-display font-bold"
+                                onClick={isMine ? () => setNoteSlug(entry.slug) : undefined}
+                                className={`flex items-center gap-1.5 px-1.5 py-1 rounded border text-[10px] font-display font-bold ${isMine ? 'cursor-pointer hover:brightness-95' : ''}`}
                                 style={{ borderColor: color, backgroundColor: color + '18' }}
+                                title={isMine ? (notes[entry.slug] ? 'Edit your note' : 'Add a note') : undefined}
                               >
                                 <span>{countryFlag(entry.countryCode)}</span>
                                 <span className="truncate uppercase text-off-black flex-1">{entry.name}</span>
+                                {isMine && notes[entry.slug] && <span className="shrink-0" aria-label="Has a note">&#128221;</span>}
                                 {owners.length > 0 && (
                                   <span className="flex items-center -space-x-1 shrink-0">
                                     {owners.map((o) => (
@@ -209,6 +218,37 @@ export default function PlannerModal({ regions }: Props) {
           </div>
         )}
       </div>
+
+      {/* Note editor for a calendar entry */}
+      {noteSlug && (
+        <div
+          className="absolute inset-0 flex items-center justify-center p-4"
+          onClick={() => setNoteSlug(null)}
+        >
+          <div className="absolute inset-0 bg-black/40" />
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-label="Note"
+            className="relative bg-cream border-2 border-off-black rounded-xl w-full max-w-[380px] p-3"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between mb-2">
+              <div className="font-display font-bold text-[10px] uppercase tracking-widest text-off-black/60 truncate">
+                {regions.find((r) => r.slug === noteSlug)?.name ?? 'Note'}
+              </div>
+              <button
+                onClick={() => setNoteSlug(null)}
+                aria-label="Close note"
+                className="px-2 text-off-black/50 hover:text-off-black text-lg leading-none"
+              >
+                &times;
+              </button>
+            </div>
+            <NoteEditor key={noteSlug} slug={noteSlug} autoFocus />
+          </div>
+        </div>
+      )}
     </div>
   )
 }
